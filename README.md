@@ -18,4 +18,8 @@ install.packages("fslretho ")
 
 ## Launch
 
-You can launch the GUI by running fslretho::main()
+You can launch the GUI by running
+
+``` r
+fslretho::main()
+```
