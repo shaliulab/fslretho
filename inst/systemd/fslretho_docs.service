@@ -1,0 +1,18 @@
+[Unit]
+Description=Run FSL-Retho (rethogui) documentation server
+Wants=NetworkManager.service
+After=NetworkManager.service
+PartOf=fslretho.service
+
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/fslretho/
+ExecStart=/opt/fslretho/inst/systemd/fslretho_docs.sh
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=fslretho.service
+

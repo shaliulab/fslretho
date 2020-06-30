@@ -1,0 +1,35 @@
+Package: fslretho
+Title: fslretho: a Shiny GUI to the Rethomics suite
+Version: 2.0
+Authors@R: 
+    person(given = "Antonio",
+           family = "Ortega",
+           role = c("aut", "cre"),
+           email = "antonio.ortega@kuleuven.vib.be")
+Description: fslretho provides a user-friendly GUI to
+    analyse behavioral datasets and focus the attention of users in the
+    biological questions at hand, freeing them from programming
+    technicalities.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Language: en
+LazyData: true
+Imports: 
+    data.table,
+    ggplot2,
+    fslbehavr,
+    fsldamr,
+    fslscopr,
+    fslsleepr,
+    fslggetho,
+    purrr,
+    rlang,
+    shiny,
+    shinydashboard,
+    shinydashboardPlus,
+    shinythemes,
+    R6,
+    rjson,
+    glue
+Suggests: 
+    knitr
