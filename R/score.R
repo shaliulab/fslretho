@@ -24,9 +24,12 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
 
     id,
     function(input, output, session) {
-      .SD <- NULL
+
+      data <- reactiveValues(data = reactive(dt_raw()))
 
       message("Populating sidebar!")
+
+
 
       output$scoringInput <- renderUI({
         tagList(
@@ -65,16 +68,10 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
         passed_functions
       })
 
-
-      # wrappers <- list("sleep_annotation" = fslsleepr::sleep_annotation_wrapper)
-
       # TODO Can this all be packaged into a function?
-      dt <- eventReactive(dataset_name(), {
+      dt <- reactive({
 
-        if(is.null(dt_raw())) {
-          return(NULL)
-
-        }
+        dataset_name()
         progress <- shiny::Progress$new()
         on.exit(progress$close())
 
@@ -94,20 +91,19 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
         dt <- fslscopr::annotate_all(data = dt_raw(), FUN = FUN(), updateProgress = updateProgress,
                                      velocity_correction_coef = velocity_correction_coef)
         dt
-      }, ignoreInit = T)
+      })
+
+      dt_validated <- reactive({
+        validate(need(nrow(dt()) > 0, "Data cannot be annotated. This could be due to your dataset being sparse"))
+        dt()
+      })
 
       # # make it eager
       observe({
-        DT <- dt()
-        if (is.null(DT)) {
-          message("DT scored is NULL")
-        } else {
-          message("DT scored is not NULL:")
-          print(DT)
-        }
+        data$data <<- reactive(dt_validated())
       })
-      return(dt)
+
+      return(data)
     }
   )
 }
-

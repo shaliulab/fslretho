@@ -19,55 +19,110 @@
 #' }
 #' @importFrom ggplot2 aes
 #' @importFrom fslbehavr mins
-summariseBehavrServer <- function(id, dt, feature = "asleep") {
+summariseBehavrServer <- function(id, scored_data, feature = "asleep") {
   moduleServer(
     id,
     function(input, output, session) {
 
-      asleep <- NULL
+      stopifnot(isolate(is.reactive(scored_data$data)))
+      stopifnot(isolate(!is.reactive(feature)))
 
+      asleep <- NULL
       # TODO Provide a way to change the summary_FUN and the summary_time_window
-      # TODO Find a way to change the column mapped to y without changing its name to something static
+      # TODO Find a way to change the column mapped to y
+      # without changing its name to something static
       ggetho_input <- reactive({
-        ggetho_input <- fslggetho::ggetho_preprocess(
-          data = dt(),
-          mapping = aes(x = t, y = asleep),
-          summary_FUN = mean,
-          summary_time_window = fslbehavr::mins(30)
-        )
-        ggetho_input
+          fslggetho::ggetho_preprocess(
+            data = scored_data$data(),
+            mapping = ggplot2::aes(x = t, y = asleep),
+            summary_FUN = mean,
+            summary_time_window = fslbehavr::mins(30)
+          )
       })
-      return(ggetho_input)
+
+      output <- list(
+        data = reactive(ggetho_input()$dt),
+        mapping = reactive(ggetho_input()$mapping),
+        scale_x_FUN = reactive(ggetho_input()$scale_x_FUN),
+        discrete_y = reactive(ggetho_input()$discrete_y),
+        time_offset = reactive(ggetho_input()$time_offset)
+      )
+      return(output)
     }
   )
 }
 
-plotBehavrServer <- function(id, ggetho_input) {
+
+plotBehavrUI <- function(id) {
+
+  ns <- shiny::NS(id)
+
+  tagList(
+    shinydashboard::box(
+      title = "Sleep trace", status = "primary",
+      shiny::plotOutput(ns("plot"))
+    ),
+    shiny::downloadButton(ns("download"))
+  )
+}
+
+plotBehavrServer <- function(id, ggetho_input, dataset_name) {
   moduleServer(
     id,
 
     function(input, output, session) {
+
+      stopifnot(!is.reactive(ggetho_input))
+      stopifnot(is.reactive(ggetho_input$data))
+
+      plot <- reactiveValues(plot = reactive(ggplot2::ggplot()))
 
       gg <- reactive({
 
         gg <- fslggetho::ggetho_plot(
-        # gg <- ggetho_plot(
-          data = ggetho_input()$dt,
-          mapping = ggetho_input()$mapping,
-          scale_x_FUN = ggetho_input()$scale_x_FUN,
-          discrete_y = ggetho_input()$discrete_y,
-          time_offset = ggetho_input()$time_offset
+          data = ggetho_input$data(),
+          mapping = ggetho_input$mapping(),
+          scale_x_FUN = ggetho_input$scale_x_FUN(),
+          discrete_y = ggetho_input$discrete_y(),
+          time_offset = ggetho_input$time_offset()
         )
         gg <- gg + fslggetho::stat_pop_etho()
-        browser()
         gg
       })
-      return(gg)
+
+      observe({
+        plot$plot <<- reactive(gg())
+      })
+
+      output$plot <- renderPlot({
+        plot$plot()
+      })
+
+      # outputOptions(output, "plot", suspendWhenHidden = FALSE)
+
+      output$download <- downloadHandler(
+        filename = function() {
+          paste0(dataset_name(), ".png")
+        }, content = function(file) {
+
+          ggplot2::ggsave(plot = plot$plot(), filename = file)
+        }
+      )
     }
   )
 }
 
 
+
+analyseSleepUI <- function(id) {
+
+  ns <- NS(id)
+
+  shiny::fluidRow(
+    plotBehavrUI(ns("plotBehavr")),
+    shiny::downloadButton(ns("summarised_data"))
+  )
+}
 
 
 analyseSleepServer <- function(id, scored_data, dataset_name) {
@@ -75,35 +130,26 @@ analyseSleepServer <- function(id, scored_data, dataset_name) {
     id,
     function(input, output, session) {
 
-      # browser()
+      stopifnot(is.reactive(isolate(scored_data$data)))
+      stopifnot(is.reactive(isolate(dataset_name)))
 
-      ggetho_input <- summariseBehavrServer("summariseBehavr", scored_data, feature = "asleep")
+      ggetho_input <- summariseBehavrServer(
+        "summariseBehavr",
+        scored_data,
+        feature = "asleep"
+      )
+
+      plotBehavrServer("plotBehavr", ggetho_input, dataset_name)
 
       output$summarised_data <- downloadHandler(
         filename = function() {
           paste0(dataset_name(), ".csv")
         }, content = function(file) {
-          data <- ggetho_input()$dt
-          data[, file_info := purrr::map(file_info, ~.[["path"]])]
-          data.table::fwrite(x = data, file, row.names=FALSE)
+
+          data <- fortify(ggetho_input$data())
+          data.table::fwrite(x = data, file, row.names = FALSE)
         }
       )
-
-      output$plot1 <- renderPlot({
-        plotBehavrServer("plotBehavr", ggetho_input)()
-      })
     }
-  )
-}
-
-analyseSleepUI <- function(id) {
-
-  ns <- NS(id)
-
-  shiny::fluidRow(
-    shinydashboard::box(title = 'Sleep trace', status = 'primary',
-      shiny::plotOutput(ns("plot1"), height = 250)
-    ),
-      shiny::downloadButton(ns("summarised_data"))
   )
 }

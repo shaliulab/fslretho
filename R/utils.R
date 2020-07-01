@@ -21,3 +21,45 @@ abort_bad_argument <- function(arg, must, not = NULL) {
         not = not
   )
 }
+
+#
+# behavr_placeholder <- function(df = NULL) {
+#
+#   metadata <- data.table::data.table(id = character())
+#   data.table::setkey(metadata, id)
+#
+#   if (is.null(df)) {
+#       x <- data.table::data.table(id = character())
+#   } else {
+#     x <- data.table::as.data.table(df)
+#     x[, id := sample(x = c(1,2), size = nrow(.SD), replace = T)]
+#   }
+#
+#   data.table::setkey(x, id)
+#   fslbehavr::behavr(x = x, metadata = metadata)
+# }
+
+#' Make a writable behavr object
+#' @param data A rejoined behavr or any data.table object
+#' TODO Possibly this should be part of a fwrite_behavr function in behavr
+fortify <- function(data) {
+
+  types <- sapply(1:ncol(data), function(i) {
+    column_name <- colnames(data)[i]
+    res <- c(is.list(data[[i]]))
+    names(res) <- column_name
+    res
+  })
+
+  if (sum(types) != 0) {
+    for (column in which(types)) {
+
+      single_column <- dplyr::pull(data[, column, with = F])
+      single_column <- purrr::map_chr(single_column, ~.[[1]])
+      cmd <- sprintf("%s := single_column", names(types)[column])
+      data[, eval(parse(text = cmd))]
+    }
+  }
+  return(data)
+
+}

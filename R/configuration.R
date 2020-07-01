@@ -40,14 +40,17 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
 
   },
 
-  save = function() {
+  save = function(config_file = NULL) {
     json <- rjson::toJSON(self$content)
 
-    write(x = json, file = self$config_file)
+    if (is.null(config_file))
+      config_file <- self$config_file
+
+    write(x = json, file = config_file)
   },
 
   load = function() {
-    if (! file.exists(self$config_file)) self$save()
+    if (!file.exists(self$config_file)) self$save()
     else {
       json <- rjson::fromJSON(file = self$config_file)
       self$content <- modifyList(self$content, json)

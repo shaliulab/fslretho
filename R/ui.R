@@ -14,7 +14,14 @@ shinydashboard_ui <- function() {
           title = "Scoring parameters",
           # icon =
           scoreDataUI("scoreData")
-        )
+        ),
+        shinydashboardPlus::dropdownBlock(
+          id = "definedGroups",
+          title = "Animal groups",
+          # icon =
+          defineGroupUI("defineGroup")
+        ),
+
       ),
       tags$li(
         textOutput("dataset_name"), class = "dropdown user user-menu"
@@ -24,7 +31,8 @@ shinydashboard_ui <- function() {
       shinydashboard::sidebarMenu(
         shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = shiny::icon('info')),
         shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
-        shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon'))
+        shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
+        shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('moon'))
       )
     ),
     # TODO Place somewhere the UI for scoreData
@@ -37,7 +45,8 @@ shinydashboard_ui <- function() {
             loadDataUI("loadData-dam", "dam")
           )
         ),
-        shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep"))
+        shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
+        shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
       )
     )
   )

@@ -1,1 +1,5 @@
-fslretho::main()
+try({
+  shiny::withLogErrors({
+    fslretho::main()
+  })
+})

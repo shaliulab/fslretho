@@ -63,7 +63,8 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
 
       # make it eager
       observeEvent(input$submit, {
-        print(dt_raw())
+        # print(dt_raw())
+        dt_raw()
         last_monitor("ethoscope")
         dataset_name(input$metadata$name)
       })

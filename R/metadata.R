@@ -17,3 +17,28 @@ load_metadata <- function(metadata_path, monitor) {
   return(metadata)
 
 }
+
+
+viewMetadataUI <- function(id) {
+
+  ns <- shiny::NS(id)
+  shiny::dataTableOutput(ns("metadata"))
+}
+
+viewMetadataServer <- function(id, scored_data) {
+
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+
+      metadata <- reactive({
+        scored_data$data()[, meta = T]
+      })
+
+      output$metadata <- shiny::renderDataTable({
+        metadata()
+      })
+    }
+  )
+}
+
