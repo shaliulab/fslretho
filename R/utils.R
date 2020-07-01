@@ -61,5 +61,32 @@ fortify <- function(data) {
     }
   }
   return(data)
+}
 
+
+#' Prepend a filename (or any character) with a datetime signature
+#'
+#' `datetime_filename` reinforces good documentation practices across
+#' fslretho to help users keep track of the files generated with the application
+#'
+#' @importFrom lubridate year month day hour minute second
+#' @importFrom stringr str_pad
+datetime_filename <- function(filename) {
+  Sys_time <- Sys.time()
+
+  rest <- list(
+    month(Sys_time), day(Sys_time),
+    hour(Sys_time), minute(Sys_time), floor(lubridate::second(Sys_time))
+  )
+
+  date_split <- c(year(Sys_time),
+    purrr::map_chr(rest, ~stringr::str_pad(string = ., side = 'left', width = 2, pad = '0'))
+  )
+
+  datetime_char <- paste(
+    paste0(date_split[1:3], collapse = '-'),
+    paste0(date_split[4:6], collapse = '-'),
+    sep = '_'
+  )
+  sprintf("%s_%s", datetime_char, filename)
 }

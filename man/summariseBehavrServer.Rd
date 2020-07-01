@@ -4,11 +4,9 @@
 \alias{summariseBehavrServer}
 \title{Aggregate a categorical data over a fixed period of time}
 \usage{
-summariseBehavrServer(id, dt, feature = "asleep")
+summariseBehavrServer(id, scored_data, feature = "asleep")
 }
 \arguments{
-\item{dt}{A behavr table with a categorical column to be summarised}
-
 \item{feature}{Name of the categorical column}
 
 \item{input}{A shiny input object}
@@ -16,6 +14,8 @@ summariseBehavrServer(id, dt, feature = "asleep")
 \item{output}{A shiny output object}
 
 \item{session}{A shiny session object}
+
+\item{dt}{A behavr table with a categorical column to be summarised}
 }
 \value{
 A list with elements

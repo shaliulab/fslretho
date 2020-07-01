@@ -1,15 +1,20 @@
 #' Server function of FSLRetho
 #'
 #' @import shiny
+#' @importFrom shinylogs track_usage store_json
 #' @noRd
 server <- function(input, output, session) {
 
+
+  # Log relevant events made by the user
+  shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
+
   last_monitor <- shiny::reactiveVal(NULL)
-  dataset_name <- shiny::reactiveVal("")
+  dataset_name <- shiny::reactiveVal("NONE")
   apply_filter <- shiny::reactiveVal(0)
 
   output$dataset_name <- shiny::renderText({
-    dataset_name()
+    paste0("Loaded dataset: ", dataset_name())
   })
 
   message("Point 1")
@@ -25,7 +30,6 @@ server <- function(input, output, session) {
 
     dataset_name()
     last_monitor()
-
     message(sprintf("Updating raw_data slot with monitor %s, dataset %s", last_monitor(), dataset_name()))
     raw_data_multiple[[last_monitor()]]()
   })

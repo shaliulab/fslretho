@@ -102,7 +102,7 @@ plotBehavrServer <- function(id, ggetho_input, dataset_name) {
 
       output$download <- downloadHandler(
         filename = function() {
-          paste0(dataset_name(), ".png")
+          datetime_filename(paste0(dataset_name(), ".png"))
         }, content = function(file) {
 
           ggplot2::ggsave(plot = plot$plot(), filename = file)
@@ -143,7 +143,7 @@ analyseSleepServer <- function(id, scored_data, dataset_name) {
 
       output$summarised_data <- downloadHandler(
         filename = function() {
-          paste0(dataset_name(), ".csv")
+          datetime_filename(paste0(dataset_name(), ".csv"))
         }, content = function(file) {
 
           data <- fortify(ggetho_input$data())

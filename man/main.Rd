@@ -4,7 +4,7 @@
 \alias{main}
 \title{Start an FSLRetho instance}
 \usage{
-main()
+main(display_mode = FALSE)
 }
 \description{
 Start an FSLRetho instance

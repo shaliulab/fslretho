@@ -23,3 +23,11 @@ You can launch the GUI by running
 ``` r
 fslretho::main()
 ```
+
+## TODO
+
+* Support DAM with damr
+* Provide data filtering functionality
+* Provide custom code functionality
+* Support more specialized analyses
+* Write tests

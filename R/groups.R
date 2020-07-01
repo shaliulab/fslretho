@@ -173,6 +173,11 @@ edit_data <- function(data, filter, value) {
   return(data)
 }
 
+#' Assign groups to flies
+#'
+#' `group_data` populates the group column of the metadata in a behavr table
+#' so plots and downstream analyses can segregate with user provided groups
+#'
 #' @param data A shiny reactiveValue with a single reactive that yields a behavr table under key input
 #' @param groups A shiny reactiveValues object where every reactive returns a named character
 #' than can be used to filter rows in the behavr object.
