@@ -47,6 +47,6 @@ server <- function(input, output, session) {
 
   viewMetadataServer("viewMetadata", grouped_data)
 
-  analyseSleepServer("analyseSleep", scored_data, dataset_name)
+  analyseSleepServer("analyseSleep", grouped_data, dataset_name)
 
 }

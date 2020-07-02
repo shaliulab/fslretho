@@ -86,7 +86,7 @@ plotBehavrServer <- function(id, ggetho_input, dataset_name) {
           discrete_y = ggetho_input$discrete_y(),
           time_offset = ggetho_input$time_offset()
         )
-        gg <- gg + fslggetho::stat_pop_etho()
+        gg <- gg + fslggetho::stat_pop_etho(aes(fill = group, color = group))
         gg
       })
 
