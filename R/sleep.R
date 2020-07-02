@@ -41,7 +41,7 @@ summariseBehavrServer <- function(id, scored_data, feature = "asleep") {
       })
 
       output <- list(
-        data = reactive(ggetho_input()$dt),
+        data = reactive(ggetho_input()$data),
         mapping = reactive(ggetho_input()$mapping),
         scale_x_FUN = reactive(ggetho_input()$scale_x_FUN),
         discrete_y = reactive(ggetho_input()$discrete_y),
@@ -138,6 +138,16 @@ analyseSleepServer <- function(id, scored_data, dataset_name) {
         scored_data,
         feature = "asleep"
       )
+
+      result <- callModule(
+        module = esquisse::esquisserServer,
+        id = "esquisse",
+        data = ggetho_input$data
+      )
+
+      output$module_out <- renderPrint({
+        str(reactiveValuesToList(result))
+      })
 
       plotBehavrServer("plotBehavr", ggetho_input, dataset_name)
 

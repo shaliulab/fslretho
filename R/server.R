@@ -2,6 +2,8 @@
 #'
 #' @import shiny
 #' @importFrom shinylogs track_usage store_json
+#' @importFrom zeallot `%<-%`
+#' @importFrom esquisse esquisserServer
 #' @noRd
 server <- function(input, output, session) {
 
@@ -9,7 +11,7 @@ server <- function(input, output, session) {
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
-  last_monitor <- shiny::reactiveVal(NULL)
+  last_monitor <- shiny::reactiveVal("ethoscope")
   dataset_name <- shiny::reactiveVal("NONE")
   apply_filter <- shiny::reactiveVal(0)
 
@@ -28,25 +30,77 @@ server <- function(input, output, session) {
   # select data slot
   raw_data <- reactive({
 
-    dataset_name()
-    last_monitor()
-    message(sprintf("Updating raw_data slot with monitor %s, dataset %s", last_monitor(), dataset_name()))
-    raw_data_multiple[[last_monitor()]]()
+    if (dataset_name() != "NONE") {
+      dataset_name()
+      last_monitor()
+      message(sprintf("Updating raw_data slot with monitor %s, dataset %s", last_monitor(), dataset_name()))
+      raw_data_multiple[[last_monitor()]]()
+    } else {
+      fslbehavr::toy_ethoscope_data()
+    }
   })
 
-
-  message("Point 3")
-
-  message("Point 4")
-
-  scored_data <- scoreDataServer("scoreData", raw_data, dataset_name)
+  scored_data <- scoreDataServer("scoreData", raw_data, dataset_name, apply_filter, last_monitor)
 
   groups <- defineGroupServer("defineGroup", scored_data, apply_filter)
 
-  grouped_data <- set_groups(scored_data, groups, apply_filter)
+  # FIXME
+  refresh_plot <- reactive({
+    dataset_name()
+    apply_filter()
+    last_monitor()
+    scored_data$data()
+  })
+
+
+  grouped_data <- reactive({
+    set_groups(scored_data, groups, refresh_plot)
+  })
+
 
   viewMetadataServer("viewMetadata", grouped_data)
 
-  analyseSleepServer("analyseSleep", grouped_data, dataset_name)
+  data_r <- reactiveValues(
+    data = reactive(NULL),
+    metadata = reactive(NULL),
+    name = reactive(""),
+    extra = reactive(
+        list(
+        scale_X_FUN = NULL,
+        discrete_y = FALSE
+      )
+    )
+  )
+
+
+  observeEvent(refresh_plot(), {
+    #browser()
+    new_data <- grouped_data()$data()
+
+    data_r$metadata <<- new_data[, meta = T]
+    sprintf("Updating data slot with dataframe of %s rows", nrow(new_data))
+    zeallot::`%<-%`(c(data, mapping, scale_X_FUN, discrete_y), bin_data(data.table::copy(new_data), do = TRUE))
+    data_r$name <<- reactive(dataset_name())
+    data_r$extra <<- reactive(list(scale_X_FUN = scale_X_FUN, discrete_y = discrete_y))
+    data_r$data <<- reactive(data)
+    print(mean(data$asleep))
+
+  }, ignoreInit = TRUE)
+
+  result <- callModule(
+    module = esquisse::esquisserServer,
+    id = "esquisse",
+    data = data_r,
+    react = c(dataset_name, apply_filter, last_monitor)
+  )
+
+
+
+  output$module_out <- renderPrint({
+    c(apply_filter())
+    str(reactiveValuesToList(result))
+  })
+
+  # analyseSleepServer("analyseSleep", grouped_data, dataset_name)
 
 }

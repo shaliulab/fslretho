@@ -24,6 +24,7 @@ main <- function(display_mode=FALSE) {
 
   # Provide a browsable tree of reactive expressions, inputs, and outputs (reactlog)
   reactlog::reactlog_enable()
+  options(shiny.fullstacktrace = TRUE)
 
   # launch the app
   shiny::shinyApp(server = server, ui = shinydashboard_ui())

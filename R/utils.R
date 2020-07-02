@@ -41,8 +41,15 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 
 #' Make a writable behavr object
 #' @param data A rejoined behavr or any data.table object
+#' @param meta If TRUE, repeat also for the metadata
 #' TODO Possibly this should be part of a fwrite_behavr function in behavr
-fortify <- function(data) {
+fortify <- function(data, meta = FALSE) {
+
+  if(meta) {
+    metadata <- data[, meta = T]
+    metadata <- fortify(metadata, FALSE)
+    fslbehavr::setmeta(data, metadata)
+  }
 
   types <- sapply(1:ncol(data), function(i) {
     column_name <- colnames(data)[i]
@@ -90,3 +97,28 @@ datetime_filename <- function(filename) {
   )
   sprintf("%s_%s", datetime_char, filename)
 }
+
+
+#' Optionally bin data
+#'
+#' `bin_data` will run `fslggetho::ggetho_preprocess` on a provided behavr table
+#' only if do
+#' Even if not do, it returns default values for plot parameters that are needed by ggetho_plot
+#' @importFrom fslggetho ggetho_preprocess
+#' @importFrom zeallot `%<-%`
+bin_data <- function(data, do = TRUE, ...) {
+  if (do) {
+    c(data, mapping, scale_X_FUN, discrete_y, time_offset) %<-% fslggetho::ggetho_preprocess(data = data, mapping = aes(y = asleep), ...)
+  } else {
+    scale_X_FUN <- NULL
+    discrete_y <- FALSE
+  }
+
+  return(list(
+    data = data,
+    mapping = mapping,
+    scale_X_FUN = scale_X_FUN,
+    discrete_y = discrete_y
+  ))
+}
+

@@ -133,7 +133,7 @@ defineSingleGroupServer <- function(id, scored_data, apply_filter) {
         scored_data$data()[, meta = input$metadata]
       })
 
-      a_filter <- eventReactive(input$apply, {
+      a_filter <- eventReactive(c(input$apply, DT()), {
 
         apply_filter(apply_filter() + 1)
 
@@ -147,7 +147,6 @@ defineSingleGroupServer <- function(id, scored_data, apply_filter) {
       isolate({
         my_filter$a_filter <- a_filter
       })
-
 
       output$a_filter <- renderPrint({
         a_filter()

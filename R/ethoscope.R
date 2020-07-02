@@ -54,9 +54,8 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
         updateProgress <- function(detail = NULL) {
           progress$inc(amount = 1 / n, detail = detail)
         }
-        ##
 
-        dt_raw <- load_ethoscope(metadata(), result_dir = input$result_dir, updateProgress = updateProgress)
+        dt_raw <- fortify(load_ethoscope(metadata(), result_dir = input$result_dir, updateProgress = updateProgress), meta = TRUE)
         return(dt_raw)
 
       })
@@ -65,6 +64,7 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
       observeEvent(input$submit, {
         # print(dt_raw())
         dt_raw()
+
         last_monitor("ethoscope")
         dataset_name(input$metadata$name)
       })

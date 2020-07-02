@@ -3,6 +3,7 @@
 #' @importFrom shinydashboard dashboardPage dashboardHeader dashboardSidebar dashboardBody
 #' @importFrom shinydashboard sidebarMenu menuItem tabItems tabItem
 #' @importFrom shiny icon
+#' @importFrom esquisse esquisserUI
 #'
 shinydashboard_ui <- function() {
   shinydashboardPlus::dashboardPagePlus(skin = "black",
@@ -48,7 +49,23 @@ shinydashboard_ui <- function() {
             loadDataUI("loadData-dam", "dam")
           )
         ),
-        shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
+        shinydashboard::tabItem(tabName = "sleep",
+          tabsetPanel(
+            tabPanel(
+              title = "esquisse",
+              esquisse::esquisserUI(
+                id = "esquisse",
+                header = FALSE, # dont display gadget title
+                choose_data = FALSE # dont display button to change data
+              )
+            ),
+            tabPanel(
+              title = "output",
+              shiny::verbatimTextOutput("module_out")
+            )
+          )
+        ),
+        # shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
         shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
       )
     )

@@ -1,4 +1,4 @@
-loadDamServer <- function(id, las_monitor, dataset_name){
+loadDamServer <- function(id, last_monitor, dataset_name){
 
   moduleServer(
     id,
@@ -13,17 +13,15 @@ loadDamServer <- function(id, las_monitor, dataset_name){
       })
 
       dt_raw <- reactive({
-        fsldamr::load_dam(metadata_linked())
+        fortify(fsldamr::load_dam(metadata_linked()), meta = TRUE)
       })
 
       # make it eager
       observeEvent(input$submit, {
-        print(dt_raw())
+        dt_raw()
         last_monitor("dam")
         dataset_name(input$metadata$name)
       })
-
-
       return(dt_raw)
     }
   )

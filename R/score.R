@@ -1,6 +1,12 @@
 FUNCTION_MAP <- list(
-  "sleep_annotation" = fslsleepr::sleep_annotation
+  "sleep_annotation" = list(
+    "ethoscope" = fslsleepr::sleep_annotation,
+    "dam" = fslsleepr::sleep_dam_annotation
+    )
 )
+
+monitor_sensitive <- names(which(unlist(lapply(FUNCTION_MAP, length)) == 2))
+
 
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
@@ -17,7 +23,7 @@ scoreDataUI <- function(id) {
 #' @importFrom fslbehavr bin_apply_all
 #' @importFrom fslscopr annotate
 #' @importFrom rlang fn_fmls
-scoreDataServer <- function(id, dt_raw, dataset_name) {
+scoreDataServer <- function(id, dt_raw, dataset_name, apply_filter, last_monitor) {
   message("Executing scoreDataServer")
 
   moduleServer(
@@ -59,15 +65,22 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
 
         passed_functions <- c()
         for (func in user_functions()) {
-          FUN <- FUNCTION_MAP[[func]]
-          FUN <- attr(FUN, "update")(user_input())
-          passed_functions <- c(passed_functions, FUN)
+          # #browser()
+          passed_function <- FUNCTION_MAP[[func]]
+          if (func %in% monitor_sensitive) passed_function <- passed_function[[last_monitor()]]
+          passed_function <- attr(passed_function, "updater")(user_input())
+          passed_functions <- c(passed_functions, passed_function)
         }
         passed_functions
       })
 
       # TODO Can this all be packaged into a function?
       dt <- reactive({
+
+        input$velocity_correction_coef
+        input$min_time_immobile
+        input$time_window_length
+        FUN()
 
         dataset_name()
         progress <- shiny::Progress$new()
@@ -86,8 +99,16 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
         # * pass velocity_correction_coef only when FUN needs it or
         # * pass it always but have functions that don't complain about it being passed
         velocity_correction_coef <- user_input()$velocity_correction_coef
-        dt <- fslscopr::annotate_all(data = dt_raw(), FUN = FUN(), updateProgress = updateProgress,
-                                     velocity_correction_coef = velocity_correction_coef)
+        if (last_monitor() == "dam") {
+          dt <- fslscopr::annotate_all(data = dt_raw(), FUN = FUN(), updateProgress = updateProgress)
+        } else {
+          dt <- fslscopr::annotate_all(
+            data = dt_raw(), FUN = FUN(), updateProgress = updateProgress,
+            velocity_correction_coef = velocity_correction_coef
+          )
+        }
+
+        #browser()
         dt
       })
 
@@ -98,6 +119,11 @@ scoreDataServer <- function(id, dt_raw, dataset_name) {
 
       # # make it eager
       observe({
+        apply_filter(isolate(apply_filter()) + 1)
+        input$velocity_correction_coef
+        input$min_time_immobile
+        input$time_window_length
+        # FUN()
         data$data <<- reactive(dt_validated())
       })
 
