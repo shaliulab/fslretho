@@ -1,4 +1,4 @@
-#' Consistent wayt of returning an error
+#' Consistent and informative error
 #' @importFrom glue glue
 #' @importFrom rlang abort
 #'
@@ -99,26 +99,16 @@ datetime_filename <- function(filename) {
 }
 
 
-#' Optionally bin data
-#'
-#' `bin_data` will run `fslggetho::ggetho_preprocess` on a provided behavr table
-#' only if do
-#' Even if not do, it returns default values for plot parameters that are needed by ggetho_plot
-#' @importFrom fslggetho ggetho_preprocess
-#' @importFrom zeallot `%<-%`
-bin_data <- function(data, do = TRUE, ...) {
-  if (do) {
-    c(data, mapping, scale_X_FUN, discrete_y, time_offset) %<-% fslggetho::ggetho_preprocess(data = data, mapping = aes(y = asleep), ...)
-  } else {
-    scale_X_FUN <- NULL
-    discrete_y <- FALSE
+show_condition_message <- function(e, type, session) {
+  if (!is.null(session)) {
+    shiny::showNotification(
+      ui = paste(
+        tools::toTitleCase(type),
+        conditionMessage(e),
+        sep = " : "
+      ),
+      type = type,
+      session = session
+    )
   }
-
-  return(list(
-    data = data,
-    mapping = mapping,
-    scale_X_FUN = scale_X_FUN,
-    discrete_y = discrete_y
-  ))
 }
-

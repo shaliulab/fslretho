@@ -29,19 +29,48 @@ load_ethoscope <- function(metadata, result_dir, reference_hour = NULL, updatePr
 }
 
 #' Wrap the ethoscope loading functionality for a ShinyUI
+#' @importFrom magrittr `%>%`
 #' @noRd
 loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
   moduleServer(
     id,
     function(input, output, session) {
 
-
       metadata <- reactive({
-        load_metadata(input$metadata$datapath, monitor = "ethoscope")
+
+        withCallingHandlers(
+          expr = tryCatch({
+            load_metadata(input$metadata$datapath, monitor = "ethoscope")
+          }, error = function(e) {
+            show_condition_message(e, "error", session)
+            list(plot = NULL, data = NULL, layout = NULL)
+            shiny::validate(shiny::need(expr = F, label = "metadata is not valid"))
+          }
+          ),
+          warning = function(w) {
+            show_condition_message(w, "warning", session)
+            list(plot = NULL, data = NULL, layout = NULL)
+          }
+        )
+
       })
+
+      metadata_linked <- reactive({
+        fslscopr::link_ethoscope_metadata(x = metadata(), result_dir = input$result_dir)
+      })
+
 
       dt_raw <- reactive({
 
+        if (nrow(metadata_linked()) == 0) {
+          showNotification("Failure: no matches were found in the local ethoscope database.
+                           This could be due to typos in the machine_name, date, etc; or
+                           your dataset being missing in the database.
+                           Check your metadata and/or the local database to find out which is the problem", type = "error")
+          shiny::validate(shiny::need(FALSE, label = ""))
+        } else {
+          showNotification("Success")
+        }
         message("Loading ethoscope data")
 
         # TODO Can this all be packaged into a function?
@@ -55,16 +84,24 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
           progress$inc(amount = 1 / n, detail = detail)
         }
 
-        dt_raw <- fortify(load_ethoscope(metadata(), result_dir = input$result_dir, updateProgress = updateProgress), meta = TRUE)
+        dt_raw <- fslscopr::load_ethoscope(
+          metadata = metadata_linked(),
+          reference_hour = NULL,
+          ncores = FSLRethoConfiguration$new()$content[["ncores"]],
+          cache = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
+          verbose = FSLRethoConfiguration$new()$content[["debug"]],
+          updateProgress = updateProgress
+        )  %>%
+          fortify(., meta = TRUE)
+
+        # dt_raw <- fortify(load_ethoscope(metadata(), result_dir = input$result_dir, updateProgress = updateProgress), meta = TRUE)
         return(dt_raw)
 
       })
 
       # make it eager
       observeEvent(input$submit, {
-        # print(dt_raw())
         dt_raw()
-
         last_monitor("ethoscope")
         dataset_name(input$metadata$name)
       })

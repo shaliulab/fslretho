@@ -25,14 +25,14 @@ viewMetadataUI <- function(id) {
   shiny::dataTableOutput(ns("metadata"))
 }
 
-viewMetadataServer <- function(id, scored_data) {
+viewMetadataServer <- function(id, grouped_data) {
 
   shiny::moduleServer(
     id,
     function(input, output, session) {
 
       metadata <- reactive({
-        scored_data$data()[, meta = T]
+        grouped_data()$data()[, meta = T]
       })
 
       output$metadata <- shiny::renderDataTable({

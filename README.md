@@ -26,8 +26,32 @@ fslretho::main()
 
 ## TODO
 
-* Support DAM with damr
-* Provide data filtering functionality
-* Provide custom code functionality
-* Support more specialized analyses
-* Write tests
+
+Priority
+=========
+- [ ] Metadata -> must have region_id, machine_name, date, reference_hour
+- [x] ZT lines 0 12
+- [ ] deploy
+- [ ] documentation, examples and videos
+
+Later
+======
+Bouts
+interactions
+Support more specialized analyses
+Write tests
+Provide custom code functionality get it to work
+
+
+
+DAM
+====
+Integrate DAM into the data backup system
+
+Data Storage
+================
+Transfer data to L
+
+
+
+

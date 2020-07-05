@@ -5,7 +5,21 @@ loadDamServer <- function(id, last_monitor, dataset_name){
     function(input, output, session) {
 
       metadata <- reactive({
-        load_metadata(input$metadata$datapath, "dam")
+
+        withCallingHandlers(
+          expr = tryCatch({
+            load_metadata(input$metadata$datapath, "dam")
+          }, error = function(e) {
+            show_condition_message(e, "error", session)
+            list(plot = NULL, data = NULL, layout = NULL)
+            shiny::validate(shiny::need(expr = F, label = "metadata is not valid"))
+          }
+          ),
+          warning = function(w) {
+            show_condition_message(w, "warning", session)
+            list(plot = NULL, data = NULL, layout = NULL)
+          }
+        )
       })
 
       metadata_linked <- reactive({

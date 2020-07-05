@@ -10,12 +10,20 @@ shinydashboard_ui <- function() {
     shinydashboardPlus::dashboardHeaderPlus(
       title = "FSLRetho2",
       left_menu = tagList(
+        actionButton("browser", label = "Browser"),
         shinydashboardPlus::dropdownBlock(
           id = "scoringInput",
           title = "Scoring parameters",
           # icon =
           scoreDataUI("scoreData")
         ),
+        shinydashboardPlus::dropdownBlock(
+          id = "binningInput",
+          title = "Binning parameters",
+          # icon =
+          bin_data_UI()
+        ),
+
         shinydashboardPlus::dropdownBlock(
           id = "definedGroups",
           title = "Animal groups",
@@ -36,7 +44,8 @@ shinydashboard_ui <- function() {
         shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = shiny::icon('info')),
         shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
         shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
-        shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('moon'))
+        shinydashboard::menuItem("Text editor", tabName = 'editor', icon = shiny::icon('code')),
+        shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table'))
       )
     ),
     # TODO Place somewhere the UI for scoreData
@@ -54,7 +63,7 @@ shinydashboard_ui <- function() {
             tabPanel(
               title = "esquisse",
               esquisse::esquisserUI(
-                id = "esquisse",
+                id = "analyseSleep",
                 header = FALSE, # dont display gadget title
                 choose_data = FALSE # dont display button to change data
               )
@@ -63,6 +72,11 @@ shinydashboard_ui <- function() {
               title = "output",
               shiny::verbatimTextOutput("module_out")
             )
+          )
+        ),
+        shinydashboard::tabItem(tabName = "editor",
+          shiny::mainPanel(
+            editorUI("aceEditor"),
           )
         ),
         # shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
@@ -78,7 +92,6 @@ navbar_ui <- function() {
 
   ui = shiny::navbarPage(
     "FSLRetho2", theme = shinythemes::shinytheme("flatly"),
-
     shiny::tabPanel(
       "Welcome",
       welcomePageUI()
@@ -107,5 +120,6 @@ navbar_ui <- function() {
         )
       )
     )
+
   )
 }

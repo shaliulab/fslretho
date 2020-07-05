@@ -4,10 +4,12 @@
 \alias{fortify}
 \title{Make a writable behavr object}
 \usage{
-fortify(data)
+fortify(data, meta = FALSE)
 }
 \arguments{
-\item{data}{A rejoined behavr or any data.table object
+\item{data}{A rejoined behavr or any data.table object}
+
+\item{meta}{If TRUE, repeat also for the metadata
 TODO Possibly this should be part of a fwrite_behavr function in behavr}
 }
 \description{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{abort_bad_argument}
 \alias{abort_bad_argument}
-\title{Consistent wayt of returning an error}
+\title{Consistent and informative error}
 \usage{
 abort_bad_argument(arg, must, not = NULL)
 }
@@ -16,5 +16,5 @@ abort_bad_argument(arg, must, not = NULL)
 Taken from https://adv-r.hadley.nz/conditions.html#signalling-conditions}
 }
 \description{
-Consistent wayt of returning an error
+Consistent and informative error
 }
