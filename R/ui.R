@@ -1,16 +1,26 @@
+
+
+
 #' A UI for fslretho
 #'
 #' @importFrom shinydashboard dashboardPage dashboardHeader dashboardSidebar dashboardBody
 #' @importFrom shinydashboard sidebarMenu menuItem tabItems tabItem
 #' @importFrom shiny icon
 #' @importFrom esquisse esquisserUI
-#'
 shinydashboard_ui <- function() {
+
+
+  if (FSLRethoConfiguration$new()$content$debug) {
+    browserButton <- actionButton("browser", label = "Browser")
+  } else {
+    browserButton <- tags$div(style = "hidden")
+  }
+
   shinydashboardPlus::dashboardPagePlus(skin = "black",
     shinydashboardPlus::dashboardHeaderPlus(
       title = "FSLRetho2",
       left_menu = tagList(
-        actionButton("browser", label = "Browser"),
+        browserButton,
         shinydashboardPlus::dropdownBlock(
           id = "scoringInput",
           title = "Scoring parameters",

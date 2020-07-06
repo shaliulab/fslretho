@@ -84,6 +84,8 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
           progress$inc(amount = 1 / n, detail = detail)
         }
 
+        # browser()
+
         dt_raw <- fslscopr::load_ethoscope(
           metadata = metadata_linked(),
           reference_hour = NULL,

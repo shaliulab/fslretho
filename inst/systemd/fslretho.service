@@ -7,7 +7,7 @@ After=NetworkManager.service
 [Service]
 Type=simple
 WorkingDirectory=/1TB/Cloud/Lab/Gitlab/fslretho
-ExecStart=/usr/bin/Rscript ./inst/app/app.R
+ExecStart=/usr/bin/R -e "fslretho::main()"
 RestartSec=5
 Restart=always
 
