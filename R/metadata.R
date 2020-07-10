@@ -1,3 +1,17 @@
+#' Coerce a column to character
+#'
+#' Make some columns that could be considered numeric character
+#' because that way thei handling is easier in esquisse
+as_character_column <- function(metadata, column_name) {
+
+  if (column_name %in% colnames(metadata)) {
+    metadata[[column_name]] <- as.character(metadata[[column_name]])
+  }
+
+  return(metadata)
+}
+
+
 #' Read and validate provided metadata
 #'
 #' @importFrom data.table fread
@@ -11,9 +25,24 @@ load_metadata <- function(metadata_path, monitor) {
   # If it's fine, it returns TRUE,
   # otherwise, an error is raised and is presented in the UI
 
+  # change the column zt0 to reference_hour if available
+  if ((! "reference_hour" %in% colnames(metadata)) & ("ZT0" %in% colnames(metadata))) {
+    colnames(metadata) <- colnames(metadata) %>% gsub(
+      pattern = "ZT0",
+      x = colnames(metadata),
+      replacement =  "reference_hour"
+    )
+  }
+
   if (monitor == "ethoscope") fslscopr::validate_metadata(metadata)
   else if (monitor == "dam") fsldamr::validate_metadata(metadata)
   else stop(sprintf("Please enter a valid monitor: currently supported are ethoscope and dam"))
+
+  char_columns <- c("start_datetime", "stop_datetime", "date")
+  for (column_name in char_columns) {
+    metadata <- as_character_column(metadata, column_name)
+  }
+
   return(metadata)
 
 }

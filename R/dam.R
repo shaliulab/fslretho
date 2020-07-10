@@ -40,12 +40,32 @@ loadDamServer <- function(id, last_monitor, dataset_name){
         }
         message("Loading dam data")
 
-        fortify(fsldamr::load_dam(metadata_linked()), meta = TRUE)
+        # TODO Can this all be packaged into a function?
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+
+        progress$set(message = "Loading ROI number ", value = 0)
+        n <- length(unique(metadata()$file))
+
+        updateProgress <- function(detail = NULL) {
+          progress$inc(amount = 1 / n, detail = detail)
+        }
+
+        fsldamr::load_dam(metadata_linked(), FUN = NULL, updateProgress = updateProgress)
+      })
+
+      dt_raw_validated <- reactive({
+        if (nrow(dt_raw()) == 0) {
+          showNotification("Failure: your metadata could be linked but the resulting table is empty", type = "error")
+          shiny::validate(shiny::need(FALSE, label = ""))
+        }
+
+        fortify(dt_raw(), meta = TRUE)
       })
 
       # make it eager
       observeEvent(input$submit, {
-        dt_raw()
+        dt_raw_validated()
         last_monitor("dam")
         dataset_name(input$metadata$name)
       })

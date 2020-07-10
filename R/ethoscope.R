@@ -91,7 +91,7 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
           reference_hour = NULL,
           ncores = FSLRethoConfiguration$new()$content[["ncores"]],
           cache = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
-          verbose = FSLRethoConfiguration$new()$content[["debug"]],
+          verbose = TRUE,
           updateProgress = updateProgress
         )  %>%
           fortify(., meta = TRUE)

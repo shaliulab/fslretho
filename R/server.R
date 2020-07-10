@@ -9,6 +9,7 @@ names(functions) <- choices
 #' @import shiny
 #' @importFrom shinylogs track_usage store_json
 #' @importFrom esquisse esquisserServer
+#' @importFrom fslsleepr bout_analysis
 #' @noRd
 server <- function(input, output, session) {
 
@@ -74,7 +75,7 @@ server <- function(input, output, session) {
 
   viewMetadataServer("viewMetadata", grouped_data)
 
-  data_r <- reactiveValues(
+  sleep_rv <- reactiveValues(
     data = reactive(fslbehavr::toy_activity_data()),
     metadata = reactive(NULL),
     name = reactive("data"),
@@ -86,40 +87,75 @@ server <- function(input, output, session) {
       )
   )
 
+  bout_rv <- reactiveValues(
+    data = reactive(fslbehavr::toy_activity_data()),
+    metadata = reactive(NULL),
+    name = reactive("data"),
+    extra = reactiveValues(
+      scale_X_FUN = reactive(NULL),
+      discrete_y = reactive(FALSE),
+      summary_FUN = reactive(mean),
+      summary_time_window = reactive(30 * 60)
+    )
+  )
+
+
+  bout_data <- reactive({
+    # browser()
+    fslsleepr::bout_analysis(asleep, grouped_data()$data())
+  })
+
+
   new_data <- reactiveVal(NULL)
 
 
   observeEvent(refresh_plot(), {
     sprintf("Updating dataset")
-    # browser()
     if (dataset_name() != "NONE") {
       new_data(grouped_data()$data())
-      data_r$metadata <<- new_data()[, meta = T]
-      data_r$name <<- reactive(dataset_name())
-      data_r$data <<- reactive(data.table::copy(new_data()))
+      sleep_rv$metadata <<- new_data()[, meta = T]
+      bout_rv$metadata <<- new_data()[, meta = T]
+      sleep_rv$name <<- reactive(dataset_name())
+      bout_rv$name <<- reactive(dataset_name())
+      sleep_rv$data <<- reactive(data.table::copy(new_data()))
+      bout_rv$data <<- reactive(data.table::copy(bout_data()))
       summary_FUN <- ifelse(is.null(input$summary_FUN), "mean", input$summary_FUN)
-      data_r$extra$summary_FUN <<- reactive(functions[[summary_FUN]])
+      sleep_rv$extra$summary_FUN <<- reactive(functions[[summary_FUN]])
+      bout_rv$extra$summary_FUN <<- reactive(functions[[summary_FUN]])
       summary_time_window <- ifelse(is.null(input$summary_time_window), 30, input$summary_time_window)
-      data_r$extra$summary_time_window <<- reactive(summary_time_window * 60)
+      sleep_rv$extra$summary_time_window <<- reactive(summary_time_window * 60)
+      bout_rv$extra$summary_time_window <<- reactive(summary_time_window * 60)
     }
   }, ignoreInit = FALSE)
 
   # need(isolate(refresh_plot() != 0), label = "")
 
-  result <- callModule(
+  analyse_sleep <- callModule(
     module = esquisse::esquisserServer,
     id = "analyseSleep",
-    data = data_r,
+    data = sleep_rv,
     refresh_plot = refresh_plot,
     debug = FSLRethoConfiguration$new()$content[["debug"]],
     raw_data = new_data
   )
 
+  analyse_bout <- callModule(
+    module = esquisse::esquisserServer,
+    id = "analyseBout",
+    data = bout_rv,
+    refresh_plot = refresh_plot,
+    debug = FSLRethoConfiguration$new()$content[["debug"]],
+    raw_data = new_data
+  )
 
-
-  output$module_out <- renderPrint({
+  output$analyseSleep_out <- renderPrint({
     c(apply_filter())
-    str(reactiveValuesToList(result))
+    str(reactiveValuesToList(analyse_sleep))
+  })
+
+  output$analyseBout_out <- renderPrint({
+    c(apply_filter())
+    str(reactiveValuesToList(analyse_bout))
   })
 
   # analyseSleepServer("analyseSleep", grouped_data, dataset_name)

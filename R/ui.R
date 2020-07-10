@@ -54,7 +54,7 @@ shinydashboard_ui <- function() {
         shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = shiny::icon('info')),
         shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
         shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
-        shinydashboard::menuItem("Text editor", tabName = 'editor', icon = shiny::icon('code')),
+        shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = shiny::icon('moon')),
         shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table'))
       )
     ),
@@ -80,15 +80,31 @@ shinydashboard_ui <- function() {
             ),
             tabPanel(
               title = "output",
-              shiny::verbatimTextOutput("module_out")
+              shiny::verbatimTextOutput("analyseSleep_out")
             )
           )
         ),
-        shinydashboard::tabItem(tabName = "editor",
-          shiny::mainPanel(
-            editorUI("aceEditor"),
+        shinydashboard::tabItem(tabName = "bout",
+          tabsetPanel(
+            tabPanel(
+              title = "Bout analysis",
+              esquisse::esquisserUI(
+                id = "analyseBout",
+                header = FALSE, # dont display gadget title
+                choose_data = FALSE # dont display button to change data
+              )
+            ),
+            tabPanel(
+              title = "output",
+              shiny::verbatimTextOutput("analyseBout_out")
+            )
           )
         ),
+        # shinydashboard::tabItem(tabName = "editor",
+        #   shiny::mainPanel(
+        #     editorUI("aceEditor"),
+        #   )
+        # ),
         # shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
         shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
       )

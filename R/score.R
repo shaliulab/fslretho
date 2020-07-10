@@ -65,7 +65,6 @@ scoreDataServer <- function(id, dt_raw, dataset_name, apply_filter, last_monitor
 
         passed_functions <- c()
         for (func in user_functions()) {
-          # #browser()
           passed_function <- FUNCTION_MAP[[func]]
           if (func %in% monitor_sensitive) passed_function <- passed_function[[last_monitor()]]
           passed_function <- attr(passed_function, "updater")(user_input())
