@@ -1,3 +1,8 @@
+FUN_choices <- c("mean", "median", "max", "min", "P_doze", "P_wake")
+
+functions <- c(mean, median, max, min, fslsleepr::p_doze, fslsleepr::p_wake)
+names(functions) <- FUN_choices
+
 binDataUI <- function(id) {
 
   ns <- NS(id)

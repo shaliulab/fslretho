@@ -1,11 +1,3 @@
-choices <- c("mean", "median", "max", "min",
-             "P_doze", "P_wake")
-
-functions <- c(mean, median, max, min, fslsleepr::p_doze, fslsleepr::p_wake)
-names(functions) <- choices
-
-
-
 #' Server function of FSLRetho
 #'
 #' @import shiny
