@@ -4,8 +4,9 @@ binDataUI <- function(id) {
   shiny::tagList(
     shiny::sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
-    shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = choices),
-    uiOutput(ns("y_selectize"))
+    shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices),
+    shiny::selectizeInput(inputId = ns("y"), label = "Variables", choices = "asleep",
+                          multiple = TRUE, selected = "asleep")
   )
 }
 
@@ -21,10 +22,8 @@ binDataServer <- function(id, grouped_data) {
         req(grouped_data$data)
         req(input$summary_time_window)
         req(input$summary_FUN)
-        req(input$y)
 
         if (shiny::isTruthy(input$y)) {
-          browser()
           data <- purrr::map(
             input$y,
             ~fslbehavr::bin_apply_all(
@@ -50,7 +49,7 @@ binDataServer <- function(id, grouped_data) {
         rv$name <- grouped_data$name
       })
 
-      choices <- reactive({
+      var_choices <- reactive({
 
         if (! isTruthy(grouped_data$data)) {
           "asleep"
@@ -59,19 +58,23 @@ binDataServer <- function(id, grouped_data) {
           all_columns <- colnames(grouped_data$data)
           binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
 
-          binnable_columns[
+          res <- binnable_columns[
             purrr::map_lgl(
               binnable_columns,
               ~. %in% all_columns
             )
           ]
+
+          res
+
         }
       })
 
-      output$y_selectize <- renderUI({
-        shiny::selectizeInput(inputId = session$ns("y"), label = "Variables", choices = choices(),
-                              multiple = TRUE, selected = "asleep")
+      observe({
+        shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = input$y)
       })
+
+
       return(rv)
     }
   )
