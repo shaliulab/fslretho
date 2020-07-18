@@ -16,7 +16,7 @@ shinydashboard_ui <- function() {
     browserButton <- tags$div(style = "hidden")
   }
 
-  shinydashboardPlus::dashboardPagePlus(skin = "black",
+  ui <- shinydashboardPlus::dashboardPagePlus(skin = "black",
     shinydashboardPlus::dashboardHeaderPlus(
       title = "FSLRetho2",
       left_menu = tagList(
@@ -31,7 +31,7 @@ shinydashboard_ui <- function() {
           id = "binningInput",
           title = "Binning parameters",
           # icon =
-          bin_data_UI()
+          binDataUI("binData")
         ),
 
         shinydashboardPlus::dropdownBlock(
@@ -79,7 +79,7 @@ shinydashboard_ui <- function() {
               )
             ),
             tabPanel(
-              title = "output",
+              title = "sleep output",
               shiny::verbatimTextOutput("analyseSleep_out")
             )
           )
@@ -95,21 +95,18 @@ shinydashboard_ui <- function() {
               )
             ),
             tabPanel(
-              title = "output",
+              title = "bout output",
               shiny::verbatimTextOutput("analyseBout_out")
             )
           )
         ),
-        # shinydashboard::tabItem(tabName = "editor",
-        #   shiny::mainPanel(
-        #     editorUI("aceEditor"),
-        #   )
-        # ),
-        # shinydashboard::tabItem(tabName = 'sleep', analyseSleepUI("analyseSleep")),
+
         shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
       )
     )
   )
+  ui
+  # browser()
 }
 
 #' @importFrom shinythemes shinytheme

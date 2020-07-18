@@ -1,8 +1,14 @@
-loadDamServer <- function(id, last_monitor, dataset_name){
+loadDamServer <- function(id){
 
   moduleServer(
     id,
     function(input, output, session) {
+
+      rv <- reactiveValues(
+        data = NULL,
+        name = NULL,
+        time = NULL
+      )
 
       metadata <- reactive({
 
@@ -51,7 +57,11 @@ loadDamServer <- function(id, last_monitor, dataset_name){
           progress$inc(amount = 1 / n, detail = detail)
         }
 
-        fsldamr::load_dam(metadata_linked(), FUN = NULL, updateProgress = updateProgress)
+        dt_raw <- fsldamr::load_dam(metadata_linked(), FUN = NULL, updateProgress = updateProgress) %>%
+          fortify(., meta = TRUE)
+
+        attr(dt_raw, "monitor") <- "dam"
+        dt_raw
       })
 
       dt_raw_validated <- reactive({
@@ -60,16 +70,17 @@ loadDamServer <- function(id, last_monitor, dataset_name){
           shiny::validate(shiny::need(FALSE, label = ""))
         }
 
-        fortify(dt_raw(), meta = TRUE)
+        dt_raw()
       })
 
-      # make it eager
       observeEvent(input$submit, {
-        dt_raw_validated()
-        last_monitor("dam")
-        dataset_name(input$metadata$name)
+        # TODO Make sure here that dt_raw_validated() attr monitor is still dam
+        rv$data <- dt_raw_validated()
+        rv$name <- input$metadata$name
+        rv$time <- as.numeric(Sys.time())
       })
-      return(dt_raw)
+
+      return(rv)
     }
   )
 }

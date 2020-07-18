@@ -4,7 +4,7 @@
 \alias{defineSingleGroupServer}
 \title{Process user entered groups of animals}
 \usage{
-defineSingleGroupServer(id, scored_data, apply_filter)
+defineSingleGroupServer(id, rv)
 }
 \description{
 Return a character defining an animal group

@@ -14,7 +14,7 @@ defineGroupUI <- function(id) {
 }
 
 
-defineGroupServer <- function(id, scored_data, apply_filter) {
+defineGroupServer <- function(id, scored_data) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -22,43 +22,50 @@ defineGroupServer <- function(id, scored_data, apply_filter) {
       ns <- session$ns
       selector <- paste0("#", ns('placeholder'))
       message(sprintf("selector %s", selector))
+
       groups <- reactiveValues()
+      rv <- reactiveValues(data = NULL, name = NULL)
 
-
-      new_id <- reactive({
-        new_id <- sprintf("defineSingleGroup%d", input$insertBtn)
-        message(sprintf("new_id: %s", new_id))
-        new_id
+      group_id <- reactive({
+        id <- sprintf("defineSingleGroup%d", input$insertBtn)
+        id
       })
 
-
-
       observeEvent(input$insertBtn, {
-
-        my_id <- new_id()
-        message("Inserting UI with id ", my_id)
+        # message("Inserting UI with id ", my_id)
         shiny::insertUI(
           selector = selector,
           ## wrap element in a div with id for ease of removala
           ui = defineSingleGroupUI(ns(my_id)), immediate = TRUE
         )
 
-        message("Pushing new reactive to groups")
-        #browser
-        groups[[isolate(my_id)]] <<- defineSingleGroupServer(new_id(), scored_data, apply_filter)$a_filter
-        # TODO Line does not work and line above does. Why?
-        # groups[[new_id()]] <<- reactive(a_filter())
+        groups[[group_id()]] <- defineSingleGroupServer(group_id(), scored_data)
 
       }, ignoreInit = TRUE, label = "observe insertBtn")
 
+      observeEvent(input$removeBtn, {
+        shiny::removeUI(
+          selector = selector
+        )
+        groups[[input$removeBtn]] <- NULL
+      })
 
-      output$out <- renderPrint({
+
+      # a reactive that reacts to every apply button
+      apply_buttons <- reactive({
         lapply(names(groups), function(x) {
-          y <- groups[[x]]()
-          y
+          input[[paste0(x, "-apply")]]
         })
       })
-      return(groups)
+
+      observeEvent(apply_buttons(), {
+        req(scored_data$data)
+        rv$data <- group_data(data.table::copy(scored_data$data), groups)
+        rv$name <- scored_data$name
+      })
+
+      return(rv)
+
     }
   )
 }
@@ -95,7 +102,7 @@ make_filter <- function(data, group_name, variable, operator, value, reverse, me
 #' implemented via row filtering in data.tables
 #' @import shiny
 #' @importFrom fslbehavr rejoin
-defineSingleGroupServer <- function(id, scored_data, apply_filter) {
+defineSingleGroupServer <- function(id, rv) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -104,15 +111,7 @@ defineSingleGroupServer <- function(id, scored_data, apply_filter) {
 
       ns <- session$ns
 
-      output$scored_data_summary <- shiny::renderPrint({
-        message("Computing scored_data_summary")
-        # print(head(scored_data$data()))
-        cat(
-          summary(
-            scored_data$data()
-          )
-        )
-      })
+      rval <- reactiveVal(NULL)
 
       output$ui_placeholder <- renderUI({
         isolate(
@@ -128,39 +127,22 @@ defineSingleGroupServer <- function(id, scored_data, apply_filter) {
         )
       })
 
+      observeEvent(c(input$apply, rv$data[, meta = input$metadata]), {
 
-      DT <- reactive({
-        scored_data$data()[, meta = input$metadata]
-      })
-
-      a_filter <- eventReactive(c(input$apply, DT()), {
-
-        apply_filter(apply_filter() + 1)
-
-        make_filter(
-          DT(), input$group_name, input$variable,
+        new_filter <- make_filter(
+          rv$data[, meta = input$metadata], input$group_name, input$variable,
           input$operator, input$value, input$reverse, input$metadata
         )
-      }, ignoreInit = TRUE, ignoreNULL = TRUE)
-
-      my_filter <- reactiveValues(a_filter = reactive(c("NULL" = "")))
-      isolate({
-        my_filter$a_filter <- a_filter
+        rval(new_filter)
       })
 
-      output$a_filter <- renderPrint({
-        a_filter()
-      })
-
-      return(my_filter)
-    }
-  )
+      return(rval)
+    })
 }
 
 edit_data <- function(data, filter, value) {
 
   group <- NULL
-  #browser
 
   if (filter != "" & !is.null(value)) {
     metadata <- data[, meta = T]
@@ -187,18 +169,17 @@ edit_data <- function(data, filter, value) {
 group_data <- function(data, groups) {
 
   group <- NULL
-  #browser
-  lapply(shiny::reactiveValuesToList(groups), function(x) x())
-
+  browser()
   if (!"group" %in% colnames(data)) data[, group := "", meta = T]
 
   if (length(names(groups)) != 0) {
+    req(length(names) != 0)
     for (i in 1:length(names(groups))) {
-      reactive_val_name <- names(groups)[i]
-      group_name <- names(groups[[reactive_val_name]]())
-      req(group_name)
-      a_filter <- groups[[reactive_val_name]]()
-      grouped_data <- edit_data(data, a_filter, group_name)
+        reactive_val_name <- names(groups)[i]
+        group_name <- names(groups[[reactive_val_name]])
+        req(group_name)
+        a_filter <- groups[[reactive_val_name]]
+        grouped_data <- edit_data(data, a_filter, group_name)
     }
   }
   else {
@@ -206,16 +187,5 @@ group_data <- function(data, groups) {
   }
 
   return(grouped_data)
-}
-
-#' @importFrom data.table copy
-set_groups <- function(scored_data, groups, btn) {
-
-  grouped_data <- eventReactive(btn(), {
-    print("reactive")
-    group_data(data.table::copy(scored_data$data()), groups)
-  }, label = "Set group to name in UI")
-
-  return(list(data = grouped_data))
 }
 

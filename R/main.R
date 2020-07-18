@@ -3,13 +3,17 @@
 #' @importFrom reactlog reactlog_enable
 #' @import shiny
 #' @export
-main <- function(display_mode=FALSE) {
+main <- function(display_mode=FALSE, port=NULL) {
   # launch the app in a separate browser window
   options(shiny.launch.browser = FALSE)
 
 
   # always on the same port: 3838
-  options(shiny.port = FSLRethoConfiguration$new()$content[["port"]])
+  if (is.null(port)) {
+      options(shiny.port = FSLRethoConfiguration$new()$content[["port"]])
+  } else {
+      options(shiny.port = port)
+  }
 
   # use the 0.0.0.0 host so the app can be accessed remotely
   options(shiny.host = "0.0.0.0")

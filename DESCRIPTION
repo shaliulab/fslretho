@@ -22,15 +22,20 @@ Imports:
     fslscopr,
     fslsleepr,
     fslggetho,
+    dplyr,
     purrr,
     rlang,
+    lubridate,
+    glue,
     shiny,
     shinydashboard,
     shinydashboardPlus,
     shinythemes,
     R6,
     rjson,
-    glue
+    shinylogs,
+    shinyAce,
+    reactlog
 Suggests: 
     knitr
 RoxygenNote: 7.1.1.9000

@@ -4,7 +4,12 @@
 \alias{scoreDataServer}
 \title{Shiny module to automatically score a raw behavr table}
 \usage{
-scoreDataServer(id, dt_raw, dataset_name, apply_filter, last_monitor)
+scoreDataServer(id, raw_data)
+}
+\arguments{
+\item{id}{Module id - character}
+
+\item{raw_data}{A shiny reactiveValues with slots data and name}
 }
 \description{
 Provide a multi-animal reactive behavr and return the scored version

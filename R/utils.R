@@ -42,7 +42,10 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 #' Make a writable behavr object
 #' @param data A rejoined behavr or any data.table object
 #' @param meta If TRUE, repeat also for the metadata
+#' @return A behavr table with no columns of type list
 #' TODO Possibly this should be part of a fwrite_behavr function in behavr
+#' @importFrom dplyr pull
+#' @importFrom purrr map
 fortify <- function(data, meta = FALSE) {
 
   if(meta) {
@@ -111,4 +114,61 @@ show_condition_message <- function(e, type, session) {
       session = session
     )
   }
+}
+
+#' Full copy a reactiveValues object
+#' @param x A reactiveValues object
+copy_rv <- function(x) {
+  y <- reactiveValues()
+  for (i in isolate(names(x))) {
+    y[[i]] <- isolate(x[[i]])
+  }
+  y
+}
+
+update_rv <- function(rv1, rv2) {
+  for (i in isolate(names(rv1))) {
+    rv1[[i]] <- isolate(rv2[[i]])
+  }
+  rv2
+}
+
+
+#' Declare an observer for every data slot in the passed reactive values
+#' and map the data and name slots to the passed dest rv upon changes in the data slot
+#' of each passed rv
+#' @param rv The reactiveValues object to be updated with the contents of the reactiveValues in ...
+#' @param ... reactiveValues objects with slots data and name
+watch_input <- function(rv, ...) {
+
+  dots <- rlang::list2(...)
+
+  for (module in dots) {
+    # stopifnot(!is.null(module$data))
+    # stopifnot(!is.null(module$name))
+    observeEvent(module$time, {
+      req(module$data)
+      req(module$name)
+
+      rv$data <- module$data
+      rv$name <- module$name
+    })
+  }
+
+  return(rv)
+}
+
+#' @importFrom tibble as_tibble
+#' @importFrom fslbehavr rejoin
+rejoin_rv <- function(rv) {
+
+  new_rv <- reactiveValues(data = NULL, name = NULL)
+
+  observe({
+    req(rv$data)
+    new_rv$data <- tibble::as_tibble(fslbehavr::rejoin(rv$data))
+    new_rv$name <- rv$name
+  })
+
+  return(new_rv)
 }

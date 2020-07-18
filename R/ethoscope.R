@@ -1,5 +1,7 @@
 #' Wrapper around the most common workflow to laod ethoscope data into R using Rethomics
 #'
+#' @importFrom magrittr `%>%`
+#' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
 #' @param metadata A valid data.table object describing an experimental design
 #' @param result_dir Absolute path of an ethoscope sqlite3 database
 #' @param reference_hour hour of the day when the light turns on in the experiment
@@ -7,7 +9,6 @@
 #' If NULL, the reference_hour is parsed from the column with the same name in the metadata
 #' If such a column is not available, then assume ZT is the same as the experiment start
 #' @param updateProgress Optional, a function that updates an object of class shiny::Progress
-#'
 #' @return A raw behavr table i.e. without annotation
 load_ethoscope <- function(metadata, result_dir, reference_hour = NULL, updateProgress = NULL) {
 
@@ -30,15 +31,23 @@ load_ethoscope <- function(metadata, result_dir, reference_hour = NULL, updatePr
 
 #' Wrap the ethoscope loading functionality for a ShinyUI
 #' @importFrom magrittr `%>%`
+#' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
 #' @noRd
-loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
+loadEthoscopeServer <- function(id) {
   moduleServer(
     id,
     function(input, output, session) {
 
+
+      rv <- reactiveValues(
+        data = NULL,
+        name = NULL,
+        time = NULL
+      )
+
       metadata <- reactive({
 
-        withCallingHandlers(
+      withCallingHandlers(
           expr = tryCatch({
             load_metadata(input$metadata$datapath, monitor = "ethoscope")
           }, error = function(e) {
@@ -96,19 +105,18 @@ loadEthoscopeServer <- function(id, last_monitor, dataset_name) {
         )  %>%
           fortify(., meta = TRUE)
 
-        # dt_raw <- fortify(load_ethoscope(metadata(), result_dir = input$result_dir, updateProgress = updateProgress), meta = TRUE)
-        return(dt_raw)
-
+        attr(dt_raw, "monitor") <- "ethoscope"
+        dt_raw
       })
 
-      # make it eager
       observeEvent(input$submit, {
-        dt_raw()
-        last_monitor("ethoscope")
-        dataset_name(input$metadata$name)
+        rv$data <- dt_raw()
+        rv$name <- input$metadata$name
+        rv$time <- as.numeric(Sys.time())
+
       })
 
-      return(dt_raw)
+      return(rv)
     }
   )
 }

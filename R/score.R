@@ -11,7 +11,13 @@ monitor_sensitive <- names(which(unlist(lapply(FUNCTION_MAP, length)) == 2))
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
   ns <- shiny::NS(id)
-  shiny::uiOutput(ns("scoringInput"))
+  tagList(
+    shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.004, step = 0.0001),
+    shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
+    shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
+    shiny::selectizeInput(ns("FUN"), label = "", choices = c("sleep_annotation"))
+  )
+  # shiny::uiOutput(ns("scoringInput"))
 }
 
 
@@ -19,53 +25,53 @@ scoreDataUI <- function(id) {
 #'
 #' Provide a multi-animal reactive behavr and return the scored version
 #'
+#' @param id Module id - character
+#' @param raw_data A shiny reactiveValues with slots data and name
 #' @importFrom shiny moduleServer reactive observe eventReactive Progress
 #' @importFrom fslbehavr bin_apply_all
 #' @importFrom fslscopr annotate
 #' @importFrom rlang fn_fmls
-scoreDataServer <- function(id, dt_raw, dataset_name, apply_filter, last_monitor) {
-  message("Executing scoreDataServer")
+scoreDataServer <- function(id, raw_data) {
 
   moduleServer(
 
     id,
     function(input, output, session) {
 
-      data <- reactiveValues(data = reactive(dt_raw()))
+      rv <- reactiveValues(data = NULL, name = NULL)
 
-      message("Populating sidebar!")
+      # output$scoringInput <- renderUI({
+      #   tagList(
+      #     shiny::sliderInput(session$ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.004, step = 0.0001),
+      #     shiny::sliderInput(session$ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
+      #     shiny::sliderInput(session$ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
+      #     shiny::selectizeInput(session$ns("FUN"), label = "", choices = c("sleep_annotation"))
+      #   )
+      # })
 
-      output$scoringInput <- renderUI({
-        tagList(
-          shiny::sliderInput(session$ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.004, step = 0.0001),
-          shiny::sliderInput(session$ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
-          shiny::sliderInput(session$ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
-          shiny::selectizeInput(session$ns("FUN"), label = "", choices = c("sleep_annotation"))
-        )
-      })
-
-
-      # the reason why we have a reactive list and not a list of reactives
-      # is every expression that depends on of these parameters
-      # also depends on the other two, i.e. they behave like a single unit
+      # TODO Can this be a reactiveValues?
       user_input <- reactive({
         list(
           "velocity_correction_coef" = ifelse(is.null(input$velocity_correction_coef), 0.004, input$velocity_correction_coef),
           "min_time_immobile" = ifelse(is.null(input$min_time_immobile), 300, input$min_time_immobile),
           "time_window_length" = ifelse(is.null(input$time_window_length), 10, input$time_window_length)
-          #, "motion_detector_FUN"
         )
       })
 
-      user_functions <- reactive({
-        ifelse(is.null(input$FUN), "sleep_annotation", input$FUN)
+      last_monitor <- reactive({
+        req(raw_data$data)
+        attr(raw_data$data, "monitor")
       })
 
-      FUN <- reactive({
+      # Convert the user passed character strings
+      # into the actual functions
+      scoring_function <- reactive({
+
+        req(input$FUN)
 
         passed_functions <- c()
-        for (func in user_functions()) {
-          passed_function <- FUNCTION_MAP[[func]]
+        for (func in input$FUN) {
+        passed_function <- FUNCTION_MAP[[func]]
           if (func %in% monitor_sensitive) passed_function <- passed_function[[last_monitor()]]
           passed_function <- attr(passed_function, "updater")(user_input())
           passed_functions <- c(passed_functions, passed_function)
@@ -73,42 +79,26 @@ scoreDataServer <- function(id, dt_raw, dataset_name, apply_filter, last_monitor
         passed_functions
       })
 
-      # TODO Can this all be packaged into a function?
       dt <- reactive({
 
-        input$velocity_correction_coef
-        input$min_time_immobile
-        input$time_window_length
-        FUN()
+        req(raw_data$data)
+        req(input$velocity_correction_coef)
+        req(input$min_time_immobile)
+        req(input$time_window_length)
+        req(scoring_function())
 
-        dataset_name()
         progress <- shiny::Progress$new()
         on.exit(progress$close())
 
         progress$set(message = "Scoring ", value = 0)
-        # n <- nrow(dt_raw[, key(dt_raw), by = key(dt_raw)])
         # TODO make sure the below statement returns alwas the same
-        n <- nrow(dt_raw()[, meta = T])
+        n <- nrow(raw_data$data[, meta = T])
 
         updateProgress <- function(detail = NULL) {
           progress$inc(amount = 1 / n, detail = detail)
         }
 
-        # TODO Find a way to either
-        # * pass velocity_correction_coef only when FUN needs it or
-        # * pass it always but have functions that don't complain about it being passed
-        velocity_correction_coef <- user_input()$velocity_correction_coef
-        if (last_monitor() == "dam") {
-          dt <- fslscopr::annotate_all(data = dt_raw(), FUN = FUN(), updateProgress = updateProgress)
-        } else {
-          dt <- fslscopr::annotate_all(
-            data = dt_raw(), FUN = FUN(), updateProgress = updateProgress,
-            velocity_correction_coef = velocity_correction_coef
-          )
-        }
-
-        #browser()
-        dt
+        fslscopr::annotate_all(data = raw_data$data, FUN = scoring_function(), updateProgress = updateProgress)
       })
 
       dt_validated <- reactive({
@@ -116,17 +106,12 @@ scoreDataServer <- function(id, dt_raw, dataset_name, apply_filter, last_monitor
         dt()
       })
 
-      # # make it eager
       observe({
-        apply_filter(isolate(apply_filter()) + 1)
-        input$velocity_correction_coef
-        input$min_time_immobile
-        input$time_window_length
-        # FUN()
-        data$data <<- reactive(dt_validated())
+        rv$data <- dt_validated()
+        rv$name <- raw_data$name
       })
 
-      return(data)
+      return(rv)
     }
   )
 }
