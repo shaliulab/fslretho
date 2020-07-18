@@ -71,16 +71,30 @@ shinydashboard_ui <- function() {
         shinydashboard::tabItem(tabName = "sleep",
           tabsetPanel(
             tabPanel(
-              title = "esquisse",
+              title = "Sleep analysis",
               esquisse::esquisserUI(
-                id = "analyseSleep",
+                id = "analyseSleep_01",
                 header = FALSE, # dont display gadget title
                 choose_data = FALSE # dont display button to change data
               )
             ),
             tabPanel(
               title = "sleep output",
-              shiny::verbatimTextOutput("analyseSleep_out")
+              shiny::verbatimTextOutput("analyseSleep_01_out")
+            )
+          ),
+          tabsetPanel(
+            tabPanel(
+              title = "Sleep analysis",
+              esquisse::esquisserUI(
+                id = "analyseSleep_02",
+                header = FALSE, # dont display gadget title
+                choose_data = FALSE # dont display button to change data
+              )
+            ),
+            tabPanel(
+              title = "sleep output",
+              shiny::verbatimTextOutput("analyseSleep_02_out")
             )
           )
         ),

@@ -36,9 +36,16 @@ server <- function(input, output, session) {
   binned_data <- binDataServer("binData", scored_data)
   bout_data <- analyseBoutServer("analyseBout", scored_data)
 
-  analyse_sleep <- callModule(
+  analyse_sleep_01 <- callModule(
     module = esquisse::esquisserServer,
-    id = "analyseSleep",
+    id = "analyseSleep_01",
+    data = rejoin_rv(binned_data),
+    dataModule = NULL
+  )
+
+  analyse_sleep_02 <- callModule(
+    module = esquisse::esquisserServer,
+    id = "analyseSleep_02",
     data = rejoin_rv(binned_data),
     dataModule = NULL
   )
@@ -50,10 +57,16 @@ server <- function(input, output, session) {
     dataModule = NULL
   )
 
-  output$analyseSleep_out <- renderPrint({
+  output$analyseSleep_01_out <- renderPrint({
     req(binned_data$data)
-    str(reactiveValuesToList(analyse_sleep))
+    str(reactiveValuesToList(analyse_sleep_01))
   })
+
+  output$analyseSleep_02_out <- renderPrint({
+    req(binned_data$data)
+    str(reactiveValuesToList(analyse_sleep_02))
+  })
+
 
   output$analyseBout_out <- renderPrint({
     req(bout_data$data)
