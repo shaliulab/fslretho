@@ -40,21 +40,24 @@ server <- function(input, output, session) {
     module = esquisse::esquisserServer,
     id = "analyseSleep_01",
     data = rejoin_rv(binned_data),
-    dataModule = NULL
+    dataModule = NULL,
+    input_modal = FALSE
   )
 
   analyse_sleep_02 <- callModule(
     module = esquisse::esquisserServer,
     id = "analyseSleep_02",
     data = rejoin_rv(binned_data),
-    dataModule = NULL
+    dataModule = NULL,
+    input_modal = FALSE
   )
 
   analyse_bout <- callModule(
     module = esquisse::esquisserServer,
     id = "analyseBout",
     data = rejoin_rv(bout_data),
-    dataModule = NULL
+    dataModule = NULL,
+    input_modal = FALSE
   )
 
   output$analyseSleep_01_out <- renderPrint({

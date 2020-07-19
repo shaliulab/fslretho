@@ -75,7 +75,8 @@ shinydashboard_ui <- function() {
               esquisse::esquisserUI(
                 id = "analyseSleep_01",
                 header = FALSE, # dont display gadget title
-                choose_data = FALSE # dont display button to change data
+                choose_data = FALSE, # dont display button to change data
+                disable_filters = FALSE
               )
             ),
             tabPanel(
@@ -89,7 +90,8 @@ shinydashboard_ui <- function() {
               esquisse::esquisserUI(
                 id = "analyseSleep_02",
                 header = FALSE, # dont display gadget title
-                choose_data = FALSE # dont display button to change data
+                choose_data = FALSE, # dont display button to change data
+                disable_filters = FALSE
               )
             ),
             tabPanel(
@@ -105,7 +107,8 @@ shinydashboard_ui <- function() {
               esquisse::esquisserUI(
                 id = "analyseBout",
                 header = FALSE, # dont display gadget title
-                choose_data = FALSE # dont display button to change data
+                choose_data = FALSE, # dont display button to change data
+                disable_filters = FALSE
               )
             ),
             tabPanel(
