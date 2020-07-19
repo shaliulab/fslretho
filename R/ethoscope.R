@@ -32,6 +32,7 @@ load_ethoscope <- function(metadata, result_dir, reference_hour = NULL, updatePr
 #' Wrap the ethoscope loading functionality for a ShinyUI
 #' @importFrom magrittr `%>%`
 #' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
+#' @import shiny
 #' @noRd
 loadEthoscopeServer <- function(id) {
   moduleServer(
@@ -72,7 +73,7 @@ loadEthoscopeServer <- function(id) {
       dt_raw <- reactive({
 
         if (nrow(metadata_linked()) == 0) {
-          showNotification("Failure: no matches were found in the local ethoscope database.
+          shiny::showNotification("Failure: no matches were found in the local ethoscope database.
                            This could be due to typos in the machine_name, date, etc; or
                            your dataset being missing in the database.
                            Check your metadata and/or the local database to find out which is the problem", type = "error")
@@ -86,18 +87,22 @@ loadEthoscopeServer <- function(id) {
         progress <- shiny::Progress$new()
         on.exit(progress$close())
 
-        progress$set(message = "Loading ROI number ", value = 0)
+        progress$set(message = "", value = 0)
         n <- nrow(metadata())
 
         updateProgress <- function(detail = NULL) {
-          progress$inc(amount = 1 / n, detail = detail)
+          if (FSLRethoConfiguration$new()$content[["ncores"]] == 1) {
+            progress$inc(amount = 1 / n, detail = detail)
+          } else {
+            shiny::showNotification(detail, type = "message")
+          }
         }
 
         # browser()
 
         dt_raw <- fslscopr::load_ethoscope(
           metadata = metadata_linked(),
-          reference_hour = NULL,
+          reference_hour = NA,
           ncores = FSLRethoConfiguration$new()$content[["ncores"]],
           cache = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
           verbose = TRUE,
