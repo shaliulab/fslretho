@@ -1,0 +1,729 @@
+{
+  "input": {
+    ".shinylogs_input": {
+      "inputs": [
+        {
+          "name": "analyseBout-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "F",
+            "M"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_duration",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            0,
+            92000
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            1.15,
+            2.8
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_asleep",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            0,
+            1
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_t",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            61200,
+            153000
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_id",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_id",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "F",
+            "M"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1,
+            10
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_id",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_t",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            61200,
+            151200
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "loadData-ethoscope-metadata",
+          "timestamp": "2020-08-02T19:03:47+00:00",
+          "value": [
+            {
+              "name": "laptop_test.csv",
+              "size": 385,
+              "type": "text/csv"
+            }
+          ],
+          "type": "shiny.fileupload",
+          "binding": "shiny.fileInputBinding"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_asleep",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            0,
+            1
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            "F",
+            "M"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1.15,
+            2.8
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1,
+            10
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1.15,
+            2.8
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "loadData-ethoscope-submit",
+          "timestamp": "2020-08-02T19:03:48+00:00",
+          "value": 1,
+          "type": "shiny.action",
+          "binding": "shiny.actionButtonInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-02T19:03:55+00:00",
+          "value": [
+            1,
+            10
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_t",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            61200,
+            153000
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-02T19:03:56+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        }
+      ]
+    },
+    ".shinylogs_lastInput": {
+      "name": "analyseSleep_01-geom",
+      "timestamp": "2020-08-02T19:04:01Z",
+      "value": "popethold",
+      "type": ""
+    },
+    "analyseBout-controls-adjust": 1,
+    "analyseBout-controls-bins": 30,
+    "analyseBout-controls-codedrop": 0,
+    "analyseBout-controls-disable_filters": false,
+    "analyseBout-controls-facet_ncol": 0,
+    "analyseBout-controls-facet_nrow": 0,
+    "analyseBout-controls-facet_scales": "fixed",
+    "analyseBout-controls-fill_color": "#0c4c8a",
+    "analyseBout-controls-filter-data-filter_datetime": [
+      "2020-03-23T19:21:49Z",
+      "2020-03-23T19:21:49Z"
+    ],
+    "analyseBout-controls-filter-data-filter_duration": [
+      0,
+      92000
+    ],
+    "analyseBout-controls-filter-data-filter_fly_count": [
+      1,
+      10
+    ],
+    "analyseBout-controls-filter-data-filter_genotype": [
+      "A",
+      "B"
+    ],
+    "analyseBout-controls-filter-data-filter_id": [
+      "2020-03-23_19-21-49_019aad|11",
+      "2020-03-23_19-21-49_019aad|12",
+      "2020-03-23_19-21-49_019aad|13",
+      "2020-03-23_19-21-49_019aad|14",
+      "2020-03-23_19-21-49_019aad|15",
+      "2020-03-23_19-21-49_019aad|16",
+      "2020-03-23_19-21-49_019aad|17",
+      "2020-03-23_19-21-49_019aad|18",
+      "2020-03-23_19-21-49_019aad|19",
+      "2020-03-23_19-21-49_019aad|20"
+    ],
+    "analyseBout-controls-filter-data-filter_reference_hour": [
+      1.15,
+      2.8
+    ],
+    "analyseBout-controls-filter-data-filter_region_id": [
+      11,
+      20
+    ],
+    "analyseBout-controls-filter-data-filter_sex": [
+      "F",
+      "M"
+    ],
+    "analyseBout-controls-filter-data-filter_t": [
+      61200,
+      151200
+    ],
+    "analyseBout-controls-filterdrop": 0,
+    "analyseBout-controls-flip": false,
+    "analyseBout-controls-holderCode": "",
+    "analyseBout-controls-labs_caption": "",
+    "analyseBout-controls-labs_color": "",
+    "analyseBout-controls-labs_fill": "",
+    "analyseBout-controls-labs_size": "",
+    "analyseBout-controls-labs_subtitle": "",
+    "analyseBout-controls-labs_title": "",
+    "analyseBout-controls-labs_x": "",
+    "analyseBout-controls-labs_y": "",
+    "analyseBout-controls-labsdrop": 0,
+    "analyseBout-controls-legend_position": "right",
+    "analyseBout-controls-palette": "ggplot2",
+    "analyseBout-controls-paramsdrop": 0,
+    "analyseBout-controls-position": "stack",
+    "analyseBout-controls-scale": "area",
+    "analyseBout-controls-size": 1,
+    "analyseBout-controls-smooth_add": false,
+    "analyseBout-controls-smooth_span": 0.75,
+    "analyseBout-controls-theme": "theme_minimal",
+    "analyseBout-controls-transX": "identity",
+    "analyseBout-controls-transY": "identity",
+    "analyseBout-controls-xlim": null,
+    "analyseBout-controls-ylim": null,
+    "analyseBout-dragvars": {
+      "source": "",
+      "target": {
+        "xvar": null,
+        "yvar": null,
+        "fill": null,
+        "color": null,
+        "size": null,
+        "group": null,
+        "facet": null,
+        "facet_row": null,
+        "facet_col": null
+      }
+    },
+    "analyseBout-geom": "auto",
+    "analyseBout-play_plot": true,
+    "analyseSleep_01-controls-adjust": 1,
+    "analyseSleep_01-controls-bins": 30,
+    "analyseSleep_01-controls-codedrop": 0,
+    "analyseSleep_01-controls-disable_filters": false,
+    "analyseSleep_01-controls-facet_ncol": 0,
+    "analyseSleep_01-controls-facet_nrow": 0,
+    "analyseSleep_01-controls-facet_scales": "fixed",
+    "analyseSleep_01-controls-fill_color": "#0c4c8a",
+    "analyseSleep_01-controls-filter-data-filter_asleep": [
+      0,
+      1
+    ],
+    "analyseSleep_01-controls-filter-data-filter_datetime": [
+      "2020-03-23T19:21:49Z",
+      "2020-03-23T19:21:49Z"
+    ],
+    "analyseSleep_01-controls-filter-data-filter_fly_count": [
+      1,
+      10
+    ],
+    "analyseSleep_01-controls-filter-data-filter_genotype": [
+      "A",
+      "B"
+    ],
+    "analyseSleep_01-controls-filter-data-filter_id": [
+      "2020-03-23_19-21-49_019aad|11",
+      "2020-03-23_19-21-49_019aad|12",
+      "2020-03-23_19-21-49_019aad|13",
+      "2020-03-23_19-21-49_019aad|14",
+      "2020-03-23_19-21-49_019aad|15",
+      "2020-03-23_19-21-49_019aad|16",
+      "2020-03-23_19-21-49_019aad|17",
+      "2020-03-23_19-21-49_019aad|18",
+      "2020-03-23_19-21-49_019aad|19",
+      "2020-03-23_19-21-49_019aad|20"
+    ],
+    "analyseSleep_01-controls-filter-data-filter_reference_hour": [
+      1.15,
+      2.8
+    ],
+    "analyseSleep_01-controls-filter-data-filter_region_id": [
+      11,
+      20
+    ],
+    "analyseSleep_01-controls-filter-data-filter_sex": [
+      "F",
+      "M"
+    ],
+    "analyseSleep_01-controls-filter-data-filter_t": [
+      61200,
+      153000
+    ],
+    "analyseSleep_01-controls-filterdrop": 0,
+    "analyseSleep_01-controls-flip": false,
+    "analyseSleep_01-controls-holderCode": "",
+    "analyseSleep_01-controls-labs_caption": "",
+    "analyseSleep_01-controls-labs_color": "",
+    "analyseSleep_01-controls-labs_fill": "",
+    "analyseSleep_01-controls-labs_size": "",
+    "analyseSleep_01-controls-labs_subtitle": "",
+    "analyseSleep_01-controls-labs_title": "",
+    "analyseSleep_01-controls-labs_x": "",
+    "analyseSleep_01-controls-labs_y": "",
+    "analyseSleep_01-controls-labsdrop": 0,
+    "analyseSleep_01-controls-legend_position": "right",
+    "analyseSleep_01-controls-palette": "ggplot2",
+    "analyseSleep_01-controls-paramsdrop": 0,
+    "analyseSleep_01-controls-position": "stack",
+    "analyseSleep_01-controls-scale": "area",
+    "analyseSleep_01-controls-size": 1,
+    "analyseSleep_01-controls-smooth_add": false,
+    "analyseSleep_01-controls-smooth_span": 0.75,
+    "analyseSleep_01-controls-theme": "theme_minimal",
+    "analyseSleep_01-controls-transX": "identity",
+    "analyseSleep_01-controls-transY": "identity",
+    "analyseSleep_01-controls-xlim": null,
+    "analyseSleep_01-controls-ylim": null,
+    "analyseSleep_01-dragvars": {
+      "source": [
+        "id",
+        "file_info",
+        "machine_name",
+        "machine_id",
+        "datetime",
+        "region_id",
+        "genotype",
+        "sex",
+        "reference_hour",
+        "fly_count",
+        "t",
+        "asleep"
+      ],
+      "target": {
+        "xvar": "t",
+        "yvar": "asleep",
+        "fill": null,
+        "color": null,
+        "size": null,
+        "group": null,
+        "facet": null,
+        "facet_row": null,
+        "facet_col": null
+      }
+    },
+    "analyseSleep_01-geom": "popethold",
+    "analyseSleep_01-play_plot": true,
+    "analyseSleep_02-controls-adjust": 1,
+    "analyseSleep_02-controls-bins": 30,
+    "analyseSleep_02-controls-codedrop": 0,
+    "analyseSleep_02-controls-disable_filters": false,
+    "analyseSleep_02-controls-facet_ncol": 0,
+    "analyseSleep_02-controls-facet_nrow": 0,
+    "analyseSleep_02-controls-facet_scales": "fixed",
+    "analyseSleep_02-controls-fill_color": "#0c4c8a",
+    "analyseSleep_02-controls-filter-data-filter_asleep": [
+      0,
+      1
+    ],
+    "analyseSleep_02-controls-filter-data-filter_datetime": [
+      "2020-03-23T19:21:49Z",
+      "2020-03-23T19:21:49Z"
+    ],
+    "analyseSleep_02-controls-filter-data-filter_fly_count": [
+      1,
+      10
+    ],
+    "analyseSleep_02-controls-filter-data-filter_genotype": [
+      "A",
+      "B"
+    ],
+    "analyseSleep_02-controls-filter-data-filter_id": [
+      "2020-03-23_19-21-49_019aad|11",
+      "2020-03-23_19-21-49_019aad|12",
+      "2020-03-23_19-21-49_019aad|13",
+      "2020-03-23_19-21-49_019aad|14",
+      "2020-03-23_19-21-49_019aad|15",
+      "2020-03-23_19-21-49_019aad|16",
+      "2020-03-23_19-21-49_019aad|17",
+      "2020-03-23_19-21-49_019aad|18",
+      "2020-03-23_19-21-49_019aad|19",
+      "2020-03-23_19-21-49_019aad|20"
+    ],
+    "analyseSleep_02-controls-filter-data-filter_reference_hour": [
+      1.15,
+      2.8
+    ],
+    "analyseSleep_02-controls-filter-data-filter_region_id": [
+      11,
+      20
+    ],
+    "analyseSleep_02-controls-filter-data-filter_sex": [
+      "F",
+      "M"
+    ],
+    "analyseSleep_02-controls-filter-data-filter_t": [
+      61200,
+      153000
+    ],
+    "analyseSleep_02-controls-filterdrop": 0,
+    "analyseSleep_02-controls-flip": false,
+    "analyseSleep_02-controls-holderCode": "",
+    "analyseSleep_02-controls-labs_caption": "",
+    "analyseSleep_02-controls-labs_color": "",
+    "analyseSleep_02-controls-labs_fill": "",
+    "analyseSleep_02-controls-labs_size": "",
+    "analyseSleep_02-controls-labs_subtitle": "",
+    "analyseSleep_02-controls-labs_title": "",
+    "analyseSleep_02-controls-labs_x": "",
+    "analyseSleep_02-controls-labs_y": "",
+    "analyseSleep_02-controls-labsdrop": 0,
+    "analyseSleep_02-controls-legend_position": "right",
+    "analyseSleep_02-controls-palette": "ggplot2",
+    "analyseSleep_02-controls-paramsdrop": 0,
+    "analyseSleep_02-controls-position": "stack",
+    "analyseSleep_02-controls-scale": "area",
+    "analyseSleep_02-controls-size": 1,
+    "analyseSleep_02-controls-smooth_add": false,
+    "analyseSleep_02-controls-smooth_span": 0.75,
+    "analyseSleep_02-controls-theme": "theme_minimal",
+    "analyseSleep_02-controls-transX": "identity",
+    "analyseSleep_02-controls-transY": "identity",
+    "analyseSleep_02-controls-xlim": null,
+    "analyseSleep_02-controls-ylim": null,
+    "analyseSleep_02-dragvars": {
+      "source": "",
+      "target": {
+        "xvar": null,
+        "yvar": null,
+        "fill": null,
+        "color": null,
+        "size": null,
+        "group": null,
+        "facet": null,
+        "facet_row": null,
+        "facet_col": null
+      }
+    },
+    "analyseSleep_02-geom": "auto",
+    "analyseSleep_02-play_plot": true,
+    "binData-summary_FUN": "mean",
+    "binData-summary_time_window": 30,
+    "binData-y": "asleep",
+    "loadData-dam-metadata": null,
+    "loadData-dam-result_dir": "/1TB/Cloud/Lab/Gitlab/fslretho/inst/extdata/DAM_results",
+    "loadData-dam-submit": 0,
+    "loadData-ethoscope-metadata": {
+      "name": [
+        "laptop_test.csv"
+      ],
+      "size": [
+        385
+      ],
+      "type": [
+        "text/csv"
+      ],
+      "datapath": [
+        "0.csv"
+      ]
+    },
+    "loadData-ethoscope-result_dir": "/ethoscope_data/results",
+    "loadData-ethoscope-submit": 1,
+    "scoreData-FUN": "sleep_annotation",
+    "scoreData-min_time_immobile": 300,
+    "scoreData-time_window_length": 10,
+    "scoreData-velocity_correction_coef": 0.004,
+    "sidebarCollapsed": false,
+    "sidebarItemExpanded": null
+  },
+  "output": {
+    "analyseSleep_01-plooooooot": {
+      "src": "[image data sha1: 02810d66cae0f18e39848273fa12e96dfefef92b]",
+      "width": 732,
+      "height": 509,
+      "coordmap": {
+        "panels": [
+          {
+            "panel": 1,
+            "row": 1,
+            "col": 1,
+            "panel_vars": {
+
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "domain": {
+              "left": 56610,
+              "right": 157590,
+              "bottom": -0.01785146726922,
+              "top": 0.37488081265362
+            },
+            "mapping": {
+              "x": "t",
+              "y": "asleep"
+            },
+            "range": {
+              "left": 38.1506849315069,
+              "right": 726.520547945205,
+              "bottom": 473.849315068493,
+              "top": 5.47945205479452
+            }
+          }
+        ],
+        "dims": {
+          "width": 732,
+          "height": 509
+        }
+      }
+    },
+    "analyseSleep_02-plooooooot": {
+      "src": "[image data sha1: b3814d87b98056c644c552032bcea48f60aa48b1]",
+      "width": 732,
+      "height": 509,
+      "coordmap": {
+        "panels": [
+          {
+            "domain": {
+              "left": -0.04,
+              "right": 1.04,
+              "bottom": -0.04,
+              "top": 1.04
+            },
+            "range": {
+              "left": 0,
+              "right": 732,
+              "bottom": 508,
+              "top": -1
+            },
+            "log": {
+              "x": null,
+              "y": null
+            },
+            "mapping": {
+
+            }
+          }
+        ],
+        "dims": {
+          "width": 732,
+          "height": 509
+        }
+      }
+    },
+    "dataset_name": "Loaded dataset: laptop_test.csv"
+  },
+  "export": {
+
+  }
+}

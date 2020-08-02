@@ -13,8 +13,10 @@ as_character_column <- function(metadata, column_name) {
 
 
 #' Read and validate provided metadata
-#'
-#' @importFrom data.table fread
+#' @note `load_metadata` will NOT link the metadata to a local database
+#' @seealso https://github.com/rethomics/scopr/blob/master/R/link-ethoscope-metadata.R
+#' @seealso https://github.com/rethomics/damr/blob/master/R/link-dam-metadata.R
+#' @import data.table
 #' @param metadata_path Absolute path to a metadata.csv file
 #' @param monitor Name of the monitor that generated the data the passed metadata is trying to load
 #' This information is used to select the right validation function
@@ -38,6 +40,7 @@ load_metadata <- function(metadata_path, monitor) {
   else if (monitor == "dam") fsldamr::validate_metadata(metadata)
   else stop(sprintf("Please enter a valid monitor: currently supported are ethoscope and dam"))
 
+  # coerce dates and datetimes to character
   char_columns <- c("start_datetime", "stop_datetime", "date")
   for (column_name in char_columns) {
     metadata <- as_character_column(metadata, column_name)
@@ -47,13 +50,15 @@ load_metadata <- function(metadata_path, monitor) {
 
 }
 
-
+#' Display a data table output of the uploaded metadata
+#' It can be filtered by column values and sorted
 viewMetadataUI <- function(id) {
 
   ns <- shiny::NS(id)
   shiny::dataTableOutput(ns("metadata"))
 }
 
+# Generate a data table of the metadata for display in the UI
 viewMetadataServer <- function(id, rv) {
 
   shiny::moduleServer(
@@ -70,4 +75,3 @@ viewMetadataServer <- function(id, rv) {
     }
   )
 }
-

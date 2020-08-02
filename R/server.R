@@ -29,7 +29,6 @@ server <- function(input, output, session) {
   # raw_data <- watch_input(rv, ethoscope_data, dam_data)
 
   scored_data <- scoreDataServer("scoreData", raw_data)
-  # grouped_data <- defineGroupServer("defineGroup", scored_data)
 
   viewMetadataServer("viewMetadata", scored_data)
 

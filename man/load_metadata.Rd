@@ -15,3 +15,11 @@ This information is used to select the right validation function}
 \description{
 Read and validate provided metadata
 }
+\note{
+`load_metadata` will NOT link the metadata to a local database
+}
+\seealso{
+https://github.com/rethomics/scopr/blob/master/R/link-ethoscope-metadata.R
+
+https://github.com/rethomics/damr/blob/master/R/link-dam-metadata.R
+}

@@ -33,14 +33,6 @@ shinydashboard_ui <- function() {
           # icon =
           binDataUI("binData")
         ),
-
-        shinydashboardPlus::dropdownBlock(
-          id = "definedGroups",
-          title = "Animal groups",
-          # icon =
-          defineGroupUI("defineGroup")
-        ),
-
       ),
       tags$li(
         tags$div(id = 'dataset_title', class = 'mybox', style = "padding: 10px; border: black 2px solid",

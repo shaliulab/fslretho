@@ -4,3 +4,6 @@
 .Ruserdata
 *.db
 *logs
+inst/INSTALL.sh
+inst/legacy/
+inst/systemd/fslretho_sayed.service

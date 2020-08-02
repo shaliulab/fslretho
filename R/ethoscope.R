@@ -1,34 +1,3 @@
-#' Wrapper around the most common workflow to laod ethoscope data into R using Rethomics
-#'
-#' @importFrom magrittr `%>%`
-#' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
-#' @param metadata A valid data.table object describing an experimental design
-#' @param result_dir Absolute path of an ethoscope sqlite3 database
-#' @param reference_hour hour of the day when the light turns on in the experiment
-#' e.g. if the lights turn on at 8 AM GMT, then reference_hour = 8
-#' If NULL, the reference_hour is parsed from the column with the same name in the metadata
-#' If such a column is not available, then assume ZT is the same as the experiment start
-#' @param updateProgress Optional, a function that updates an object of class shiny::Progress
-#' @return A raw behavr table i.e. without annotation
-load_ethoscope <- function(metadata, result_dir, reference_hour = NULL, updateProgress = NULL) {
-
-  # Link metadata to the ethoscope database i.e.
-  # add to each fly pointer to the dbfile in the database where it is stored
-  # This pointer is exploited in the fslscopr::load_ethoscope function
-  metadata <- fslscopr::link_ethoscope_metadata(x = metadata, result_dir = result_dir)
-
-  # Load into R the behavioral dataset described in the user passed metadata
-  dt <- fslscopr::load_ethoscope(
-    metadata = metadata,
-    reference_hour = reference_hour,
-    ncores = FSLRethoConfiguration$new()$content[["ncores"]],
-    cache = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
-    verbose = FSLRethoConfiguration$new()$content[["debug"]],
-    updateProgress = updateProgress
-  )
-  return(dt)
-}
-
 #' Wrap the ethoscope loading functionality for a ShinyUI
 #' @importFrom magrittr `%>%`
 #' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
@@ -94,7 +63,7 @@ loadEthoscopeServer <- function(id) {
           if (FSLRethoConfiguration$new()$content[["ncores"]] == 1) {
             progress$inc(amount = 1 / n, detail = detail)
           } else {
-            shiny::showNotification(detail, type = "message")
+            shiny::showNotification(detail, type = "message", duration = 5)
           }
         }
 
