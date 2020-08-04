@@ -30,6 +30,8 @@ main <- function(display_mode=FALSE, port=NULL) {
   reactlog::reactlog_enable()
   options(shiny.fullstacktrace = TRUE)
 
+  shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
+
   # launch the app
   shiny::shinyApp(server = server, ui = shinydashboard_ui())
 }

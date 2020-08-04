@@ -1,28 +1,24 @@
-$(document).on('click', '.needed', function () {
-                              Shiny.onInputChange('last_btn',this.id);
-                             });
+var refresh_plot = function() {
+  new_height = parseInt(document.querySelector("div#analyseSleep_00").style.height.replace("px",""));
+  setTimeout(1000);
+  document.querySelector("div#analyseSleep_00 > img").height = new_height;
+  console.log(new_height);
+  setTimeout(1000);
+  Shiny.onInputChange("refresh_analyseSleep_00", new_height);
 
+  setTimeout(5000);
+  document.querySelector("div#analyseSleep_00 > img").height = new_height;
 
-console.log("Hello, I am Javascript and I am running in this page");
-
-
-var labels = document.getElementsByTagName('LABEL');
-for (var i = 0; i < labels.length; i++) {
-    if (labels[i].htmlFor != '') {
-         var elem = document.getElementById(labels[i].htmlFor);
-         if (elem)
-            elem.label = labels[i];         
-    }
 };
-
 
 // Check every 100ms if R is busy or not
 // and set the visibility of the div.busy accordingly
 // this div displays a stop sign that should be visible only when shiny is busy
 setInterval(function(){
   if ($('html').attr('class')=='shiny-busy') {
-    $('div.busy').show()
+    $('div.busy').show();
   } else {
-    $('div.busy').hide()
+    $('div.busy').hide();
   }
 },100);
+

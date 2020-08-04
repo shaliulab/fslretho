@@ -71,29 +71,37 @@ binDataServer <- function(id, grouped_data) {
         rv$name <- grouped_data$name
       })
 
-
       # Update the list of binnable variables if the uploaded data changes
       var_choices <- reactive({
 
-        if (! isTruthy(grouped_data$data)) {
-          "asleep"
-        } else {
+        req(grouped_data$data)
 
-          all_columns <- colnames(grouped_data$data)
-          binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
+        all_columns <- colnames(grouped_data$data)
+        binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
 
-          available_columns <- binnable_columns[
-            purrr::map_lgl(
-              binnable_columns,
-              ~. %in% all_columns
-            )
-          ]
-          available_columns
+        available_columns <- binnable_columns[
+          purrr::map_lgl(
+            binnable_columns,
+            ~. %in% all_columns
+          )
+        ]
+        available_columns
+
+      })
+
+      selected <- reactive({
+        req(grouped_data$data)
+        output <- c(input$y)
+
+        if ("interactions" %in% colnames(grouped_data$data)) {
+          output <- c(output, "interactions")
         }
+
+        output
       })
 
       observe({
-        shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = input$y)
+        shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = isolate(selected()))
       })
 
       return(rv)

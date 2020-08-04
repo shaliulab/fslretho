@@ -1,12 +1,10 @@
-
-
-
 #' A UI for fslretho
 #'
 #' @importFrom shinydashboard dashboardPage dashboardHeader dashboardSidebar dashboardBody
 #' @importFrom shinydashboard sidebarMenu menuItem tabItems tabItem
 #' @importFrom shiny icon
 #' @importFrom esquisse esquisserUI
+#' @importFrom magrittr `%>%`
 shinydashboard_ui <- function() {
 
 
@@ -16,7 +14,14 @@ shinydashboard_ui <- function() {
     browserButton <- tags$div(style = "hidden")
   }
 
+  plot_output <- plotOutput("analyseSleep_00", height = "auto")
+  # html_class <- plot_output %>% htmltools::tagGetAttribute("class")
+
+  plot_output <- tagAppendAttributes(plot_output, class = "resizable") %>%
+    tagAppendAttributes(onmouseup='refresh_plot()')
+
   ui <- shinydashboardPlus::dashboardPagePlus(skin = "black",
+
     shinydashboardPlus::dashboardHeaderPlus(
       title = "FSLRetho2",
       left_menu = tagList(
@@ -52,6 +57,9 @@ shinydashboard_ui <- function() {
     ),
     # TODO Place somewhere the UI for scoreData
     shinydashboard::dashboardBody(
+      tags$link(rel="stylesheet", type="text/css", href="fslretho/css/styles.css"),
+      tags$script(src = "fslretho/js/my_javascript.js"),
+
       shinydashboard::tabItems(
         shinydashboard::tabItem(tabName = 'welcome', welcomePageUI()),
         shinydashboard::tabItem(tabName = 'load',
@@ -61,6 +69,13 @@ shinydashboard_ui <- function() {
           )
         ),
         shinydashboard::tabItem(tabName = "sleep",
+          shiny::fluidRow(
+            shinydashboard::box(
+              title = "Sleep trace + interactions", status = "primary", solidHeader = TRUE,
+              collapsible = TRUE, width = "90%",
+              plot_output
+            )
+          ),
           tabsetPanel(
             tabPanel(
               title = "Sleep analysis",

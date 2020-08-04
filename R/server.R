@@ -4,6 +4,9 @@
 #' @importFrom shinylogs track_usage store_json
 #' @importFrom esquisse esquisserServer
 #' @importFrom fslsleepr bout_analysis
+#' @importFrom ggplot2 ggplot facet_wrap aes facet_grid
+#' @importFrom fslggetho stat_ld_annotations stat_pop_etho
+#' @importFrom cowplot plot_grid
 #' @noRd
 server <- function(input, output, session) {
 
@@ -34,6 +37,40 @@ server <- function(input, output, session) {
 
   binned_data <- binDataServer("binData", scored_data)
   bout_data <- analyseBoutServer("analyseBout", scored_data)
+
+  analyse_sleep_00 <- reactiveVal(NULL)
+
+  output$analyseSleep_00 <- renderPlot({
+    # browser()
+    input$refresh_analyseSleep_00
+    analyse_sleep_00()
+  })
+
+  observe({
+
+    req(binned_data$data$t)
+    req(binned_data$data$asleep)
+    req(binned_data$data[, meta = T]$region_id)
+
+    sleep_trace <- ggplot2::ggplot(data = fslbehavr::rejoin(binned_data$data), ggplot2::aes(x = t, y = asleep)) +
+      fslggetho::stat_pop_etho() +
+      fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
+      ggplot2::facet_grid(region_id ~ .)
+
+    if (isTruthy(binned_data$data$interactions)) {
+      interactions_trace <- ggplot2::ggplot(data = fslbehavr::rejoin(binned_data$data), ggplot2::aes(x = t, y = interactions)) +
+        fslggetho::stat_pop_etho() +
+        fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA)  +
+        ggplot2::facet_grid(region_id ~ .)
+
+      output_plot <- cowplot::plot_grid(sleep_trace, interactions_trace, ncol = 2)
+    } else {
+      output_plot <- sleep_trace
+    }
+
+    analyse_sleep_00(output_plot)
+
+  })
 
   analyse_sleep_01 <- callModule(
     module = esquisse::esquisserServer,
