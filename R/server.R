@@ -8,7 +8,7 @@
 #' @importFrom fslggetho stat_ld_annotations stat_pop_etho
 #' @importFrom cowplot plot_grid
 #' @importFrom rlang expr
-#' @importFrom fslbehavr bin_all days
+#' @importfslbehavr
 #' @noRd
 server <- function(input, output, session) {
 
@@ -51,12 +51,16 @@ server <- function(input, output, session) {
     keep_columns <- setdiff(colnames(binned_data$data[, meta=TRUE]), c("t", "id"))
     print(keep_columns)
 
-    my_expression <- rlang::expr(fslbehavr::bin_all(data = !!rlang::sym(binned_data$name), y = !!binned_data$y, x = "t",
+    sleep_expression <- rlang::expr(fslbehavr::bin_all(data = !!rlang::sym(binned_data$name), y = !!binned_data$y, x = "t",
+                                                      x_bin_length = !!fslbehavr::days(28),
+                                                      FUN = !!binned_data$summary_FUN, keep_columns = !!keep_columns))
+
+    bout_expression <- rlang::expr(fslbehavr::bin_all(data = !!rlang::sym(binned_data$name), y ="duration", x = "t",
                                      x_bin_length = !!fslbehavr::days(28),
                                      FUN = !!binned_data$summary_FUN, keep_columns = !!keep_columns))
 
-    preprocessing$data <- my_expression
-    # preprocessing$name <- raw_data$name
+    preprocessing$sleep <- sleep_expression
+    preprocessing$bout <- bout_expression
 
 
   })
@@ -109,7 +113,7 @@ server <- function(input, output, session) {
     data = rejoin_rv(binned_data),
     dataModule = NULL,
     input_modal = FALSE,
-    preprocessing_expression = preprocessing$data
+    preprocessing_expression = preprocessing$sleep
   )
 
   analyse_bout_01 <- callModule(
@@ -127,7 +131,7 @@ server <- function(input, output, session) {
     data = rejoin_rv(bout_data),
     dataModule = NULL,
     input_modal = FALSE,
-    preprocessing_expression = preprocessing$data
+    preprocessing_expression = preprocessing$bout
 
   )
 

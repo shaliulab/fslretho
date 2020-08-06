@@ -23,7 +23,9 @@ binDataUI <- function(id) {
 }
 
 
-
+#' @import fslbehavr
+#' @import shiny
+#' @importFrom data.table copy
 binDataServer <- function(id, grouped_data, summary_time_window = NULL, main = FALSE) {
   moduleServer(
     id,
@@ -128,16 +130,3 @@ binDataServer <- function(id, grouped_data, summary_time_window = NULL, main = F
     }
   )
 }
-
-
-# library(fslbehavr)
-# library(ggplot2)
-#
-# dt1 <- toy_ethoscope_data(id_value="_01")
-# dt2 <- toy_ethoscope_data(id_value="_02")
-# dt <- fslbehavr::bind_behavr_list(list(dt1, dt2))
-# out <- dt[, fslsleepr::sleep_annotation(.SD), by=id]
-#
-#
-# dt <- bin_all(data = out, y = "asleep", x_bin_length = mins(30), summary_FUN = mean)
-# ggplot(data = dt, aes(x = t, y = asleep, color = id)) + geom_point()
