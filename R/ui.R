@@ -14,12 +14,6 @@ shinydashboard_ui <- function() {
     browserButton <- tags$div(style = "hidden")
   }
 
-  plot_output <- plotOutput("analyseSleep_00", height = "auto")
-  # html_class <- plot_output %>% htmltools::tagGetAttribute("class")
-
-  plot_output <- tagAppendAttributes(plot_output, class = "resizable") %>%
-    tagAppendAttributes(onmouseup='refresh_plot()')
-
   ui <- shinydashboardPlus::dashboardPagePlus(skin = "black",
 
     shinydashboardPlus::dashboardHeaderPlus(
@@ -73,7 +67,9 @@ shinydashboard_ui <- function() {
             shinydashboard::box(
               title = "Sleep trace + interactions", status = "primary", solidHeader = TRUE,
               collapsible = TRUE, width = "90%",
-              plot_output
+              plotOutput("analyseSleep_00", height = "400px") %>%
+                tagAppendAttributes(class = "resizable") %>%
+                tagAppendAttributes(onmouseup='refresh_plot()')
             )
           ),
           tabsetPanel(
@@ -112,7 +108,7 @@ shinydashboard_ui <- function() {
             tabPanel(
               title = "Bout analysis",
               esquisse::esquisserUI(
-                id = "analyseBout",
+                id = "analyseBout_01",
                 header = FALSE, # dont display gadget title
                 choose_data = FALSE, # dont display button to change data
                 disable_filters = FALSE
@@ -120,9 +116,25 @@ shinydashboard_ui <- function() {
             ),
             tabPanel(
               title = "bout output",
-              shiny::verbatimTextOutput("analyseBout_out")
+              shiny::verbatimTextOutput("analyseBout_01_out")
+            )
+          ),
+          tabsetPanel(
+            tabPanel(
+              title = "Bout analysis",
+              esquisse::esquisserUI(
+                id = "analyseBout_02",
+                header = FALSE, # dont display gadget title
+                choose_data = FALSE, # dont display button to change data
+                disable_filters = FALSE
+              )
+            ),
+            tabPanel(
+              title = "bout output",
+              shiny::verbatimTextOutput("analyseBout_02_out")
             )
           )
+
         ),
 
         shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))

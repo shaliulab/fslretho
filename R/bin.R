@@ -22,12 +22,14 @@ binDataUI <- function(id) {
   )
 }
 
-binDataServer <- function(id, grouped_data) {
+
+
+binDataServer <- function(id, grouped_data, summary_time_window = NULL, main = FALSE) {
   moduleServer(
     id,
     function(input, output, session) {
 
-      rv <- reactiveValues(data = NULL, name = NULL)
+      rv <- reactiveValues(data = NULL, name = NULL, summary_FUN = NULL, y = NULL)
 
       # Update the rv object with the new binned time series
       observe({
@@ -35,6 +37,23 @@ binDataServer <- function(id, grouped_data) {
         req(grouped_data$data)
         req(input$summary_time_window)
         req(input$summary_FUN)
+        summary_FUN <- functions[[input$summary_FUN]]
+
+        x_bin_length <- ifelse(
+          is.null(summary_time_window),
+          fslbehavr::mins(input$summary_time_window),
+          fslbehavr::mins(summary_time_window)
+        )
+
+        available_columns <- input$y %in% colnames(grouped_data$data)
+        if (!all(available_columns)) {
+          warning(sprintf("The following columns to be binned are NOT available %s",
+                          paste0(input$y[!available_columns], sep = ", ")
+                          )
+          )
+        }
+
+        y <- input$y[available_columns]
 
         # if the passed variables to bin on are truthy
         # do this for all of them one by one:
@@ -42,69 +61,83 @@ binDataServer <- function(id, grouped_data) {
         # Bin the time series over time
         # with window length given by summary_time_window
         # and function given by summary_FUN
-        if (shiny::isTruthy(input$y)) {
-          data <- purrr::map(
-            input$y,
-            ~fslbehavr::bin_apply_all(
-              grouped_data$data,
-              .,
-              x = "t",
-              x_bin_length = fslbehavr::mins(input$summary_time_window),
-              # TODO Support wrapping
-              # wrap_x_by = time_wrap,
-              FUN = functions[[input$summary_FUN]]
-              )
-          )
 
-          # if more than one variable was passed,
-          # merge the results
-          # all together
-          if (length(data) == 1) {
-            rv$data <- data[[1]]
-          } else {
-            rv$data <- Reduce(x = data, f = fslbehavr::merge_behavr_all)
-          }
+
+        # copy to avoid the reactivevalue to be processed several times
+        data <- data.table::copy(grouped_data$data)
+
+        if (shiny::isTruthy(input$y)) {
+
+          print(key(grouped_data$data))
+          rv$data <- fslbehavr::bin_all(
+            data = grouped_data$data,
+            y = y,
+            x_bin_length = x_bin_length,
+            FUN = summary_FUN
+          )
 
         } else {
           rv$data <- grouped_data$data
         }
         rv$name <- grouped_data$name
+        rv$summary_FUN <- summary_FUN
+        rv$y <- y
       })
 
-      # Update the list of binnable variables if the uploaded data changes
-      var_choices <- reactive({
 
-        req(grouped_data$data)
+      # update the UI only if main is TRUE
+      # this is to avoid the different instances of the module
+      # which share the UI from stepping on each other
+      # only the main instance writes to the UI
+      # (even if all the instances read from it)
+      if (isTRUE(main)) {
+        # Update the list of binnable variables if the uploaded data changes
+        var_choices <- reactive({
 
-        all_columns <- colnames(grouped_data$data)
-        binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
+          req(grouped_data$data)
 
-        available_columns <- binnable_columns[
-          purrr::map_lgl(
-            binnable_columns,
-            ~. %in% all_columns
-          )
-        ]
-        available_columns
+          all_columns <- colnames(grouped_data$data)
+          binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
 
-      })
+          available_columns <- binnable_columns[
+            purrr::map_lgl(
+              binnable_columns,
+              ~. %in% all_columns
+            )
+          ]
+          available_columns
 
-      selected <- reactive({
-        req(grouped_data$data)
-        output <- c(input$y)
+        })
 
-        if ("interactions" %in% colnames(grouped_data$data)) {
-          output <- c(output, "interactions")
-        }
+        selected <- reactive({
+          req(grouped_data$data)
+          output <- c(input$y)
 
-        output
-      })
+          if ("interactions" %in% colnames(grouped_data$data)) {
+            output <- c(output, "interactions")
+          }
 
-      observe({
-        shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = isolate(selected()))
-      })
+          output
+        })
 
+        observe({
+          shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = isolate(selected()))
+        })
+      }
       return(rv)
     }
   )
 }
+
+
+# library(fslbehavr)
+# library(ggplot2)
+#
+# dt1 <- toy_ethoscope_data(id_value="_01")
+# dt2 <- toy_ethoscope_data(id_value="_02")
+# dt <- fslbehavr::bind_behavr_list(list(dt1, dt2))
+# out <- dt[, fslsleepr::sleep_annotation(.SD), by=id]
+#
+#
+# dt <- bin_all(data = out, y = "asleep", x_bin_length = mins(30), summary_FUN = mean)
+# ggplot(data = dt, aes(x = t, y = asleep, color = id)) + geom_point()

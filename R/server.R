@@ -7,6 +7,8 @@
 #' @importFrom ggplot2 ggplot facet_wrap aes facet_grid
 #' @importFrom fslggetho stat_ld_annotations stat_pop_etho
 #' @importFrom cowplot plot_grid
+#' @importFrom rlang expr
+#' @importFrom fslbehavr bin_all days
 #' @noRd
 server <- function(input, output, session) {
 
@@ -35,11 +37,33 @@ server <- function(input, output, session) {
 
   viewMetadataServer("viewMetadata", scored_data)
 
-  binned_data <- binDataServer("binData", scored_data)
+  binned_data <- binDataServer("binData", scored_data, main = TRUE)
   bout_data <- analyseBoutServer("analyseBout", scored_data)
 
-  analyse_sleep_00 <- reactiveVal(NULL)
+  preprocessing <- reactiveValues(data = NULL)
 
+  observe({
+
+    req(binned_data$name)
+    req(binned_data$data)
+    req(binned_data$y)
+    req(binned_data$summary_FUN)
+    keep_columns <- setdiff(colnames(binned_data$data[, meta=TRUE]), c("t", "id"))
+    print(keep_columns)
+
+    my_expression <- rlang::expr(fslbehavr::bin_all(data = !!rlang::sym(binned_data$name), y = !!binned_data$y, x = "t",
+                                     x_bin_length = !!fslbehavr::days(28),
+                                     FUN = !!binned_data$summary_FUN, keep_columns = !!keep_columns))
+
+    preprocessing$data <- my_expression
+    # preprocessing$name <- raw_data$name
+
+
+  })
+
+
+  # TODO Put this in its own module
+  analyse_sleep_00 <- reactiveVal(NULL)
   output$analyseSleep_00 <- renderPlot({
     # browser()
     input$refresh_analyseSleep_00
@@ -47,7 +71,6 @@ server <- function(input, output, session) {
   })
 
   observe({
-
     req(binned_data$data$t)
     req(binned_data$data$asleep)
     req(binned_data$data[, meta = T]$region_id)
@@ -85,15 +108,27 @@ server <- function(input, output, session) {
     id = "analyseSleep_02",
     data = rejoin_rv(binned_data),
     dataModule = NULL,
-    input_modal = FALSE
+    input_modal = FALSE,
+    preprocessing_expression = preprocessing$data
   )
 
-  analyse_bout <- callModule(
+  analyse_bout_01 <- callModule(
     module = esquisse::esquisserServer,
-    id = "analyseBout",
+    id = "analyseBout_01",
     data = rejoin_rv(bout_data),
     dataModule = NULL,
     input_modal = FALSE
+
+  )
+
+  analyse_bout_02 <- callModule(
+    module = esquisse::esquisserServer,
+    id = "analyseBout_02",
+    data = rejoin_rv(bout_data),
+    dataModule = NULL,
+    input_modal = FALSE,
+    preprocessing_expression = preprocessing$data
+
   )
 
   output$analyseSleep_01_out <- renderPrint({
@@ -107,9 +142,15 @@ server <- function(input, output, session) {
   })
 
 
-  output$analyseBout_out <- renderPrint({
+  output$analyseBout_01_out <- renderPrint({
     req(bout_data$data)
-    str(reactiveValuesToList(analyse_bout))
+    str(reactiveValuesToList(analyse_bout_01))
+  })
+
+
+  output$analyseBout_02_out <- renderPrint({
+    req(bout_data$data)
+    str(reactiveValuesToList(analyse_bout_02))
   })
 
   output$dataset_name <- shiny::renderText({

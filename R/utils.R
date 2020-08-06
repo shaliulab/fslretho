@@ -158,6 +158,10 @@ watch_input <- function(rv, ...) {
   return(rv)
 }
 
+#' Transform the passed rv with slots data and name
+#' so the content of data is not a behavr table anymore
+#' and instead a rejoin()ed data.table
+#'
 #' @importFrom tibble as_tibble
 #' @importFrom fslbehavr rejoin
 rejoin_rv <- function(rv) {
