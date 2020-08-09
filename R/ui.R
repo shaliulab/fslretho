@@ -74,7 +74,7 @@ shinydashboard_ui <- function() {
           ),
           tabsetPanel(
             tabPanel(
-              title = "Sleep analysis",
+              title = "Plot",
               esquisse::esquisserUI(
                 id = "analyseSleep_01",
                 header = FALSE, # dont display gadget title
@@ -83,13 +83,17 @@ shinydashboard_ui <- function() {
               )
             ),
             tabPanel(
-              title = "sleep output",
+              title = "Output",
               shiny::verbatimTextOutput("analyseSleep_01_out")
+            ),
+            tabPanel(
+              title = "Help",
+              analyse_sleep_01_help()
             )
           ),
           tabsetPanel(
             tabPanel(
-              title = "Sleep analysis",
+              title = "Plot",
               esquisse::esquisserUI(
                 id = "analyseSleep_02",
                 header = FALSE, # dont display gadget title
@@ -98,8 +102,12 @@ shinydashboard_ui <- function() {
               )
             ),
             tabPanel(
-              title = "sleep output",
+              title = "Output",
               shiny::verbatimTextOutput("analyseSleep_02_out")
+            ),
+            tabPanel(
+              title = "Help",
+              analyse_sleep_02_help()
             )
           )
         ),

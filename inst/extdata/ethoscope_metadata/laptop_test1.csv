@@ -1,0 +1,3 @@
+machine_name,region_id,date,genotype,sex,reference_hour
+ETHOSCOPE_019,11,2020-03-23,A,F,2
+ETHOSCOPE_019,12,2020-03-23,A,F,2

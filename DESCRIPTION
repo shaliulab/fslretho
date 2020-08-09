@@ -34,7 +34,6 @@ Imports:
     R6,
     rjson,
     shinylogs,
-    shinyAce,
     reactlog
 Suggests: 
     knitr,

@@ -3,28 +3,8 @@
     ".shinylogs_input": {
       "inputs": [
         {
-          "name": "analyseBout-controls-filter-data-filter_sex",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            "F",
-            "M"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_duration",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            0,
-            92000
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
           "name": "analyseSleep_01-controls-filter-data-filter_reference_hour",
-          "timestamp": "2020-08-02T19:03:55+00:00",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             1.15,
             2.8
@@ -33,94 +13,8 @@
           "binding": "shiny.sliderInput"
         },
         {
-          "name": "analyseSleep_02-controls-filter-data-filter_asleep",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            0,
-            1
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_t",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            61200,
-            153000
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_id",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            "2020-03-23_19-21-49_019aad|11",
-            "2020-03-23_19-21-49_019aad|12",
-            "2020-03-23_19-21-49_019aad|13",
-            "2020-03-23_19-21-49_019aad|14",
-            "2020-03-23_19-21-49_019aad|15",
-            "2020-03-23_19-21-49_019aad|16",
-            "2020-03-23_19-21-49_019aad|17",
-            "2020-03-23_19-21-49_019aad|18",
-            "2020-03-23_19-21-49_019aad|19",
-            "2020-03-23_19-21-49_019aad|20"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_region_id",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            11,
-            20
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_datetime",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            1584991309,
-            1584991309
-          ],
-          "type": "shiny.datetime",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_id",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            "2020-03-23_19-21-49_019aad|11",
-            "2020-03-23_19-21-49_019aad|12",
-            "2020-03-23_19-21-49_019aad|13",
-            "2020-03-23_19-21-49_019aad|14",
-            "2020-03-23_19-21-49_019aad|15",
-            "2020-03-23_19-21-49_019aad|16",
-            "2020-03-23_19-21-49_019aad|17",
-            "2020-03-23_19-21-49_019aad|18",
-            "2020-03-23_19-21-49_019aad|19",
-            "2020-03-23_19-21-49_019aad|20"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "analyseSleep_02-controls-filter-data-filter_sex",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            "F",
-            "M"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_fly_count",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseSleep_01-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             1,
             10
@@ -129,8 +23,68 @@
           "binding": "shiny.sliderInput"
         },
         {
-          "name": "analyseSleep_02-controls-filter-data-filter_id",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseBout_02-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1.15,
+            2.8
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_asleep",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            0,
+            1
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1.15,
+            2.8
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             "2020-03-23_19-21-49_019aad|11",
             "2020-03-23_19-21-49_019aad|12",
@@ -147,8 +101,21 @@
           "binding": "shiny.selectInput"
         },
         {
+          "name": "loadData-ethoscope-metadata",
+          "timestamp": "2020-08-09T13:47:17+00:00",
+          "value": [
+            {
+              "name": "laptop_test.csv",
+              "size": 396,
+              "type": "text/csv"
+            }
+          ],
+          "type": "shiny.fileupload",
+          "binding": "shiny.fileInputBinding"
+        },
+        {
           "name": "analyseSleep_02-controls-filter-data-filter_region_id",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             11,
             20
@@ -157,61 +124,8 @@
           "binding": "shiny.sliderInput"
         },
         {
-          "name": "analyseSleep_01-controls-filter-data-filter_genotype",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            "A",
-            "B"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_t",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            61200,
-            151200
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_genotype",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            "A",
-            "B"
-          ],
-          "type": "",
-          "binding": "shiny.selectInput"
-        },
-        {
-          "name": "loadData-ethoscope-metadata",
-          "timestamp": "2020-08-02T19:03:47+00:00",
-          "value": [
-            {
-              "name": "laptop_test.csv",
-              "size": 385,
-              "type": "text/csv"
-            }
-          ],
-          "type": "shiny.fileupload",
-          "binding": "shiny.fileInputBinding"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_asleep",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            0,
-            1
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_sex",
-          "timestamp": "2020-08-02T19:03:55+00:00",
+          "name": "analyseSleep_02-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             "F",
             "M"
@@ -220,8 +134,229 @@
           "binding": "shiny.selectInput"
         },
         {
-          "name": "analyseBout-controls-filter-data-filter_reference_hour",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseSleep_01-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "F",
+            "M"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_t",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            17,
+            42
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1,
+            10
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_asleep",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            0,
+            1
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "A",
+            "B"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_region_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            11,
+            20
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_t",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            17,
+            42
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_fly_count",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1,
+            10
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_t",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            17,
+            42
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_duration",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            0,
+            34500
+          ],
+          "type": "",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_02-controls-filter-data-filter_id",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "2020-03-23_19-21-49_019aad|11",
+            "2020-03-23_19-21-49_019aad|12",
+            "2020-03-23_19-21-49_019aad|13",
+            "2020-03-23_19-21-49_019aad|14",
+            "2020-03-23_19-21-49_019aad|15",
+            "2020-03-23_19-21-49_019aad|16",
+            "2020-03-23_19-21-49_019aad|17",
+            "2020-03-23_19-21-49_019aad|18",
+            "2020-03-23_19-21-49_019aad|19",
+            "2020-03-23_19-21-49_019aad|20"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "analyseSleep_01-controls-filter-data-filter_datetime",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            1584991309,
+            1584991309
+          ],
+          "type": "shiny.datetime",
+          "binding": "shiny.sliderInput"
+        },
+        {
+          "name": "loadData-ethoscope-submit",
+          "timestamp": "2020-08-09T13:47:18+00:00",
+          "value": 1,
+          "type": "shiny.action",
+          "binding": "shiny.actionButtonInput"
+        },
+        {
+          "name": "analyseBout_02-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-09T13:47:26+00:00",
+          "value": [
+            "F",
+            "M"
+          ],
+          "type": "",
+          "binding": "shiny.selectInput"
+        },
+        {
+          "name": "analyseBout_01-controls-filter-data-filter_reference_hour",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             1.15,
             2.8
@@ -231,7 +366,7 @@
         },
         {
           "name": "analyseSleep_02-controls-filter-data-filter_fly_count",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             1,
             10
@@ -240,45 +375,28 @@
           "binding": "shiny.sliderInput"
         },
         {
-          "name": "analyseSleep_01-controls-filter-data-filter_datetime",
-          "timestamp": "2020-08-02T19:03:55+00:00",
+          "name": "analyseBout_01-controls-filter-data-filter_sex",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
-            1584991309,
-            1584991309
+            "F",
+            "M"
           ],
-          "type": "shiny.datetime",
-          "binding": "shiny.sliderInput"
+          "type": "",
+          "binding": "shiny.selectInput"
         },
         {
-          "name": "analyseSleep_02-controls-filter-data-filter_reference_hour",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseBout_02-controls-filter-data-filter_t",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
-            1.15,
-            2.8
+            17,
+            42
           ],
           "type": "",
           "binding": "shiny.sliderInput"
         },
         {
-          "name": "loadData-ethoscope-submit",
-          "timestamp": "2020-08-02T19:03:48+00:00",
-          "value": 1,
-          "type": "shiny.action",
-          "binding": "shiny.actionButtonInput"
-        },
-        {
-          "name": "analyseSleep_01-controls-filter-data-filter_fly_count",
-          "timestamp": "2020-08-02T19:03:55+00:00",
-          "value": [
-            1,
-            10
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseSleep_02-controls-filter-data-filter_genotype",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseSleep_01-controls-filter-data-filter_genotype",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
             "A",
             "B"
@@ -287,31 +405,11 @@
           "binding": "shiny.selectInput"
         },
         {
-          "name": "analyseSleep_02-controls-filter-data-filter_t",
-          "timestamp": "2020-08-02T19:03:56+00:00",
+          "name": "analyseBout_01-controls-filter-data-filter_duration",
+          "timestamp": "2020-08-09T13:47:26+00:00",
           "value": [
-            61200,
-            153000
-          ],
-          "type": "",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseSleep_02-controls-filter-data-filter_datetime",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            1584991309,
-            1584991309
-          ],
-          "type": "shiny.datetime",
-          "binding": "shiny.sliderInput"
-        },
-        {
-          "name": "analyseBout-controls-filter-data-filter_region_id",
-          "timestamp": "2020-08-02T19:03:56+00:00",
-          "value": [
-            11,
-            20
+            0,
+            34500
           ],
           "type": "",
           "binding": "shiny.sliderInput"
@@ -320,35 +418,36 @@
     },
     ".shinylogs_lastInput": {
       "name": "analyseSleep_01-geom",
-      "timestamp": "2020-08-02T19:04:01Z",
+      "timestamp": "2020-08-09T13:47:35Z",
       "value": "popethold",
       "type": ""
     },
-    "analyseBout-controls-adjust": 1,
-    "analyseBout-controls-bins": 30,
-    "analyseBout-controls-codedrop": 0,
-    "analyseBout-controls-disable_filters": false,
-    "analyseBout-controls-facet_ncol": 0,
-    "analyseBout-controls-facet_nrow": 0,
-    "analyseBout-controls-facet_scales": "fixed",
-    "analyseBout-controls-fill_color": "#0c4c8a",
-    "analyseBout-controls-filter-data-filter_datetime": [
+    "about": 0,
+    "analyseBout_01-controls-adjust": 1,
+    "analyseBout_01-controls-bins": 30,
+    "analyseBout_01-controls-codedrop": 0,
+    "analyseBout_01-controls-disable_filters": false,
+    "analyseBout_01-controls-facet_ncol": 0,
+    "analyseBout_01-controls-facet_nrow": 0,
+    "analyseBout_01-controls-facet_scales": "fixed",
+    "analyseBout_01-controls-fill_color": "#0c4c8a",
+    "analyseBout_01-controls-filter-data-filter_datetime": [
       "2020-03-23T19:21:49Z",
       "2020-03-23T19:21:49Z"
     ],
-    "analyseBout-controls-filter-data-filter_duration": [
+    "analyseBout_01-controls-filter-data-filter_duration": [
       0,
-      92000
+      34500
     ],
-    "analyseBout-controls-filter-data-filter_fly_count": [
+    "analyseBout_01-controls-filter-data-filter_fly_count": [
       1,
       10
     ],
-    "analyseBout-controls-filter-data-filter_genotype": [
+    "analyseBout_01-controls-filter-data-filter_genotype": [
       "A",
       "B"
     ],
-    "analyseBout-controls-filter-data-filter_id": [
+    "analyseBout_01-controls-filter-data-filter_id": [
       "2020-03-23_19-21-49_019aad|11",
       "2020-03-23_19-21-49_019aad|12",
       "2020-03-23_19-21-49_019aad|13",
@@ -360,48 +459,48 @@
       "2020-03-23_19-21-49_019aad|19",
       "2020-03-23_19-21-49_019aad|20"
     ],
-    "analyseBout-controls-filter-data-filter_reference_hour": [
+    "analyseBout_01-controls-filter-data-filter_reference_hour": [
       1.15,
       2.8
     ],
-    "analyseBout-controls-filter-data-filter_region_id": [
+    "analyseBout_01-controls-filter-data-filter_region_id": [
       11,
       20
     ],
-    "analyseBout-controls-filter-data-filter_sex": [
+    "analyseBout_01-controls-filter-data-filter_sex": [
       "F",
       "M"
     ],
-    "analyseBout-controls-filter-data-filter_t": [
-      61200,
-      151200
+    "analyseBout_01-controls-filter-data-filter_t": [
+      17,
+      42
     ],
-    "analyseBout-controls-filterdrop": 0,
-    "analyseBout-controls-flip": false,
-    "analyseBout-controls-holderCode": "",
-    "analyseBout-controls-labs_caption": "",
-    "analyseBout-controls-labs_color": "",
-    "analyseBout-controls-labs_fill": "",
-    "analyseBout-controls-labs_size": "",
-    "analyseBout-controls-labs_subtitle": "",
-    "analyseBout-controls-labs_title": "",
-    "analyseBout-controls-labs_x": "",
-    "analyseBout-controls-labs_y": "",
-    "analyseBout-controls-labsdrop": 0,
-    "analyseBout-controls-legend_position": "right",
-    "analyseBout-controls-palette": "ggplot2",
-    "analyseBout-controls-paramsdrop": 0,
-    "analyseBout-controls-position": "stack",
-    "analyseBout-controls-scale": "area",
-    "analyseBout-controls-size": 1,
-    "analyseBout-controls-smooth_add": false,
-    "analyseBout-controls-smooth_span": 0.75,
-    "analyseBout-controls-theme": "theme_minimal",
-    "analyseBout-controls-transX": "identity",
-    "analyseBout-controls-transY": "identity",
-    "analyseBout-controls-xlim": null,
-    "analyseBout-controls-ylim": null,
-    "analyseBout-dragvars": {
+    "analyseBout_01-controls-filterdrop": 0,
+    "analyseBout_01-controls-flip": false,
+    "analyseBout_01-controls-holderCode": "",
+    "analyseBout_01-controls-labs_caption": "",
+    "analyseBout_01-controls-labs_color": "",
+    "analyseBout_01-controls-labs_fill": "",
+    "analyseBout_01-controls-labs_size": "",
+    "analyseBout_01-controls-labs_subtitle": "",
+    "analyseBout_01-controls-labs_title": "",
+    "analyseBout_01-controls-labs_x": "",
+    "analyseBout_01-controls-labs_y": "",
+    "analyseBout_01-controls-labsdrop": 0,
+    "analyseBout_01-controls-legend_position": "right",
+    "analyseBout_01-controls-palette": "ggplot2",
+    "analyseBout_01-controls-paramsdrop": 0,
+    "analyseBout_01-controls-position": "stack",
+    "analyseBout_01-controls-scale": "area",
+    "analyseBout_01-controls-size": 1,
+    "analyseBout_01-controls-smooth_add": false,
+    "analyseBout_01-controls-smooth_span": 0.75,
+    "analyseBout_01-controls-theme": "theme_minimal",
+    "analyseBout_01-controls-transX": "identity",
+    "analyseBout_01-controls-transY": "identity",
+    "analyseBout_01-controls-xlim": null,
+    "analyseBout_01-controls-ylim": null,
+    "analyseBout_01-dragvars": {
       "source": "",
       "target": {
         "xvar": null,
@@ -415,8 +514,101 @@
         "facet_col": null
       }
     },
-    "analyseBout-geom": "auto",
-    "analyseBout-play_plot": true,
+    "analyseBout_01-geom": "auto",
+    "analyseBout_01-play_plot": true,
+    "analyseBout_02-controls-adjust": 1,
+    "analyseBout_02-controls-bins": 30,
+    "analyseBout_02-controls-codedrop": 0,
+    "analyseBout_02-controls-disable_filters": false,
+    "analyseBout_02-controls-facet_ncol": 0,
+    "analyseBout_02-controls-facet_nrow": 0,
+    "analyseBout_02-controls-facet_scales": "fixed",
+    "analyseBout_02-controls-fill_color": "#0c4c8a",
+    "analyseBout_02-controls-filter-data-filter_datetime": [
+      "2020-03-23T19:21:49Z",
+      "2020-03-23T19:21:49Z"
+    ],
+    "analyseBout_02-controls-filter-data-filter_duration": [
+      0,
+      34500
+    ],
+    "analyseBout_02-controls-filter-data-filter_fly_count": [
+      1,
+      10
+    ],
+    "analyseBout_02-controls-filter-data-filter_genotype": [
+      "A",
+      "B"
+    ],
+    "analyseBout_02-controls-filter-data-filter_id": [
+      "2020-03-23_19-21-49_019aad|11",
+      "2020-03-23_19-21-49_019aad|12",
+      "2020-03-23_19-21-49_019aad|13",
+      "2020-03-23_19-21-49_019aad|14",
+      "2020-03-23_19-21-49_019aad|15",
+      "2020-03-23_19-21-49_019aad|16",
+      "2020-03-23_19-21-49_019aad|17",
+      "2020-03-23_19-21-49_019aad|18",
+      "2020-03-23_19-21-49_019aad|19",
+      "2020-03-23_19-21-49_019aad|20"
+    ],
+    "analyseBout_02-controls-filter-data-filter_reference_hour": [
+      1.15,
+      2.8
+    ],
+    "analyseBout_02-controls-filter-data-filter_region_id": [
+      11,
+      20
+    ],
+    "analyseBout_02-controls-filter-data-filter_sex": [
+      "F",
+      "M"
+    ],
+    "analyseBout_02-controls-filter-data-filter_t": [
+      17,
+      42
+    ],
+    "analyseBout_02-controls-filterdrop": 0,
+    "analyseBout_02-controls-flip": false,
+    "analyseBout_02-controls-holderCode": "",
+    "analyseBout_02-controls-labs_caption": "",
+    "analyseBout_02-controls-labs_color": "",
+    "analyseBout_02-controls-labs_fill": "",
+    "analyseBout_02-controls-labs_size": "",
+    "analyseBout_02-controls-labs_subtitle": "",
+    "analyseBout_02-controls-labs_title": "",
+    "analyseBout_02-controls-labs_x": "",
+    "analyseBout_02-controls-labs_y": "",
+    "analyseBout_02-controls-labsdrop": 0,
+    "analyseBout_02-controls-legend_position": "right",
+    "analyseBout_02-controls-palette": "ggplot2",
+    "analyseBout_02-controls-paramsdrop": 0,
+    "analyseBout_02-controls-position": "stack",
+    "analyseBout_02-controls-scale": "area",
+    "analyseBout_02-controls-size": 1,
+    "analyseBout_02-controls-smooth_add": false,
+    "analyseBout_02-controls-smooth_span": 0.75,
+    "analyseBout_02-controls-theme": "theme_minimal",
+    "analyseBout_02-controls-transX": "identity",
+    "analyseBout_02-controls-transY": "identity",
+    "analyseBout_02-controls-xlim": null,
+    "analyseBout_02-controls-ylim": null,
+    "analyseBout_02-dragvars": {
+      "source": "",
+      "target": {
+        "xvar": null,
+        "yvar": null,
+        "fill": null,
+        "color": null,
+        "size": null,
+        "group": null,
+        "facet": null,
+        "facet_row": null,
+        "facet_col": null
+      }
+    },
+    "analyseBout_02-geom": "auto",
+    "analyseBout_02-play_plot": true,
     "analyseSleep_01-controls-adjust": 1,
     "analyseSleep_01-controls-bins": 30,
     "analyseSleep_01-controls-codedrop": 0,
@@ -453,6 +645,10 @@
       "2020-03-23_19-21-49_019aad|19",
       "2020-03-23_19-21-49_019aad|20"
     ],
+    "analyseSleep_01-controls-filter-data-filter_interactions": [
+      -0.34,
+      0.32
+    ],
     "analyseSleep_01-controls-filter-data-filter_reference_hour": [
       1.15,
       2.8
@@ -466,8 +662,8 @@
       "M"
     ],
     "analyseSleep_01-controls-filter-data-filter_t": [
-      61200,
-      153000
+      42.5,
+      42.5
     ],
     "analyseSleep_01-controls-filterdrop": 0,
     "analyseSleep_01-controls-flip": false,
@@ -507,7 +703,8 @@
         "reference_hour",
         "fly_count",
         "t",
-        "asleep"
+        "asleep",
+        "interactions"
       ],
       "target": {
         "xvar": "t",
@@ -559,6 +756,10 @@
       "2020-03-23_19-21-49_019aad|19",
       "2020-03-23_19-21-49_019aad|20"
     ],
+    "analyseSleep_02-controls-filter-data-filter_interactions": [
+      -0.34,
+      0.32
+    ],
     "analyseSleep_02-controls-filter-data-filter_reference_hour": [
       1.15,
       2.8
@@ -572,8 +773,8 @@
       "M"
     ],
     "analyseSleep_02-controls-filter-data-filter_t": [
-      61200,
-      153000
+      42.5,
+      42.5
     ],
     "analyseSleep_02-controls-filterdrop": 0,
     "analyseSleep_02-controls-flip": false,
@@ -618,7 +819,10 @@
     "analyseSleep_02-play_plot": true,
     "binData-summary_FUN": "mean",
     "binData-summary_time_window": 30,
-    "binData-y": "asleep",
+    "binData-y": [
+      "asleep",
+      "interactions"
+    ],
     "loadData-dam-metadata": null,
     "loadData-dam-result_dir": "/1TB/Cloud/Lab/Gitlab/fslretho/inst/extdata/DAM_results",
     "loadData-dam-submit": 0,
@@ -627,7 +831,7 @@
         "laptop_test.csv"
       ],
       "size": [
-        385
+        396
       ],
       "type": [
         "text/csv"
@@ -641,15 +845,15 @@
     "scoreData-FUN": "sleep_annotation",
     "scoreData-min_time_immobile": 300,
     "scoreData-time_window_length": 10,
-    "scoreData-velocity_correction_coef": 0.004,
+    "scoreData-velocity_correction_coef": 0.0048,
     "sidebarCollapsed": false,
     "sidebarItemExpanded": null
   },
   "output": {
-    "analyseSleep_01-plooooooot": {
-      "src": "[image data sha1: 02810d66cae0f18e39848273fa12e96dfefef92b]",
-      "width": 732,
-      "height": 509,
+    "analyseSleep_00": {
+      "src": "[image data sha1: d1b74e71729978c4ed3a2f5250abab0582f8ab50]",
+      "width": 740,
+      "height": 400,
       "coordmap": {
         "panels": [
           {
@@ -664,28 +868,33 @@
               "y": null
             },
             "domain": {
-              "left": 56610,
-              "right": 157590,
-              "bottom": -0.01785146726922,
-              "top": 0.37488081265362
+              "left": 0,
+              "right": 1,
+              "bottom": 0,
+              "top": 1
             },
             "mapping": {
-              "x": "t",
-              "y": "asleep"
+              "x": null,
+              "y": null
             },
             "range": {
-              "left": 38.1506849315069,
-              "right": 726.520547945205,
-              "bottom": 473.849315068493,
-              "top": 5.47945205479452
+              "left": 0,
+              "right": 740,
+              "bottom": 400,
+              "top": 0
             }
           }
         ],
         "dims": {
-          "width": 732,
-          "height": 509
+          "width": 740,
+          "height": 400
         }
       }
+    },
+    "analyseSleep_01-plooooooot": {
+      "message": "x limits are not in order: `x_limits[1] >= x_limits[2]`",
+      "call": "f(...)",
+      "type": null
     },
     "analyseSleep_02-plooooooot": {
       "src": "[image data sha1: b3814d87b98056c644c552032bcea48f60aa48b1]",

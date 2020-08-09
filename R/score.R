@@ -12,7 +12,7 @@ monitor_sensitive <- names(which(unlist(lapply(FUNCTION_MAP, length)) == 2))
 scoreDataUI <- function(id) {
   ns <- shiny::NS(id)
   tagList(
-    shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.004, step = 0.0001),
+    shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001),
     shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
     shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
     shiny::selectizeInput(ns("FUN"), label = "", choices = c("sleep_annotation"))

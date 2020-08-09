@@ -5,7 +5,7 @@
 #' TRUE state in each window
 #' Relevant for moving, asleep and interactions variables
 
-FUN_choices <- c("mean", "median", "max", "min", "P_doze", "P_wake")
+FUN_choices <- c("mean", "max", "min", "P_doze", "P_wake")
 
 functions <- c(mean, median, max, min, fslsleepr::p_doze, fslsleepr::p_wake)
 names(functions) <- FUN_choices

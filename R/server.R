@@ -8,7 +8,7 @@
 #' @importFrom fslggetho stat_ld_annotations stat_pop_etho
 #' @importFrom cowplot plot_grid
 #' @importFrom rlang expr
-#' @importfslbehavr
+#' @import fslbehavr
 #' @noRd
 server <- function(input, output, session) {
 
@@ -49,7 +49,6 @@ server <- function(input, output, session) {
     req(binned_data$y)
     req(binned_data$summary_FUN)
     keep_columns <- setdiff(colnames(binned_data$data[, meta=TRUE]), c("t", "id"))
-    print(keep_columns)
 
     sleep_expression <- rlang::expr(fslbehavr::bin_all(data = !!rlang::sym(binned_data$name), y = !!binned_data$y, x = "t",
                                                       x_bin_length = !!fslbehavr::days(28),
@@ -69,7 +68,6 @@ server <- function(input, output, session) {
   # TODO Put this in its own module
   analyse_sleep_00 <- reactiveVal(NULL)
   output$analyseSleep_00 <- renderPlot({
-    # browser()
     input$refresh_analyseSleep_00
     analyse_sleep_00()
   })
@@ -161,5 +159,10 @@ server <- function(input, output, session) {
     req(scored_data$name)
     paste0("Loaded dataset: ", scored_data$name)
   })
+
+  observeEvent(input$about, {
+    shiny::showModal(app_description())
+  })
+
 
 }
