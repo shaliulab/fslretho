@@ -5,6 +5,7 @@
 #' @importFrom shiny icon
 #' @importFrom esquisse esquisserUI
 #' @importFrom magrittr `%>%`
+#' @importFrom shinybusy add_busy_bar
 shinydashboard_ui <- function() {
 
 
@@ -51,6 +52,8 @@ shinydashboard_ui <- function() {
     ),
     # TODO Place somewhere the UI for scoreData
     shinydashboard::dashboardBody(
+      shinybusy::add_busy_bar(color = "#FF0000"),
+
       tags$link(rel="stylesheet", type="text/css", href="fslretho/css/styles.css"),
       tags$script(src = "fslretho/js/my_javascript.js"),
 
