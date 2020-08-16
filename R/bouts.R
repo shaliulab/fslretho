@@ -8,7 +8,8 @@ analyseBoutServer <- function(id, grouped_data) {
       observeEvent(grouped_data$data, {
         req(grouped_data$data)
         bouts <- fslsleepr::bout_analysis(asleep, grouped_data$data)
-        # browser()
+        bouts <- bouts[asleep == TRUE, -"asleep"]
+
         rv$data <- fslbehavr::bin_apply_all(bouts,
                                             duration,
                                             x = "t",
