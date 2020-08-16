@@ -35,10 +35,14 @@ shinydashboard_ui <- function() {
         ),
       ),
       tags$li(
+        shiny::actionButton("reloadData", "", icon = icon("redo")),
+        class = "dropdown user user-menu"
+      ),
+
+      tags$li(
         tags$div(id = 'dataset_title', class = 'mybox', style = "padding: 10px; border: black 2px solid",
           shiny::textOutput("dataset_name"),
         ), class = "dropdown user user-menu"
-
       )
     ),
     shinydashboard::dashboardSidebar(

@@ -3,11 +3,11 @@
 #' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
 #' @import shiny
 #' @noRd
-loadEthoscopeServer <- function(id) {
+loadEthoscopeServer <- function(id, reload) {
   moduleServer(
     id,
-    function(input, output, session) {
 
+    function(input, output, session) {
 
       rv <- reactiveValues(
         data = NULL,
@@ -17,20 +17,22 @@ loadEthoscopeServer <- function(id) {
 
       metadata <- reactive({
 
-      withCallingHandlers(
-          expr = tryCatch({
-            load_metadata(input$metadata$datapath, monitor = "ethoscope")
-          }, error = function(e) {
-            show_condition_message(e, "error", session)
-            list(plot = NULL, data = NULL, layout = NULL)
-            shiny::validate(shiny::need(expr = F, label = "metadata is not valid"))
-          }
-          ),
-          warning = function(w) {
-            show_condition_message(w, "warning", session)
-            list(plot = NULL, data = NULL, layout = NULL)
-          }
-        )
+        reload()
+
+        withCallingHandlers(
+            expr = tryCatch({
+              load_metadata(input$metadata$datapath, monitor = "ethoscope")
+            }, error = function(e) {
+              show_condition_message(e, "error", session)
+              list(plot = NULL, data = NULL, layout = NULL)
+              shiny::validate(shiny::need(expr = F, label = "metadata is not valid"))
+            }
+            ),
+            warning = function(w) {
+              show_condition_message(w, "warning", session)
+              list(plot = NULL, data = NULL, layout = NULL)
+            }
+          )
 
       })
 
@@ -40,6 +42,8 @@ loadEthoscopeServer <- function(id) {
 
 
       dt_raw <- reactive({
+
+        reload()
 
         if (nrow(metadata_linked()) == 0) {
           shiny::showNotification("Failure: no matches were found in the local ethoscope database.
@@ -83,11 +87,10 @@ loadEthoscopeServer <- function(id) {
         dt_raw
       })
 
-      observeEvent(input$submit, {
+      observeEvent(c(input$submit, reload()), {
         rv$data <- dt_raw()
         rv$name <- input$metadata$name
         rv$time <- as.numeric(Sys.time())
-
       })
 
       return(rv)

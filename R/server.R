@@ -16,10 +16,19 @@ server <- function(input, output, session) {
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
   # Placeholder where to keep the loaded data and its name
-  raw_data <- reactiveValues(data = NULL, name = NULL)
+  raw_data <- reactiveValues(
+    data = NULL,
+    name = NULL,
+    time = NULL
+  )
 
-  ethoscope_data <- loadEthoscopeServer("loadData-ethoscope")
-  dam_data <- loadDamServer("loadData-dam")
+  reload <- reactive({
+    input$reloadData
+  })
+
+  ethoscope_data <- loadEthoscopeServer("loadData-ethoscope", reload)
+  dam_data <- loadDamServer("loadData-dam", reload)
+
 
   observeEvent(ethoscope_data$time, {
     raw_data <- update_rv(raw_data, ethoscope_data)

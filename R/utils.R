@@ -130,7 +130,7 @@ update_rv <- function(rv1, rv2) {
   for (i in isolate(names(rv1))) {
     rv1[[i]] <- isolate(rv2[[i]])
   }
-  rv2
+  rv1
 }
 
 

@@ -1,4 +1,4 @@
-loadDamServer <- function(id){
+loadDamServer <- function(id, reload){
 
   moduleServer(
     id,
@@ -11,6 +11,8 @@ loadDamServer <- function(id){
       )
 
       metadata <- reactive({
+
+        reload()
 
         withCallingHandlers(
           expr = tryCatch({
@@ -73,12 +75,13 @@ loadDamServer <- function(id){
         dt_raw()
       })
 
-      observeEvent(input$submit, {
+      observeEvent(c(input$submit, reload()), {
         # TODO Make sure here that dt_raw_validated() attr monitor is still dam
         rv$data <- dt_raw_validated()
         rv$name <- input$metadata$name
         rv$time <- as.numeric(Sys.time())
       })
+
 
       return(rv)
     }
