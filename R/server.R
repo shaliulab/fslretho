@@ -23,6 +23,7 @@ server <- function(input, output, session) {
   )
 
   reload <- reactive({
+    req(!is.null(input$reloadData))
     input$reloadData
   })
 

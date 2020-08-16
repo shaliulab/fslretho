@@ -91,7 +91,8 @@ loadEthoscopeServer <- function(id, reload) {
         rv$data <- dt_raw()
         rv$name <- input$metadata$name
         rv$time <- as.numeric(Sys.time())
-      })
+      }, ignoreInit = TRUE)
+
 
       return(rv)
     }

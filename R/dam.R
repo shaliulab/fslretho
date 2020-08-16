@@ -80,7 +80,7 @@ loadDamServer <- function(id, reload){
         rv$data <- dt_raw_validated()
         rv$name <- input$metadata$name
         rv$time <- as.numeric(Sys.time())
-      })
+      }, ignoreInit = TRUE)
 
 
       return(rv)
