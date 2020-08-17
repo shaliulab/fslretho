@@ -12,7 +12,9 @@ loadDamServer <- function(id, reload){
 
       metadata <- reactive({
 
+        req(input$metadata$datapath)
         reload()
+
 
         withCallingHandlers(
           expr = tryCatch({

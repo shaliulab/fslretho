@@ -17,6 +17,8 @@ loadEthoscopeServer <- function(id, reload) {
 
       metadata <- reactive({
 
+
+        req(input$metadata$datapath)
         reload()
 
         withCallingHandlers(
@@ -42,8 +44,6 @@ loadEthoscopeServer <- function(id, reload) {
 
 
       dt_raw <- reactive({
-
-        reload()
 
         if (nrow(metadata_linked()) == 0) {
           shiny::showNotification("Failure: no matches were found in the local ethoscope database.
@@ -71,7 +71,6 @@ loadEthoscopeServer <- function(id, reload) {
           }
         }
 
-        # browser()
 
         dt_raw <- fslscopr::load_ethoscope(
           metadata = metadata_linked(),
@@ -91,7 +90,7 @@ loadEthoscopeServer <- function(id, reload) {
         rv$data <- dt_raw()
         rv$name <- input$metadata$name
         rv$time <- as.numeric(Sys.time())
-      }, ignoreInit = TRUE)
+    }, ignoreInit = TRUE)
 
 
       return(rv)
