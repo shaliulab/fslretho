@@ -1,6 +1,6 @@
 #' @importFrom RSQLite dbGetQuery SQLite SQLITE_RO dbConnect
 #' @importFrom data.table as.data.table
-list_ethoscopes <- function(FILE="/etc/ethoscope-node.db") {
+list_ethoscopes <- function(FILE="/etc/ethoscope-node.db", sorted = TRUE) {
   con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
   ethos <- tryCatch({
     data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ethoscopes"))$ethoscope_name
@@ -9,11 +9,16 @@ list_ethoscopes <- function(FILE="/etc/ethoscope-node.db") {
     RSQLite::dbDisconnect(con)
   })
 
+  if (sorted) {
+    ethos <- sort(ethos)
+  }
+
   return(ethos)
 }
 
 save_backupoff <- function(x, path="/etc/backup_off.conf") {
-  x <- x[x != ""]
+  x <- sort(x[x != ""])
+
   write.table(x = x, file = path, quote = F, row.names = F, col.names = F)
 }
 
@@ -23,7 +28,7 @@ load_backupoff <- function(path="/etc/backup_off.conf") {
   }, error = function(e) {
     ""
   })
-  x <- x[x != ""]
+  x <- sort(x[x != ""])
   x
 }
 
@@ -45,7 +50,7 @@ backupManagerUI <- function(id) {
 
   ns <- shiny::NS(id)
 
-  ethos <- list_ethoscopes("/etc/ethoscope-node.db")
+  ethos <- list_ethoscopes("/etc/ethoscope-node.db", sorted = TRUE)
 
   rows <- lapply(ethos, function(etho) {
     switch_id <- paste0(etho, "_switch")
