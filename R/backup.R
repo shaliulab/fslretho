@@ -51,7 +51,7 @@ backupManagerUI <- function(id) {
     switch_id <- paste0(etho, "_switch")
     button_id <- paste0(etho, "_button")
 
-    shiny::tagList(
+    shiny::tags$tr(
       shiny::tags$td(
      # shiny::tags$p(etho, style = "display: inline-block;"),
         shiny::tags$p(etho)
