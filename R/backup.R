@@ -51,6 +51,7 @@ backupManagerUI <- function(id) {
   ns <- shiny::NS(id)
 
   ethos <- list_ethoscopes("/etc/ethoscope-node.db", sorted = TRUE)
+  backup_off <- load_backupoff()
 
   rows <- lapply(ethos, function(etho) {
     switch_id <- paste0(etho, "_switch")
@@ -62,8 +63,7 @@ backupManagerUI <- function(id) {
         shiny::tags$p(etho)
       ),
       shiny::tags$td(
-        shinyWidgets::materialSwitch(ns(switch_id), value = TRUE) #%>%
-        # htmltools::tagAppendAttributes(., style = "display: inline-block;")
+        shinyWidgets::materialSwitch(ns(switch_id), value = ! (etho %in% backup_off))
       ),
       shiny::tags$td(
         shinyWidgets::actionBttn(
