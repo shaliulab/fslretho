@@ -80,6 +80,9 @@ shinydashboard_ui <- function() {
                 tagAppendAttributes(onmouseup = 'refresh_plot()')
             )
           ),
+
+          analyse_sleep_01_help(),
+
           tabsetPanel(
             tabPanel(
               title = "Plot",
@@ -93,12 +96,12 @@ shinydashboard_ui <- function() {
             tabPanel(
               title = "Output",
               shiny::verbatimTextOutput("analyseSleep_01_out")
-            ),
-            tabPanel(
-              title = "Help",
-              analyse_sleep_01_help()
             )
           ),
+
+          analyse_sleep_02_help(),
+
+
           tabsetPanel(
             tabPanel(
               title = "Plot",
@@ -112,10 +115,6 @@ shinydashboard_ui <- function() {
             tabPanel(
               title = "Output",
               shiny::verbatimTextOutput("analyseSleep_02_out")
-            ),
-            tabPanel(
-              title = "Help",
-              analyse_sleep_02_help()
             )
           )
         ),
