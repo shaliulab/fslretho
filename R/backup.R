@@ -48,14 +48,19 @@ add_backupoff <- function(x, etho) {
 #' @importFrom magrittr `%>%`
 backupManagerUI <- function(id) {
 
+
   ns <- shiny::NS(id)
 
   ethos <- list_ethoscopes("/etc/ethoscope-node.db", sorted = TRUE)
   backup_off <- load_backupoff()
 
-  rows <- lapply(ethos, function(etho) {
+  rows <- lapply(1:length(ethos), function(i) {
+    etho <- ethos[i]
     switch_id <- paste0(etho, "_switch")
     button_id <- paste0(etho, "_button")
+    label <- paste0("Backup ", etho)
+    class <- ifelse(i %% 2 == 0, "even", "odd")
+    
 
     shiny::tags$tr(
       shiny::tags$td(
@@ -68,11 +73,12 @@ backupManagerUI <- function(id) {
       shiny::tags$td(
         shinyWidgets::actionBttn(
           inputId = ns(button_id),
-          label = "Backup!",
+          label = label,
           color = "primary",
           style = "bordered"
         )
-      )
+      ),
+      class = class
     )
   })
 

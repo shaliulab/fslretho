@@ -77,3 +77,11 @@ body {
 .dropdown > .dropdown-toggle > .label-danger {
   display: none;
 }
+
+td {
+  padding: 10px;
+}
+
+tr.odd {
+	background-color: #dddddd; color: black;
+}
