@@ -51,14 +51,15 @@ shinydashboard_ui <- function() {
         shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
         shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
         shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = shiny::icon('moon')),
-        shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table'))
+        shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table')),
+        shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = shiny::icon('save'))
       )
     ),
     # TODO Place somewhere the UI for scoreData
     shinydashboard::dashboardBody(
       shinybusy::add_busy_bar(color = "#FF0000"),
 
-      tags$link(rel="stylesheet", type="text/css", href="fslretho/css/styles.css"),
+      tags$link(rel = "stylesheet", type = "text/css", href = "fslretho/css/styles.css"),
       tags$script(src = "fslretho/js/my_javascript.js"),
 
       shinydashboard::tabItems(
@@ -76,7 +77,7 @@ shinydashboard_ui <- function() {
               collapsible = TRUE, width = "90%",
               plotOutput("analyseSleep_00", height = "400px") %>%
                 tagAppendAttributes(class = "resizable") %>%
-                tagAppendAttributes(onmouseup='refresh_plot()')
+                tagAppendAttributes(onmouseup = 'refresh_plot()')
             )
           ),
           tabsetPanel(
@@ -152,7 +153,8 @@ shinydashboard_ui <- function() {
 
         ),
 
-        shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
+        shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata")),
+        shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
       )
     )
   )

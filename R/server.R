@@ -46,6 +46,7 @@ server <- function(input, output, session) {
   scored_data <- scoreDataServer("scoreData", raw_data)
 
   viewMetadataServer("viewMetadata", scored_data)
+  backupManagerServer("manageBackup")
 
   binned_data <- binDataServer("binData", scored_data, main = TRUE)
   bout_data <- analyseBoutServer("analyseBout", scored_data)
