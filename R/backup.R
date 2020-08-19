@@ -116,33 +116,42 @@ backupManagerServer <- function(id) {
       # to back the corresponding ethoscope
       # If the switch is OFF, then the backup daemon
       # will ignore this ethoscope even if it's running
+      lapply(switches, function(sw) {
 
-      for (sw in switches) {
         observeEvent(input[[sw]], {
           etho <- gsub(pattern = "_switch", replacement = "", x = sw)
           backup_off <- load_backupoff()
           if(input[[sw]]) {
             backup_off <- remove_backupoff(backup_off, etho)
+            message(sprintf("Enabling backup daemon for %s", etho))
           } else {
             backup_off <- add_backupoff(backup_off, etho)
+            message(sprintf("Disabling backup daemon for %s", etho))
           }
 
           save_backupoff(backup_off)
         }, ignoreInit = TRUE)
-      }
+      })
+
+      
 
       # Respond to click on manual backup buttons
-      for (bt in buttons) {
+      lapply(buttons, function(bt) {
+
         observeEvent(input[[bt]], {
           etho <- gsub(pattern = "_button", replacement = "", x = bt)
           pattern <- gsub(pattern = "ETHOSCOPE_", replacement = "", x = etho)
           backup_cmd <- glue::glue('{python_binary} {backup_tool.py} --safe --debug --ethoscope {pattern}')
+          message(sprintf("CMD: %s", backup_cmd))
+
           tryCatch({
             system(backup_cmd)
+            print(backup_cmd)
+            message(sprintf("Manual backup of %s completed!", etho))
           }, error = function(e) {
             warning(e)
           })
-        })
-      }
+        }, ignoreInit = TRUE)
+      })
     })
 }
