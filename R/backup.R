@@ -48,7 +48,6 @@ add_backupoff <- function(x, etho) {
 #' @importFrom magrittr `%>%`
 backupManagerUI <- function(id) {
 
-
   ns <- shiny::NS(id)
 
   ethos <- list_ethoscopes("/etc/ethoscope-node.db", sorted = TRUE)
@@ -60,11 +59,9 @@ backupManagerUI <- function(id) {
     button_id <- paste0(etho, "_button")
     label <- paste0("Backup ", etho)
     class <- ifelse(i %% 2 == 0, "even", "odd")
-    
 
     shiny::tags$tr(
       shiny::tags$td(
-     # shiny::tags$p(etho, style = "display: inline-block;"),
         shiny::tags$p(etho)
       ),
       shiny::tags$td(
@@ -112,10 +109,8 @@ backupManagerServer <- function(id) {
 
       python_binary <- FSLRethoConfiguration$new()$content[["python_binary"]]
       python_binary <- ifelse(is.null(python_binary), "python", python_binary)
-
-
       backup_tool.py <- "/opt/ethoscope-node/node_src/scripts/backup_tool.py"
-
+      backup_off <- load_backupoff()
 
       # Respond to switch toggles
       # If the switch is ON, we want the backup daemon
@@ -124,22 +119,27 @@ backupManagerServer <- function(id) {
       # will ignore this ethoscope even if it's running
       lapply(switches, function(sw) {
 
+        etho <- gsub(pattern = "_switch", replacement = "", x = sw)
+        if (etho %in% backup_off) {
+            print("Setting to FALSE")
+            shinyWidgets::updateMaterialSwitch(session = session, inputId = sw, value = FALSE)
+        } else {
+            print("Setting to TRUE")
+            shinyWidgets::updateMaterialSwitch(session = session, inputId = sw, value = TRUE)
+        }
+
         observeEvent(input[[sw]], {
-          etho <- gsub(pattern = "_switch", replacement = "", x = sw)
-          backup_off <- load_backupoff()
           if(input[[sw]]) {
-            backup_off <- remove_backupoff(backup_off, etho)
+            backup_off <<- remove_backupoff(backup_off, etho)
             message(sprintf("Enabling backup daemon for %s", etho))
           } else {
-            backup_off <- add_backupoff(backup_off, etho)
+            backup_off <<- add_backupoff(backup_off, etho)
             message(sprintf("Disabling backup daemon for %s", etho))
           }
-
           save_backupoff(backup_off)
         }, ignoreInit = TRUE)
       })
 
-      
 
       # Respond to click on manual backup buttons
       lapply(buttons, function(bt) {
