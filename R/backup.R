@@ -91,7 +91,24 @@ backupManagerUI <- function(id) {
   )
 
 
-  shiny::tagList(etho_table)
+  shiny::tagList(
+    shiny::tags$p(
+        "PLEASE NOTE: The state of some switches upon page load might not be accurate immediately.
+        Please give a couple of seconds for FSLRetho to update the switches.
+        This is required when loading the page for the first time on each session, i.e. you dont need to wait
+        if you have seen this text before in your current session.
+        You will have to wait again if you reload or close, but not if you just move between the different sections
+        of the application.
+        "
+      ),
+    shiny::tags$p(
+      "When a switch is OFF, the corresponding ethoscope gets listed under /etc/backup_off.conf.
+      Manually editing the file and writing there the name of the ethoscope whose automatic backup
+      you want to disable has the same effect. Correspondingly, removing the ethoscope from the file
+      has the same effect as turning its switch ON.
+    "),
+    etho_table
+    )
 
 
 }
