@@ -1,5 +1,7 @@
 #' Start an FSLRetho instance
 #'
+#' @param display_mode Whether to show the code alongside the application or not
+#' @param port Port on which fslretho2 should run
 #' @importFrom reactlog reactlog_enable
 #' @import shiny
 #' @export
@@ -22,8 +24,6 @@ main <- function(display_mode=FALSE, port=NULL) {
   # gives you the ability to interactively debug inside any of the frames
   # options(error = recover)
 
-  # whether to show the code as it runs side by side with the application
-  # or not
   options(display.mode = display_mode)
 
   # Provide a browsable tree of reactive expressions, inputs, and outputs (reactlog)
@@ -33,5 +33,5 @@ main <- function(display_mode=FALSE, port=NULL) {
   shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
 
   # launch the app
-  shiny::shinyApp(server = server, ui = shinydashboard_ui())
+  shiny::shinyApp(server = server, ui = ui())
 }

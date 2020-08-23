@@ -198,3 +198,5 @@ navbar_ui <- function() {
 
   )
 }
+
+ui <- shinydashboard_ui

@@ -87,14 +87,16 @@ server <- function(input, output, session) {
     req(binned_data$data$t)
     req(binned_data$data$asleep)
     req(binned_data$data[, meta = T]$region_id)
+    data <- fslbehavr::rejoin(binned_data$data)
+    # saveRDS(object = data, file = "/tmp/data.rds")
 
-    sleep_trace <- ggplot2::ggplot(data = fslbehavr::rejoin(binned_data$data), ggplot2::aes(x = t, y = asleep)) +
+    sleep_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = asleep)) +
       fslggetho::stat_pop_etho() +
       fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
       ggplot2::facet_grid(region_id ~ .)
 
     if (isTruthy(binned_data$data$interactions)) {
-      interactions_trace <- ggplot2::ggplot(data = fslbehavr::rejoin(binned_data$data), ggplot2::aes(x = t, y = interactions)) +
+      interactions_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = interactions)) +
         fslggetho::stat_pop_etho() +
         fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA)  +
         ggplot2::facet_grid(region_id ~ .)
@@ -110,16 +112,20 @@ server <- function(input, output, session) {
 
   analyse_sleep_01 <- callModule(
     module = esquisse::esquisserServer,
+  # analyse_sleep_01 <- esquisse::esquisserServer(
     id = "analyseSleep_01",
     data = rejoin_rv(binned_data),
+    # dataModule = "GlobalEnv",
     dataModule = NULL,
     input_modal = FALSE
   )
 
   analyse_sleep_02 <- callModule(
     module = esquisse::esquisserServer,
+  # analyse_sleep_02 <- esquisse::esquisserServer(
     id = "analyseSleep_02",
     data = rejoin_rv(binned_data),
+    # dataModule = "GlobalEnv",
     dataModule = NULL,
     input_modal = FALSE,
     preprocessing_expression = preprocessing$sleep
@@ -127,8 +133,10 @@ server <- function(input, output, session) {
 
   analyse_bout_01 <- callModule(
     module = esquisse::esquisserServer,
+  # analyse_bout_01 <- esquisse::esquisserServer(
     id = "analyseBout_01",
     data = rejoin_rv(bout_data),
+    # dataModule = "GlobalEnv",
     dataModule = NULL,
     input_modal = FALSE
 
@@ -136,8 +144,10 @@ server <- function(input, output, session) {
 
   analyse_bout_02 <- callModule(
     module = esquisse::esquisserServer,
+  # analyse_bout_02 <- esquisse::esquisserServer(
     id = "analyseBout_02",
     data = rejoin_rv(bout_data),
+    # dataModule = "GlobalEnv",
     dataModule = NULL,
     input_modal = FALSE,
     preprocessing_expression = preprocessing$bout
