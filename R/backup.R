@@ -138,10 +138,10 @@ backupManagerServer <- function(id) {
 
         etho <- gsub(pattern = "_switch", replacement = "", x = sw)
         if (etho %in% backup_off) {
-            print("Setting to FALSE")
+            # print("Setting to FALSE")
             shinyWidgets::updateMaterialSwitch(session = session, inputId = sw, value = FALSE)
         } else {
-            print("Setting to TRUE")
+            # print("Setting to TRUE")
             shinyWidgets::updateMaterialSwitch(session = session, inputId = sw, value = TRUE)
         }
 
