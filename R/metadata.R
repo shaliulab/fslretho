@@ -22,7 +22,9 @@ as_character_column <- function(metadata, column_name) {
 #' This information is used to select the right validation function
 load_metadata <- function(metadata_path, monitor) {
   # Load into R the metadata table
-  metadata <- data.table::fread(metadata_path)
+  if (monitor == "ethoscope") metadata <- fslscopr::read_metadata(metadata_path)
+  else metadata <- data.table::fread(cmd=paste0("grep -v '^#' ", metadata_path))
+
   # Validate the user passed metadata
   # If it's fine, it returns TRUE,
   # otherwise, an error is raised and is presented in the UI
