@@ -15,6 +15,15 @@ shinydashboard_ui <- function() {
     browserButton <- tags$div(style = "hidden")
   }
 
+  cache_dir <- file.path(
+    FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
+    "sessions"
+  )
+
+  rds_load_options <- list.files(path = cache_dir)#,pattern = "rds")
+  names(rds_load_options) <- rds_load_options %>% sapply(., function(x) substr(x, 1, 10))
+  rds_load_options <- as.list(rds_load_options)
+
   ui <- shinydashboardPlus::dashboardPagePlus(skin = "black",
 
     shinydashboardPlus::dashboardHeaderPlus(
@@ -34,6 +43,28 @@ shinydashboard_ui <- function() {
           binDataUI("binData")
         ),
       ),
+      tags$li(
+        shiny::actionButton("load", "", icon = icon("upload")),
+        class = "dropdown user user-menu"
+      ),
+      tags$li(
+        shiny::selectizeInput(
+            "rds_load", label = "", multiple = FALSE,
+            selected = rds_load_options[[1]], choices = rds_load_options
+          ),
+        class = "dropdown user user-menu"
+      ),
+
+      tags$li(
+        shiny::actionButton("save", "", icon = icon("save")),
+        class = "dropdown user user-menu"
+      ),
+
+      tags$li(
+        shiny::textInput("rds_save", label = "", value = "", placeholder = "save.rds"),
+        class = "dropdown user user-menu"
+      ),
+
       tags$li(
         shiny::actionButton("reloadData", "", icon = icon("redo")),
         class = "dropdown user user-menu"

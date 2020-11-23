@@ -12,47 +12,66 @@
 #' @noRd
 server <- function(input, output, session) {
 
+  ## Preparation ----
+  # Run a simple ethoscope backup manager
+  backupManagerServer("manageBackup")
+
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
-  # # Placeholder where to keep the loaded data and its name
-  # raw_data <- reactiveValues(
-  #   data = NULL,
-  #   name = NULL,
-  #   time = NULL
-  # )
-
+  # Define a trigger shared across modules
   reload <- reactive({
     req(!is.null(input$reloadData))
     input$reloadData
   })
 
+  ## Analysis ----
+  # Load and analyse data provided by user
   raw_data <- loadDataServer("loadData", reload)
-  # dam_data <- loadDamServer("loadData-dam", reload)
-
-
-  # observeEvent(behavioral_data$time, {
-  #   raw_data <- update_rv(raw_data, behavioral_data)
-  # }, ignoreInit = TRUE)
-
-  # observeEvent(dam_data$time, {
-  #   raw_data <- update_rv(raw_data, dam_data)
-  # }, ignoreInit = TRUE)
-
-
-  # bind the content of rv to the last modified module_data
-  # raw_data <- watch_input(rv, ethoscope_data, dam_data)
-
   scored_data <- scoreDataServer("scoreData", raw_data)
-
   unified_data <- unify_datasets(id = "", scored_data)
 
-  viewMetadataServer("viewMetadata", unified_data)
-  backupManagerServer("manageBackup")
+
+  cache_dir <- file.path(
+    FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
+    "sessions"
+  )
+
+  observeEvent(input$save, {
+
+
+    browser()
+
+    tosave <- shiny::reactiveValuesToList(unified_data)
+
+    saveRDS(
+      object = tosave,
+      file = file.path(cache_dir, input$rds_save)
+    )
+  })
+
+  saved_unified_data <- reactive({
+    readRDS(
+      file = file.path(cache_dir, input$rds_load)
+    )
+  })
+
+  observeEvent(input$load, {
+    unified_data$data <<- saved_unified_data()$data
+    unified_data$name <<- saved_unified_data()$name
+    unified_data$time <<- saved_unified_data()$time
+  })
+
+  # Everything below uses either unified_data or binned_data
+  # This makes for a nice set of session saving objects
 
   binned_data <- binDataServer("binData", unified_data, main = TRUE)
+
+
+
   bout_data <- analyseBoutServer("analyseBout", unified_data)
 
+  # TODO Make this nicer
   preprocessing <- reactiveValues(data = NULL)
 
   observe({
@@ -75,7 +94,11 @@ server <- function(input, output, session) {
     preprocessing$bout <- bout_expression
   })
 
+  ## Metadata viz ----
+  # View loaded metadata
+  viewMetadataServer("viewMetadata", unified_data)
 
+  ## Plotting ----
   # TODO Put this in its own module
   analyse_sleep_00 <- reactiveVal(NULL)
   output$analyseSleep_00 <- renderPlot({
