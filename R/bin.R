@@ -39,6 +39,7 @@ binDataServer <- function(id, grouped_data, summary_time_window = NULL, main = F
         req(grouped_data$data)
         req(input$summary_time_window)
         req(input$summary_FUN)
+        req(grouped_data$time)
         summary_FUN <- functions[[input$summary_FUN]]
 
         x_bin_length <- ifelse(

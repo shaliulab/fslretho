@@ -3,11 +3,7 @@
 #' @importFrom fslscopr link_ethoscope_metadata load_ethoscope
 #' @import shiny
 #' @noRd
-loadEthoscopeServer <- function(id, reload) {
-  moduleServer(
-    id,
-
-    function(input, output, session) {
+loadEthoscopeServer <- function(id, metadata_datapath, reload, input, session) {
 
       rv <- reactiveValues(
         data = NULL,
@@ -15,15 +11,21 @@ loadEthoscopeServer <- function(id, reload) {
         time = NULL
       )
 
+      ethoscope_metadata_datapath <- reactive({
+        req(metadata_datapath())
+        metadata_datapath()[sapply(metadata_datapath(), get_monitor_name) == "ethoscope"]
+      })
+
+
       metadata <- reactive({
 
-
-        req(input$metadata$datapath)
         reload()
+        # browser()
+        req(ethoscope_metadata_datapath())
 
         withCallingHandlers(
             expr = tryCatch({
-              load_metadata(input$metadata$datapath, monitor = "ethoscope")
+              load_metadata(ethoscope_metadata_datapath(), monitor = "ethoscope")
             }, error = function(e) {
               show_condition_message(e, "error", session)
               list(plot = NULL, data = NULL, layout = NULL)
@@ -39,7 +41,7 @@ loadEthoscopeServer <- function(id, reload) {
       })
 
       metadata_linked <- reactive({
-        fslscopr::link_ethoscope_metadata(x = metadata(), result_dir = input$result_dir)
+        fslscopr::link_ethoscope_metadata(x = metadata(), result_dir = input$result_dir_ethoscope)
       })
 
 
@@ -86,14 +88,35 @@ loadEthoscopeServer <- function(id, reload) {
         dt_raw
       })
 
+      dataset_name <- reactive({
+        res <- basename(metadata_datapath())
+        print(res)
+        res
+      })
+
+
+      dt_raw_validated <- reactive({
+        if (nrow(dt_raw()) == 0) {
+          showNotification("Failure: your metadata could be linked but the resulting table is empty", type = "error")
+          shiny::validate(shiny::need(FALSE, label = ""))
+        }
+
+        dt_raw()
+      })
+
       observeEvent(c(input$submit, reload()), {
-        rv$data <- dt_raw()
-        rv$name <- input$metadata$name
-        rv$time <- as.numeric(Sys.time())
+        # browser()
+        if(isTruthy(ethoscope_metadata_datapath())) {
+          rv$data <- dt_raw_validated()
+          rv$name <- dataset_name()
+          rv$time <- as.numeric(Sys.time())
+        } else {
+          rv$data <- NULL
+          rv$name <- NULL
+          rv$time <- NULL
+        }
+
     }, ignoreInit = TRUE)
 
-
-      return(rv)
-    }
-  )
+    return(rv)
 }

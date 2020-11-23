@@ -15,29 +15,29 @@ server <- function(input, output, session) {
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
-  # Placeholder where to keep the loaded data and its name
-  raw_data <- reactiveValues(
-    data = NULL,
-    name = NULL,
-    time = NULL
-  )
+  # # Placeholder where to keep the loaded data and its name
+  # raw_data <- reactiveValues(
+  #   data = NULL,
+  #   name = NULL,
+  #   time = NULL
+  # )
 
   reload <- reactive({
     req(!is.null(input$reloadData))
     input$reloadData
   })
 
-  ethoscope_data <- loadEthoscopeServer("loadData-ethoscope", reload)
-  dam_data <- loadDamServer("loadData-dam", reload)
+  raw_data <- loadDataServer("loadData", reload)
+  # dam_data <- loadDamServer("loadData-dam", reload)
 
 
-  observeEvent(ethoscope_data$time, {
-    raw_data <- update_rv(raw_data, ethoscope_data)
-  }, ignoreInit = TRUE)
+  # observeEvent(behavioral_data$time, {
+  #   raw_data <- update_rv(raw_data, behavioral_data)
+  # }, ignoreInit = TRUE)
 
-  observeEvent(dam_data$time, {
-    raw_data <- update_rv(raw_data, dam_data)
-  }, ignoreInit = TRUE)
+  # observeEvent(dam_data$time, {
+  #   raw_data <- update_rv(raw_data, dam_data)
+  # }, ignoreInit = TRUE)
 
 
   # bind the content of rv to the last modified module_data
@@ -45,11 +45,13 @@ server <- function(input, output, session) {
 
   scored_data <- scoreDataServer("scoreData", raw_data)
 
-  viewMetadataServer("viewMetadata", scored_data)
+  unified_data <- unify_datasets(id = "", scored_data)
+
+  viewMetadataServer("viewMetadata", unified_data)
   backupManagerServer("manageBackup")
 
-  binned_data <- binDataServer("binData", scored_data, main = TRUE)
-  bout_data <- analyseBoutServer("analyseBout", scored_data)
+  binned_data <- binDataServer("binData", unified_data, main = TRUE)
+  bout_data <- analyseBoutServer("analyseBout", unified_data)
 
   preprocessing <- reactiveValues(data = NULL)
 
@@ -71,8 +73,6 @@ server <- function(input, output, session) {
 
     preprocessing$sleep <- sleep_expression
     preprocessing$bout <- bout_expression
-
-
   })
 
 
@@ -177,8 +177,8 @@ server <- function(input, output, session) {
   })
 
   output$dataset_name <- shiny::renderText({
-    req(scored_data$name)
-    paste0("Loaded dataset: ", scored_data$name)
+    req(unified_data$name)
+    paste0("Loaded dataset: ", unified_data$name)
   })
 
   observeEvent(input$about, {

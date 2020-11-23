@@ -1,24 +1,25 @@
-loadDamServer <- function(id, reload){
+loadDamServer <- function(id, metadata_datapath, reload, input, session){
 
-  moduleServer(
-    id,
-    function(input, output, session) {
-
-      rv <- reactiveValues(
+    rv <- reactiveValues(
         data = NULL,
         name = NULL,
         time = NULL
       )
 
+      dam_metadata_datapath <- reactive({
+        req(metadata_datapath())
+        metadata_datapath()[sapply(metadata_datapath(), get_monitor_name) == "dam"]
+      })
+
       metadata <- reactive({
 
-        req(input$metadata$datapath)
-        reload()
-
+        # reload()
+        # browser()
+        if(!isTruthy(dam_metadata_datapath())) return(rv)
 
         withCallingHandlers(
           expr = tryCatch({
-            load_metadata(input$metadata$datapath, "dam")
+            load_metadata(dam_metadata_datapath(), "dam")
           }, error = function(e) {
             show_condition_message(e, "error", session)
             list(plot = NULL, data = NULL, layout = NULL)
@@ -33,7 +34,7 @@ loadDamServer <- function(id, reload){
       })
 
       metadata_linked <- reactive({
-        fsldamr::link_dam_metadata(metadata(), input$result_dir)
+        fsldamr::link_dam_metadata(metadata(), input$result_dir_dam)
       })
 
 
@@ -77,15 +78,27 @@ loadDamServer <- function(id, reload){
         dt_raw()
       })
 
+      dataset_name <- reactive({
+        res <- basename(metadata_datapath())
+        print(res)
+        res
+      })
+
+
       observeEvent(c(input$submit, reload()), {
-        # TODO Make sure here that dt_raw_validated() attr monitor is still dam
-        rv$data <- dt_raw_validated()
-        rv$name <- input$metadata$name
-        rv$time <- as.numeric(Sys.time())
+        # browser()
+        if(isTruthy(dam_metadata_datapath())) {
+          rv$data <- dt_raw_validated()
+          rv$name <- dataset_name()
+          rv$time <- as.numeric(Sys.time())
+        } else {
+          rv$data <- NULL
+          rv$name <- NULL
+          rv$time <- NULL
+        }
+
       }, ignoreInit = TRUE)
 
 
       return(rv)
-    }
-  )
 }

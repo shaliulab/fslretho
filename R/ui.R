@@ -66,8 +66,8 @@ shinydashboard_ui <- function() {
         shinydashboard::tabItem(tabName = 'welcome', welcomePageUI()),
         shinydashboard::tabItem(tabName = 'load',
           tagList(
-            loadDataUI("loadData-ethoscope", "ethoscope"),
-            loadDataUI("loadData-dam", "dam")
+            loadDataUI("loadData"),
+            # loadDataUI("loadData-dam", "dam")
           )
         ),
         shinydashboard::tabItem(tabName = "sleep",
