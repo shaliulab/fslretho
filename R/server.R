@@ -19,6 +19,10 @@ server <- function(input, output, session) {
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
+  options("retry_locked" = tempfile(pattern = "retry_locked"))
+  message(sprintf("retry_locked -> %s", getOption("retry_locked"))
+
+
   # Define a trigger shared across modules
   reload <- reactive({
     req(!is.null(input$reloadData))
@@ -38,9 +42,6 @@ server <- function(input, output, session) {
   )
 
   observeEvent(input$save, {
-
-
-    browser()
 
     tosave <- shiny::reactiveValuesToList(unified_data)
 
@@ -64,11 +65,7 @@ server <- function(input, output, session) {
 
   # Everything below uses either unified_data or binned_data
   # This makes for a nice set of session saving objects
-
   binned_data <- binDataServer("binData", unified_data, main = TRUE)
-
-
-
   bout_data <- analyseBoutServer("analyseBout", unified_data)
 
   # TODO Make this nicer
