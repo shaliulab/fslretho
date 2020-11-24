@@ -20,7 +20,7 @@ server <- function(input, output, session) {
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
   options("retry_locked" = tempfile(pattern = "retry_locked"))
-  message(sprintf("retry_locked -> %s", getOption("retry_locked"))
+  message(sprintf("retry_locked -> %s", getOption("retry_locked")))
 
 
   # Define a trigger shared across modules
