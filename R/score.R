@@ -11,6 +11,7 @@ scoreDataUI <- function(id) {
 }
 
 
+#' @importFrom fslscopr annotate_all
 score_monitor <- function(raw_data, input, monitor) {
 
   # reactive({
@@ -90,7 +91,6 @@ score_monitor <- function(raw_data, input, monitor) {
 #' @param raw_data A shiny reactiveValues with slots data and name
 #' @importFrom shiny moduleServer reactive observe eventReactive Progress
 #' @importFrom fslbehavr bin_apply_all
-#' @importFrom fslscopr annotate
 #' @importFrom rlang fn_fmls
 scoreDataServer <- function(id, raw_data) {
 
