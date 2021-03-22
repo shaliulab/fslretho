@@ -1,7 +1,7 @@
 #' A UI for fslretho
 #'
-#' @importFrom shinydashboard dashboardPage dashboardHeader dashboardSidebar dashboardBody
-#' @importFrom shinydashboard sidebarMenu menuItem tabItems tabItem
+#' @importFrom shinydashboardPlus dashboardPage dashboardHeader dashboardSidebar
+#' @importFrom shinydashboard sidebarMenu menuItem tabItems tabItem dashboardBody
 #' @importFrom shiny icon
 #' @importFrom esquisse esquisserUI
 #' @importFrom magrittr `%>%`
@@ -23,10 +23,11 @@ shinydashboard_ui <- function() {
   rds_load_options <- list.files(path = cache_dir)#,pattern = "rds")
   names(rds_load_options) <- rds_load_options %>% sapply(., function(x) substr(x, 1, 10))
   rds_load_options <- as.list(rds_load_options)
+  rds_load_options <- ifelse(length(rds_load_options) == 0, list("Empty_cache" = ""), rds_load_options)
 
-  ui <- shinydashboardPlus::dashboardPagePlus(skin = "black",
+  ui <- shinydashboardPlus::dashboardPage(skin = "black",
 
-    shinydashboardPlus::dashboardHeaderPlus(
+    shinydashboardPlus::dashboardHeader(
       title = "FSLRetho2",
       left_menu = tagList(
         browserButton,
