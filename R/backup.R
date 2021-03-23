@@ -42,6 +42,43 @@ add_backupoff <- function(x, etho) {
 }
 
 
+generate_tBody_ui <- function(ethos) {
+
+  if (length(ethos) != 0) {
+
+    rows <- lapply(1:length(ethos), function(i) {
+      etho <- ethos[i]
+      switch_id <- paste0(etho, "_switch")
+      button_id <- paste0(etho, "_button")
+      label <- paste0("Backup ", etho)
+      class <- ifelse(i %% 2 == 0, "even", "odd")
+
+      shiny::tags$tr(
+        shiny::tags$td(
+          shiny::tags$p(etho)
+        ),
+        shiny::tags$td(
+          shinyWidgets::materialSwitch(ns(switch_id), value = ! (etho %in% backup_off))
+        ),
+        shiny::tags$td(
+          shinyWidgets::actionBttn(
+            inputId = ns(button_id),
+            label = label,
+            color = "primary",
+            style = "bordered"
+          )
+        ),
+        class = class
+      )
+    })
+  } else {
+    rows <- list()
+  }
+
+  rows <- shiny::tagList(rows)
+  return(rows)
+
+}
 
 #' @import shiny
 #' @import shinyWidgets
@@ -53,31 +90,8 @@ backupManagerUI <- function(id) {
   ethos <- list_ethoscopes("/etc/ethoscope-node.db", sorted = TRUE)
   backup_off <- load_backupoff()
 
-  rows <- lapply(1:length(ethos), function(i) {
-    etho <- ethos[i]
-    switch_id <- paste0(etho, "_switch")
-    button_id <- paste0(etho, "_button")
-    label <- paste0("Backup ", etho)
-    class <- ifelse(i %% 2 == 0, "even", "odd")
+  table_body <- generate_tBody_ui(ethos)
 
-    shiny::tags$tr(
-      shiny::tags$td(
-        shiny::tags$p(etho)
-      ),
-      shiny::tags$td(
-        shinyWidgets::materialSwitch(ns(switch_id), value = ! (etho %in% backup_off))
-      ),
-      shiny::tags$td(
-        shinyWidgets::actionBttn(
-          inputId = ns(button_id),
-          label = label,
-          color = "primary",
-          style = "bordered"
-        )
-      ),
-      class = class
-    )
-  })
 
   etho_table <- tags$table(
     tags$thead(
@@ -86,7 +100,7 @@ backupManagerUI <- function(id) {
       tags$th("Manual backup")
     ),
     tags$tbody(
-      shiny::tagList(rows)
+      table_body
     )
   )
 
