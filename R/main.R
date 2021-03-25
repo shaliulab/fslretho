@@ -19,6 +19,8 @@ main <- function(display_mode=FALSE, port=NULL) {
 
   # use the 0.0.0.0 host so the app can be accessed remotely
   options(shiny.host = "0.0.0.0")
+  # options("retry_locked" = tempfile(pattern = "retry_locked"))
+  # message(sprintf("retry_locked -> %s", getOption("retry_locked")))
 
   # get an interactive prompt that displays the traceback
   # gives you the ability to interactively debug inside any of the frames

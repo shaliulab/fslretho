@@ -54,12 +54,13 @@ extend_dataset <- function(dt, metadata, new_dataset, monitor) {
   ))
 }
 
+#' Choose either the ethoscope or the DAM dataset
+#'
+#' @param data A reactiveValues with an ethoscope and a dam slot
+#' @return A reactiveValues with slots data name and time of the selected dataset
 unify_datasets <- function(id="", data) {
 
-  # observe({
-  #   browser()
-  #   data$ethoscope$data
-  # })
+
 
   moduleServer(
     id,

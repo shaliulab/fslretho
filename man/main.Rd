@@ -6,6 +6,11 @@
 \usage{
 main(display_mode = FALSE, port = NULL)
 }
+\arguments{
+\item{display_mode}{Whether to show the code alongside the application or not}
+
+\item{port}{Port on which fslretho2 should run}
+}
 \description{
 Start an FSLRetho instance
 }

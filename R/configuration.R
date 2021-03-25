@@ -33,8 +33,16 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
         "description" = "A path to a folder containing rds files for fast reloading of data loaded in a previous run"
       )
     )
+    sessions_folder <- file.path(content$folders$ethoscope_cache$path, "sessions")
+
+    config_file <- get_writable_path(config_file)
     self$config_file <- config_file
     self$content <- content
+
+    if (!dir.exists(content$folders$ethoscope_cache$path)) dir.create(content$folders$ethoscope_cache$path)
+    if (!dir.exists(sessions_folder)) dir.create(sessions_folder)
+
+
 
     self$load()
 
@@ -46,12 +54,15 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     if (is.null(config_file))
       config_file <- self$config_file
 
+    message(paste0("Saving ", config_file))
     write(x = json, file = config_file)
   },
 
   load = function() {
     if (!file.exists(self$config_file)) self$save()
     else {
+
+      message(paste0("Loading ", self$config_file))
       json <- rjson::fromJSON(file = self$config_file)
       self$content <- modifyList(self$content, json)
     }

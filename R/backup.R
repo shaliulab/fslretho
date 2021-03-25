@@ -1,6 +1,9 @@
 #' @importFrom RSQLite dbGetQuery SQLite SQLITE_RO dbConnect
 #' @importFrom data.table as.data.table
 list_ethoscopes <- function(FILE="/etc/ethoscope-node.db", sorted = TRUE) {
+
+  if(!file.exists(FILE)) {stop(paste0(FILE, ", the ethoscope resource database does not exist"))}
+
   con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
   ethos <- tryCatch({
     data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT * FROM ethoscopes"))$ethoscope_name
@@ -19,6 +22,7 @@ list_ethoscopes <- function(FILE="/etc/ethoscope-node.db", sorted = TRUE) {
 save_backupoff <- function(x, path="/etc/backup_off.conf") {
   x <- sort(x[x != ""])
 
+  path <- get_writable_path(path)
   write.table(x = x, file = path, quote = F, row.names = F, col.names = F)
 }
 

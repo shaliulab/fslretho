@@ -40,8 +40,8 @@ loadDataServer <- function(id, reload) {
     function(input, output, session) {
 
       rv <- reactiveValues(
-        ethoscope = NULL,
-        dam = NULL
+        ethoscope = data.table(),
+        dam = data.table()
       )
 
       metadata_datapath <- reactive({

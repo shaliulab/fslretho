@@ -1,3 +1,15 @@
+is.writable <- function(path) {
+  # code <- system(paste0("touch ", path, " 2> /dev/null"))
+  # if (code == 0)
+  #   writable <- TRUE
+  # else
+  #   writable <- FALSE
+  code <- file.access(path, mode=2)
+  if (code == 0) writable <- TRUE
+  else writable <- FALSE
+  return(writable)
+}
+
 #' Consistent and informative error
 #' @importFrom glue glue
 #' @importFrom rlang abort
@@ -164,6 +176,8 @@ watch_input <- function(rv, ...) {
 #'
 #' @importFrom tibble as_tibble
 #' @importFrom fslbehavr rejoin
+#' @param rv A reactiveValues with data and name slots. Data carries a behavr table.
+#' @return A reactive values where data is a rejoined behavr i.e. plain data.table.
 rejoin_rv <- function(rv) {
 
   new_rv <- reactiveValues(data = NULL, name = NULL)
@@ -176,3 +190,23 @@ rejoin_rv <- function(rv) {
 
   return(new_rv)
 }
+
+
+#' Update the path so it is writable for sure
+#'
+#' If path is not writable, use the same filename but saved instead
+#' to the $HOME folder, which should always be writable
+#' @param path character for a path in the filesystem
+get_writable_path <- function(path) {
+  # check if path is not writable
+  if (!is.writable(path)) {
+    old_path <- path
+    dir <- file.path(Sys.getenv("HOME"), ".config")
+    path <- file.path(dir, basename(path))
+    if (!dir.exists(dir)) dir.create(dir)
+    message(paste0("Updating path ", old_path, " -> ", path))
+  }
+  return(path)
+}
+
+
