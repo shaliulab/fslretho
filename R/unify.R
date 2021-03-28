@@ -5,24 +5,32 @@ TYPES <- list(
   "factor" = factor,
   "logical" = logical
 )
-extend_datatable <- function(metadata, extra_meta) {
-  new_cols <- setdiff(colnames(extra_meta), colnames(metadata))
-  # new_cols_class <- extra_meta[, new_cols, with = F] %>% apply(., 2, class)
-  new_cols_class <- extra_meta[, new_cols, with = F] %>% as.list %>% lapply(., class) %>% unlist
+
+#' Add  fields available in a table to another table missing  them
+#' @param x Receiving table
+#' @param xx Donating table
+extend_datatable <- function(x, xx) {
+  new_cols <- setdiff(colnames(xx), colnames(x))
+  new_cols_class <- xx[, new_cols, with = F] %>% as.list %>% lapply(., class) %>% unlist
 
   if(!is.null(new_cols_class)) {
     for (i in 1:length(new_cols_class)) {
       type <- new_cols_class[i]
       if (!type %in% names(TYPES)) {
-        stop(glue::glue("Passed unknown type {type}"))
+        stop(paste0("Passed unknown type ", type))
       }
-      metadata[, names(new_cols_class)[i]] <- TYPES[[type]]()
+      x[, names(new_cols_class)[i]] <- TYPES[[type]]()
     }
   }
-
-  metadata
+  return(x)
 }
 
+#' Populate a pair of placeholder data.tables with the loaded data
+#'
+#' Populate a dependency generating pair of placeholders
+#' with the data loaded by the user.
+#' The placeholders contain the standard ethoscope and dam fields
+#' and are extended with more if the provided data carries them
 extend_dataset <- function(dt, metadata, new_dataset, monitor) {
 
    local_meta <- new_dataset[[monitor]]$data[, meta = T]
@@ -54,12 +62,47 @@ extend_dataset <- function(dt, metadata, new_dataset, monitor) {
   ))
 }
 
+#' Initialize a sensible placeholder with the right fields
+#' but no data
+behavr_placeholder <- function() {
+
+  # placeholder metadata
+  metadata <- data.table::data.table(id = factor(),
+                         file_info = character(),
+                         machine_name = character(),
+                         machine_id = character(),
+                         datetime = character(),
+                         region_id = integer(),
+                         reference_hour = numeric(),
+                         source = character()
+  )
+
+  # placeholder table
+  dt <- data.table::data.table(
+    id = factor(),
+    t = numeric(),
+    x = numeric(),
+    y = numeric(),
+    max_velocity = numeric(),
+    interactions = integer(),
+    beam_crosses = integer(),
+    moving = logical(),
+    asleep = logical(),
+    is_interpolated = logical()
+  )
+
+  # create a placeholder behavr table using the placeholder
+  data.table::setkey(metadata, id)
+  data.table::setkey(dt, id)
+  fslbehavr::setmeta(dt, metadata)
+  return(dt)
+}
+
 #' Choose either the ethoscope or the DAM dataset
 #'
 #' @param data A reactiveValues with an ethoscope and a dam slot
 #' @return A reactiveValues with slots data name and time of the selected dataset
-unify_datasets <- function(id="", data) {
-
+unifyDatasetsServer <- function(id="", data) {
 
 
   moduleServer(
@@ -74,47 +117,25 @@ unify_datasets <- function(id="", data) {
 
       unified_data <- reactive({
 
-        metadata <- data.table(id = factor(),
-                               file_info = character(),
-                               machine_name = character(),
-                               machine_id = character(),
-                               datetime = character(),
-                               region_id = integer(),
-                               reference_hour = numeric(),
-                               source = character()
-        )
 
-        dt <- data.table(
-          id = factor(),
-          t = numeric(),
-          x = numeric(),
-          y = numeric(),
-          max_velocity = numeric(),
-          interactions = integer(),
-          beam_crosses = integer(),
-          moving = logical(),
-          asleep = logical(),
-          is_interpolated = logical()
+        placeholder <- behavr_placeholder()
+        dt <- placeholder
 
-        )
-        setkey(metadata, id)
-        setkey(dt, id)
-        setmeta(dt, metadata)
-
+        # push the loaded data to the placeholders
         if (!is.null(data$ethoscope$data)) {
-
+          # push the loaded ethoscope data
           extension <- extend_dataset(dt, metadata, data, "ethoscope")
-          dt <- extension$dt
-          metadata <- extension$metadata
         }
 
         if (!is.null(data$dam$data)) {
-
+          # push the loaded dam data
           extension <- extend_dataset(dt, metadata, data, "dam")
-          dt <- extension$dt
-          metadata <- extension$metadata
-
+        } else {
+          warning("TODO: Shall I run?")
         }
+
+        dt <- extension$dt
+        metadata <- extension$metadata
         setmeta(dt, metadata)
 
         if (nrow(dt) == 0) {
@@ -137,7 +158,6 @@ unify_datasets <- function(id="", data) {
         rv$name <- dataset_name()
         rv$time <- dataset_time()
       })
-
       return(rv)
     }
   )
