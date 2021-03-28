@@ -5,7 +5,7 @@
 #include "R/header.R"
 ########################################################
 
-#' @impotFrom shinydashboard menuItem sidebarMenu dashboardSidebar
+#' @importFrom shinydashboard menuItem sidebarMenu dashboardSidebar
 #' @importFrom shiny icon
 get_sidebar <- function() {
   sidebar <- shinydashboard::dashboardSidebar(
