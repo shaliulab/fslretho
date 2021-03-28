@@ -8,6 +8,12 @@ and instead a rejoin()ed data.table}
 \usage{
 rejoin_rv(rv)
 }
+\arguments{
+\item{rv}{A reactiveValues with data and name slots. Data carries a behavr table.}
+}
+\value{
+A reactive values where data is a rejoined behavr i.e. plain data.table.
+}
 \description{
 Transform the passed rv with slots data and name
 so the content of data is not a behavr table anymore

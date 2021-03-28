@@ -4,7 +4,7 @@
 \alias{scoreDataServer}
 \title{Shiny module to automatically score a raw behavr table}
 \usage{
-scoreDataServer(id, raw_data)
+scoreDataServer(id, raw_data, trigger = reactiveVal(0))
 }
 \arguments{
 \item{id}{Module id - character}
