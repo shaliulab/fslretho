@@ -46,4 +46,4 @@ Imports:
 Suggests: 
     knitr,
     testthat (>= 2.1.0)
-RoxygenNote: 7.1.1.9000
+RoxygenNote: 7.1.1
