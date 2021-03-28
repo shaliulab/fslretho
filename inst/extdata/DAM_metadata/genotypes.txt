@@ -1,4 +1,0 @@
-genotype == 'R52B10-gal4 X uas-dtrpa1 (x)'
-genotype == 'R19G02-gal4 X uas-dtrpa1 (x) '
-substr(genotype, 1, 10) == 'pVIBSSL48-'
-
