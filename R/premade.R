@@ -1,7 +1,7 @@
-# Premade plots without any user tweaking
-
+#' Premade plots without any user tweaking
+#'
 #' @param data reactiveValues with a data slot containing an ethoscope behavr table
-#' @ImportFrom cowplot plot_grid
+#' @importFrom cowplot plot_grid
 sleepInteractionsServer <- function(id, data) {
 
   moduleServer(
@@ -41,7 +41,6 @@ sleepInteractionsServer <- function(id, data) {
         analyse_sleep_00(output_plot)
 
       }, ignoreNULL = TRUE)
-
     }
   )
 }
