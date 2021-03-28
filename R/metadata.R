@@ -1,3 +1,4 @@
+#' @importFrom data.table fread
 get_monitor_name <- function(metadata_datapath) {
 
   metadata <- data.table::fread(cmd = paste0("grep -v '^#' ", metadata_datapath))
@@ -17,20 +18,47 @@ as_character_column <- function(metadata, column_name) {
   return(metadata)
 }
 
-
+#' Load a DAN metadata .csv into R
+#' @importFrom data.table fread
 read_dam_metadata <- function(metadata_path) {
 
   metadata <- data.table::fread(cmd=paste0("grep -v '^#' ", metadata_path))
   metadata$start_datetime <- as.character(metadata$start_datetime)
   metadata$stop_datetime <- as.character(metadata$stop_datetime)
   return(metadata)
-
 }
+
+#' Load an ethoscope metadata .csv into R and perform basic validation
+#' @importFrom data.table fread
+#' @importFrom magrittr `%>%`
+#' @export
+read_metadata <- function(metadata_path) {
+
+  metadata <- tryCatch(
+    data.table::fread(cmd = paste0("grep -v '^#' ", metadata_path)),
+    error = function(e) {
+      message(e)
+      stop_bad_argument(what = "metadata_path", "cannot be read with fread(). Check it is not malformed. For instance, make sure all rows have same number of columns i.e. same number of commas")
+    })
+
+  # change the column zt0 to reference_hour if available
+  if ((!"reference_hour" %in% colnames(metadata)) & ("ZT0" %in% colnames(metadata))) {
+    colnames(metadata) <- colnames(metadata) %>% gsub(
+      pattern = "ZT0",
+      x = colnames(metadata),
+      replacement =  "reference_hour"
+    )
+  }
+
+  return(metadata)
+}
+
+
 #' Read and validate provided metadata
 #' @note `load_metadata` will NOT link the metadata to a local database
 #' @seealso https://github.com/rethomics/scopr/blob/master/R/link-ethoscope-metadata.R
 #' @seealso https://github.com/rethomics/damr/blob/master/R/link-dam-metadata.R
-#' @import data.table
+#' @importFrom magrittr `%>%`
 #' @param metadata_path Absolute path to a metadata.csv file
 #' @param monitor Name of the monitor that generated the data the passed metadata is trying to load
 #' This information is used to select the right validation function
@@ -39,7 +67,7 @@ load_metadata <- function(metadata_datapath, monitor) {
 
   if (monitor == "ethoscope") {
     metadata <- tryCatch({
-        metadata_list <- lapply(metadata_datapath, fslscopr::read_metadata)
+        metadata_list <- lapply(metadata_datapath, read_metadata)
         # browser()
         metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
       }, error = function(e) {
@@ -60,18 +88,6 @@ load_metadata <- function(metadata_datapath, monitor) {
     stop("Monitor not valid. Please pass ethoscope or dam")
   }
 
-  # Validate the user passed metadata
-  # If it's fine, it returns TRUE,
-  # otherwise, an error is raised and is presented in the UI
-
-  # # change the column zt0 to reference_hour if available
-  # if ((! "reference_hour" %in% colnames(metadata)) & ("ZT0" %in% colnames(metadata))) {
-  #   colnames(metadata) <- colnames(metadata) %>% gsub(
-  #     pattern = "ZT0",
-  #     x = colnames(metadata),
-  #     replacement =  "reference_hour"
-  #   )
-  # }
   showNotification(glue::glue("Validating {monitor} metadata. Please wait..."))
   # browser()
   if (monitor == "ethoscope") fslscopr::validate_metadata(metadata)
@@ -90,6 +106,7 @@ load_metadata <- function(metadata_datapath, monitor) {
 
 #' Display a data table output of the uploaded metadata
 #' It can be filtered by column values and sorted
+#' @import shiny
 viewMetadataUI <- function(id) {
 
   ns <- shiny::NS(id)
@@ -103,7 +120,7 @@ viewMetadataServer <- function(id, rv) {
     id,
     function(input, output, session) {
 
-      metadata <- reactive({
+      metadata <- shiny::reactive({
         rv$data[, meta = T]
       })
 
