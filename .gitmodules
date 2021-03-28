@@ -1,0 +1,18 @@
+[submodule "inst/dependencies/fslscopr"]
+	path = inst/dependencies/fslscopr
+	url = git@github.com:shaliulab/fslscopr
+[submodule "inst/dependencies/fslssleepr"]
+	path = inst/dependencies/fslsleepr
+	url = git@github.com:shaliulab/fslsleepr
+[submodule "inst/dependencies/fslbehavr"]
+	path = inst/dependencies/fslbehavr
+	url = git@github.com:shaliulab/fslbehavr
+[submodule "inst/inst/dependencies/fsldamr"]
+	path = inst/dependencies/fsldamr
+	url = git@github.com:shaliulab/fsldamr
+[submodule "inst/inst/dependencies/fslggetho"]
+	path = inst/dependencies/fslggetho
+	url = git@github.com:shaliulab/fslggetho
+[submodule "inst/inst/dependencies/esquisse"]
+	path = inst/dependencies/esquisse
+	url = git@github.com:shaliulab/esquisse
