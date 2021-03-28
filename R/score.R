@@ -10,9 +10,11 @@ scoreDataUI <- function(id) {
   # shiny::uiOutput(ns("scoringInput"))
 }
 
-
+#' Annotate behavior coming from DAM or ethoscope
 #' @importFrom fslscopr annotate_all
-score_monitor <- function(raw_data, input, monitor) {
+#' @importFrom fslsleepr sleep_annotation sleep_dam_annotation
+#' @export
+score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
 
   # reactive({
   # TODO Can this be a reactiveValues?
@@ -40,7 +42,6 @@ score_monitor <- function(raw_data, input, monitor) {
     req(input$velocity_correction_coef)
     req(input$min_time_immobile)
     req(input$time_window_length)
-    # req(raw_data[[monitor]]$time)
     print(raw_data[[monitor]]$time)
     req(raw_data[[monitor]]$time)
 
@@ -78,7 +79,6 @@ score_monitor <- function(raw_data, input, monitor) {
       rv$name <- NULL
       rv$time <- NULL
     }
-
     rv
 }
 
@@ -92,52 +92,26 @@ score_monitor <- function(raw_data, input, monitor) {
 #' @importFrom shiny moduleServer reactive observe eventReactive Progress
 #' @importFrom fslbehavr bin_apply_all
 #' @importFrom rlang fn_fmls
-scoreDataServer <- function(id, raw_data) {
+scoreDataServer <- function(id, raw_data, trigger=reactiveVal(0)) {
 
   moduleServer(
-
     id,
     function(input, output, session) {
-
-      rv <- reactiveValues(data = NULL, name = NULL, time = NULL)
-
-      # last_monitor <- reactive({
-      #   req(raw_data$data)
-      #   attr(raw_data$data, "monitor")
-      # })
-
-      # Convert the user passed character strings
-      # into the actual functions
-      # scoring_function <- reactive({
-      #
-      #   req(input$FUN)
-      #
-      #   passed_functions <- c()
-      #   for (func in input$FUN) {
-      #   passed_function <- FUNCTION_MAP[[func]]
-      #     if (func %in% monitor_sensitive) passed_function <- passed_function[[last_monitor()]]
-      #     passed_function <- attr(passed_function, "updater")(user_input())
-      #     passed_functions <- c(passed_functions, passed_function)
-      #   }
-      #   passed_functions
-      # })
-
       # at least data from one monitor must be available
       observe({
-        # browser()
         req(c(raw_data$ethoscope, raw_data$dam))
       })
 
       # TODO If this is done with BiocParallel, these would be loaded in parallel
       # On the other hand, loading DAM is very fast, so it's not really needed
-
       monitors_dt <- reactiveValues(ethoscope = NULL, dam = NULL)
 
       observe({
+        # trigger() # Not needed
         monitors_dt$ethoscope <- score_monitor(raw_data, input, "ethoscope")
         monitors_dt$dam <- score_monitor(raw_data, input, "dam")
+        # print(paste0("Observe is processing ", nrow(raw_data$ethoscope$data), " rows"))
       })
       return(monitors_dt)
-    }
-  )
+  })
 }
