@@ -1,44 +1,90 @@
 library(testthat)
 library(shiny)
-devtools::load_all()
-context("data load")
+context("load ethoscope")
 
-test_that("app loads files as expected", {
+upload_metadata <- function(metadata) {
+  temp_file <- tempfile(pattern = "metadata_", fileext = ".csv")
+  data.table::fwrite(x = metadata, file = temp_file, sep = ",", col.names = T)
+  return(temp_file)
+}
+
+
+test_that("loadDataServer can load ethoscope data and return it upon submission", {
 
   reload <- reactiveVal(value = 0, label = "reload")
 
   testServer(loadDataServer, args = list("reload" = reload), {
-    metadata <- system.file(
-      "extdata/ethoscope_metadata/metadata.csv",
-      mustWork = TRUE, package = "fslretho"
+
+    dir <- paste0(scopr::scopr_example_dir(), "/ethoscope_results/")
+
+    metadata <- data.table(machine_name = c("E_014"),
+                           date = c("2016-01-25"),
+                           time = c("21:46:14"),
+                           test=c(1),
+                           reference_hour = 10
     )
 
-    metadata <- list(datapath=metadata)
-    results_folder_ethoscope <- system.file(
-      "extdata/ethoscope_data/results/", mustWork = TRUE, package = "fslretho"
-    )
-    results_folder_dam <- system.file(
-      "extdata/DAM_data/results/", mustWork = TRUE, package = "fslretho"
-    )
+    temp_file <- upload_metadata(metadata)
 
-    session$setInputs(metadata=metadata, result_dir_ethoscope=results_folder_ethoscope)
-    session$setInputs(result_dir_dam=results_folder_dam)
-    print(reload())
-    reload(1)
-    # Sys.sleep(2)
-    print(paste0("The test sees ", reload()))
-    session$flushReact()
-    raw_data <- session$getReturned()
-    expect_equal(nrow(raw_data$ethoscope$data), 1000)
+    conf <- fslretho:::FSLRethoConfiguration$new()
+    conf$content$testing <- TRUE
+    conf$content$reference_hour_required <- TRUE
+    conf$save()
 
-    target <- as.data.table(readRDS(system.file("extdata/roi_1.rds", package = "fslretho")))
-    ref <- as.data.table(raw_data$ethoscope$data)
-    x <- waldo::compare(target, ref, ignore_attr=TRUE)
+    session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir)
 
-    # no differences
-    expect_length(x, 0)
-    expect_equal(raw_data$ethoscope$name,  "metadata.csv")
+    expect_null(rv$ethoscope$data)
+    session$setInputs(submit=1)
+    expect_is(rv$ethoscope$data, "behavr")
+    expect_true(nrow(rv$ethoscope$data) == 271)
+
+    returned <- session$getReturned()
+    expect_identical(rv$ethoscope$data, returned$ethoscope$data)
+
+
+    conf$content$testing <- NULL
+    conf$save()
   })
 })
 
 
+test_that("loadDataServer can reload ethoscope data", {
+
+  reload <- reactiveVal(value = 0, label = "reload")
+
+  testServer(loadDataServer, args = list("reload" = reload), {
+
+    dir <- paste0(scopr::scopr_example_dir(), "/ethoscope_results/")
+
+    metadata <- data.table(machine_name = c("E_014"),
+                           date = c("2016-01-25"),
+                           time = c("21:46:14"),
+                           test=c(1),
+                           reference_hour = 10
+    )
+
+    temp_file <- upload_metadata(metadata)
+
+
+    conf <- fslretho:::FSLRethoConfiguration$new()
+    conf$content$testing <- TRUE
+    conf$content$reference_hour_required <- TRUE
+    conf$save()
+
+    session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir)
+    session$setInputs(submit=1)
+    first_time <- rv$ethoscope$time
+
+    # make a metadata copy, upload it and check whether the application responds
+    metadata$test <- 2
+    temp_file <- upload_metadata(metadata)
+    session$setInputs(metadata=list(datapath=temp_file))
+    reload(reload() + 1); session$flushReact()
+
+    expect_false(rv$ethoscope$time == first_time)
+    expect_true(all(rv$ethoscope$data[, meta=T]$test == 2))
+
+    conf$content$testing <- NULL
+    conf$save()
+  })
+})

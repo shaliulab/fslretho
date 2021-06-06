@@ -83,7 +83,7 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
 #' @importFrom scopr link_ethoscope_metadata load_ethoscope
 #' @import shiny
 #' @noRd
-loadEthoscopeServer <- function(id, metadata_datapath, reload, result_dir) {
+loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_dir) {
 
   moduleServer(
     id,
@@ -94,11 +94,8 @@ loadEthoscopeServer <- function(id, metadata_datapath, reload, result_dir) {
         time = NULL
       )
 
-
       message("Loading metadata")
-
       metadata <- loadMetadataServer("metadata-ethoscope", metadata_datapath, "ethoscope", result_dir)
-
 
       message("Loading dt_raw")
       updateProgress_load <- progressBarServer("ethoscope-load", metadata)
@@ -108,7 +105,8 @@ loadEthoscopeServer <- function(id, metadata_datapath, reload, result_dir) {
         updateProgress_load=updateProgress_load, updateProgress_annotate=updateProgress_annotate
       )
 
-      observeEvent(c(input$submit, reload()), {
+      observeEvent(c(submit, reload()), {
+        message("Reload or submit detected")
         if(isTruthy(metadata())) {
           rv$data <- dt_raw()
           rv$name <- basename(metadata_datapath())
@@ -118,7 +116,6 @@ loadEthoscopeServer <- function(id, metadata_datapath, reload, result_dir) {
           rv$name <- NULL
           rv$time <- NULL
         }
-
       }, ignoreInit = TRUE)
 
       return(rv)
