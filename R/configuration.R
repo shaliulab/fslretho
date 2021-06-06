@@ -24,7 +24,7 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
   initialize = function(config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"), "fslretho.conf")) {
 
     content <- scopr::scoprConfiguration$new()$content
-    content <- append(content, list("debug" = FALSE, "stop_backups" = TRUE, port = 3838))
+    content <- append(content, list("debug" = FALSE, "stop_backups" = TRUE, port = 3838, testing=FALSE))
 
     content$folders <- append(content$folders, list(
       "dam" = list(

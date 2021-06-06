@@ -1,55 +1,41 @@
+#' Given a metadata file, infer what type of monitor it is
+#'
 #' @importFrom data.table fread
-get_monitor_name <- function(metadata_datapath) {
+#' @param metadata_path Path to a metadata file
+#' @return character either dam or ethoscope
+get_monitor_name <- function(metadata_path) {
 
-  metadata <- data.table::fread(cmd = paste0("grep -v '^#' ", metadata_datapath))
+  metadata <- read.table(metadata_path, comment.char = "#", header = TRUE, sep = ",")
+  metadata <- data.table::as.data.table(metadata)
+
   if(all(c("machine_name", "date") %in% colnames(metadata))) return("ethoscope")
+
   if(all(c("file", "start_datetime", "stop_datetime") %in% colnames(metadata))) return("dam")
 }
 
-#' Coerce a column to character
+# TODO Put in their packages
+
+#' Load a DAM metadata .csv into R
 #'
-#' Make some columns that could be considered numeric character
-#' because that way thei handling is easier in esquisse
-as_character_column <- function(metadata, column_name) {
-
-  if (column_name %in% colnames(metadata)) {
-    metadata[[column_name]] <- as.character(metadata[[column_name]])
-  }
-  return(metadata)
-}
-
-#' Load a DAN metadata .csv into R
-#' @importFrom data.table fread
+#' @import data.table
+#' @importFrom utils read.table
+#' @inheritParams get_monitor_name
+#' @export
 read_dam_metadata <- function(metadata_path) {
 
-  metadata <- data.table::fread(cmd=paste0("grep -v '^#' ", metadata_path))
-  metadata$start_datetime <- as.character(metadata$start_datetime)
-  metadata$stop_datetime <- as.character(metadata$stop_datetime)
+  metadata <- read.table(metadata_path, comment.char = "#", header = TRUE, sep = ",")
+  metadata <- data.table::as.data.table(metadata)
   return(metadata)
 }
 
 #' Load an ethoscope metadata .csv into R and perform basic validation
-#' @importFrom data.table fread
-#' @importFrom magrittr `%>%`
+#' @import data.table
+#' @importFrom utils read.table
+#' @inheritParams get_monitor_name
 #' @export
 read_metadata <- function(metadata_path) {
-
-  metadata <- tryCatch(
-    data.table::fread(cmd = paste0("grep -v '^#' ", metadata_path)),
-    error = function(e) {
-      message(e)
-      stop_bad_argument(what = "metadata_path", "cannot be read with fread(). Check it is not malformed. For instance, make sure all rows have same number of columns i.e. same number of commas")
-    })
-
-  # change the column zt0 to reference_hour if available
-  if ((!"reference_hour" %in% colnames(metadata)) & ("ZT0" %in% colnames(metadata))) {
-    colnames(metadata) <- colnames(metadata) %>% gsub(
-      pattern = "ZT0",
-      x = colnames(metadata),
-      replacement =  "reference_hour"
-    )
-  }
-
+  metadata <- read.table(metadata_path, comment.char = "#", header = TRUE, sep = ",")
+  metadata <- data.table::as.data.table(metadata)
   return(metadata)
 }
 
@@ -62,47 +48,103 @@ read_metadata <- function(metadata_path) {
 #' @param metadata_path Absolute path to a metadata.csv file
 #' @param monitor Name of the monitor that generated the data the passed metadata is trying to load
 #' This information is used to select the right validation function
-load_metadata <- function(metadata_datapath, monitor) {
+load_metadata <- function(metadata_path, monitor) {
   # Load into R the metadata table
 
-  if (monitor == "ethoscope") {
-    metadata <- tryCatch({
-        metadata_list <- lapply(metadata_datapath, read_metadata)
-        # browser()
-        metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
-      }, error = function(e) {
-        print(e)
-        stop("Problem combining ethoscope metadatas!")
-      }
-    )
-  } else if(monitor == "dam") {
-    metadata <- tryCatch({
-      metadata_list <- lapply(metadata_datapath, read_dam_metadata)
-      # browser()
-      metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
+  read_functions <- list("ethoscope" = read_metadata, "dam" = read_dam_metadata)
+
+  if(!monitor %in% names(read_functions)) stop(sprintf("Please enter a valid monitor: currently supported are ethoscope and dam"))
+
+  read_function <- read_functions[[monitor]]
+
+  metadata <- tryCatch({
+    # TODO Do I want to handle multiple metadatas?
+    metadata_list <- lapply(metadata_path, read_function)
+    metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
     }, error = function(e) {
       print(e)
-      stop("Problem combining dam metadatas!")
-    })
-  } else {
-    stop("Monitor not valid. Please pass ethoscope or dam")
-  }
-
-  showNotification(glue::glue("Validating {monitor} metadata. Please wait..."))
-  # browser()
-  if (monitor == "ethoscope") fslscopr::validate_metadata(metadata)
-  else if (monitor == "dam") fsldamr::validate_metadata(metadata)
-  else stop(sprintf("Please enter a valid monitor: currently supported are ethoscope and dam"))
-
-  # coerce dates and datetimes to character
-  char_columns <- c("start_datetime", "stop_datetime", "date")
-  for (column_name in char_columns) {
-    metadata <- as_character_column(metadata, column_name)
-  }
-
+      stop(paste0("Problem combining ", monitor, " metadatas!"))
+    }
+  )
   return(metadata)
-
 }
+
+validate_metadata <- function(metadata, monitor) {
+  validation_functions <- list("ethoscope" = scopr::validate_metadata, "dam" = damr::validate_metadata)
+  validation_function <- validation_functions[[monitor]]
+  validation_function(metadata)
+}
+
+load_metadata_with_handlers <- function(session, ..., monitor) {
+  metadata <- withCallingHandlers(
+    expr = tryCatch({
+      metadata <- load_metadata(..., monitor=monitor)
+      showNotification(paste0("Validating ", monitor, " metadata. Please wait..."))
+      validate_metadata(metadata, monitor)
+      metadata
+    }, error = function(e) {
+      show_condition_message(e, "error", session)
+      list(plot = NULL, data = NULL, layout = NULL)
+      shiny::validate(shiny::need(expr = F, label = "metadata is not valid"))
+    }
+    ),
+    warning = function(w) {
+      show_condition_message(w, "warning", session)
+      list(plot = NULL, data = NULL, layout = NULL)
+    }
+  )
+  return(metadata)
+}
+
+
+
+loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
+
+  moduleServer(
+    id,
+    function(input, output, session) {
+
+      datapath <- reactive({
+        req(metadata_path())
+        metadata_path()[sapply(metadata_path(), get_monitor_name) == monitor]
+      })
+
+
+      metadata <- reactive({
+        load_metadata_with_handlers(session, datapath(), monitor = monitor)
+      })
+
+
+      metadata_linked <- reactive({
+        scopr::link_ethoscope_metadata(x = metadata(), result_dir = result_dir)
+      })
+
+
+      metadata_link_validated <- reactive({
+
+        if (nrow(metadata_linked()) == 0) {
+          shiny::showNotification("Failure: no matches were found in the local ethoscope database.
+                           This could be due to typos in the machine_name, date, etc; or
+                           your dataset being missing in the database.
+                           Check your metadata and/or the local database to find out which is the problem", type = "error")
+          shiny::validate(shiny::need(FALSE, label = ""))
+        } else {
+          showNotification("Success")
+        }
+      })
+
+      observe({
+        metadata_link_validated()
+      })
+
+      # observeEvent(reload(), {
+      #   browser()
+      # })
+      return(metadata_linked)
+    }
+  )
+}
+
 
 #' Display a data table output of the uploaded metadata
 #' It can be filtered by column values and sorted

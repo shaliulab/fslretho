@@ -17,8 +17,7 @@ binDataUI <- function(id) {
     shiny::sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
     shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices),
-    shiny::selectizeInput(inputId = ns("y"), label = "Variables", choices = "asleep",
-                          multiple = TRUE, selected = "asleep")
+    shiny::textInput(ns("y"), label = "Y axis", value="asleep")
   )
 }
 
@@ -26,108 +25,43 @@ binDataUI <- function(id) {
 #' @import fslbehavr
 #' @import shiny
 #' @importFrom data.table copy
-binDataServer <- function(id, grouped_data, summary_time_window = NULL, main = FALSE) {
+binDataServer <- function(id, grouped_data, preproc_FUN=NULL, ...) {
   moduleServer(
     id,
     function(input, output, session) {
 
-      rv <- reactiveValues(data = NULL, name = NULL, summary_FUN = NULL, y = NULL)
-
-      # Update the rv object with the new binned time series
-      observe({
-
-        req(grouped_data$data)
-        req(input$summary_time_window)
-        req(input$summary_FUN)
-        req(grouped_data$time)
-        summary_FUN <- functions[[input$summary_FUN]]
-
-        x_bin_length <- ifelse(
-          is.null(summary_time_window),
-          fslbehavr::mins(input$summary_time_window),
-          fslbehavr::mins(summary_time_window)
-        )
-
-        available_columns <- input$y %in% colnames(grouped_data$data)
-        if (!all(available_columns)) {
-          warning(sprintf("The following columns to be binned are NOT available %s",
-                          paste0(input$y[!available_columns], sep = ", ")
-                          )
-          )
-        }
-
-        y <- input$y[available_columns]
-
-        # if the passed variables to bin on are truthy
-        # do this for all of them one by one:
-        #
-        # Bin the time series over time
-        # with window length given by summary_time_window
-        # and function given by summary_FUN
-
-
-        # copy to avoid the reactivevalue to be processed several times
-        data <- data.table::copy(grouped_data$data)
-
-        if (shiny::isTruthy(input$y)) {
-
-          print(key(grouped_data$data))
-          rv$data <- fslbehavr::bin_all(
-            data = grouped_data$data,
-            y = y,
-            x_bin_length = x_bin_length,
-            FUN = summary_FUN
-          )
-
-        } else {
-          rv$data <- grouped_data$data
-        }
-        rv$name <- grouped_data$name
-        rv$summary_FUN <- summary_FUN
-        rv$y <- y
+      x_bin_length <- reactive({
+        ifelse(is.null(input$summary_time_window), behavr::mins(30), input$summary_time_window)
       })
 
+      FUN <- reactive({
+        functions[ifelse(is.null(input$summary_FUN), "sleep_amount", input$summary_FUN)]
+      })
 
-      # update the UI only if main is TRUE
-      # this is to avoid the different instances of the module
-      # which share the UI from stepping on each other
-      # only the main instance writes to the UI
-      # (even if all the instances read from it)
-      if (isTRUE(main)) {
-        # Update the list of binnable variables if the uploaded data changes
-        var_choices <- reactive({
+      data <- reactive({
 
-          req(grouped_data$data)
+        if (is.null(preproc_FUN)) {
+          grouped_data$data
+        } else {
+          preproc_FUN(grouped_data$data, ...)
+        }
+      })
 
-          all_columns <- colnames(grouped_data$data)
-          binnable_columns <- c("asleep", "moving", "interactions", "max_velocity", "is_interpolated", "beam_crosses", "x", "y")
+      binned_data <- reactive({
+        behavr::bin_apply_all(
+          data(),
+          x = "t",
+          y = input$y,
+          x_bin_length = x_bin_length(),
+          FUN = FUN()
+        )
+      })
 
-          available_columns <- binnable_columns[
-            purrr::map_lgl(
-              binnable_columns,
-              ~. %in% all_columns
-            )
-          ]
-          available_columns
-
-        })
-
-        selected <- reactive({
-          req(grouped_data$data)
-          output <- c(input$y)
-
-          if ("interactions" %in% colnames(grouped_data$data)) {
-            output <- c(output, "interactions")
-          }
-
-          output
-        })
-
-        observe({
-          shiny::updateSelectizeInput(session, "y", choices = var_choices(), selected = isolate(selected()))
-        })
-      }
-      return(rv)
+      return(binned_data)
     }
-  )
+  )}
+
+
+bout_analysis <- function(data, ...) {
+  sleepr::bout_analysis(data = data, ...)
 }
