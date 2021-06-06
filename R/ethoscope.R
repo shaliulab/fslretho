@@ -43,13 +43,11 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
       dt_raw <- reactive({
 
         message("Calling scopr::load_ethoscope")
-
-
         dt_raw <- scopr::load_ethoscope(
           metadata = metadata(),
           reference_hour = NA,
-          ncores = FSLRethoConfiguration$new()$content[["ncores"]],
-          cache = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]],
+          ncores = FSLRethoConfiguration$new()$content$ncores,
+          cache = FSLRethoConfiguration$new()$content$folders$ethoscope_cache$path,
           verbose = TRUE,
           updateProgress_load = updateProgress_load(),
           updateProgress_annotate = updateProgress_annotate()

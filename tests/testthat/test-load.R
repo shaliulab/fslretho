@@ -1,5 +1,3 @@
-library(testthat)
-library(shiny)
 context("load ethoscope")
 
 upload_metadata <- function(metadata) {
