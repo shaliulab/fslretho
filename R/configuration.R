@@ -22,28 +22,22 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
   #' @param config_file Path to the default configuration file
   initialize = function(config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"), "fslretho.conf")) {
 
-    content <- list("debug" = TRUE, "ncores" = 2, "stop_backups" = TRUE, port = 3838)
-    content$folders <- list(
+    content <- scopr::scoprConfiguration$new()$content
+    content <- append(content, list("debug" = TRUE, "ncores" = 2, "stop_backups" = TRUE, port = 3838))
+
+    content$folders <- append(content$folders, list(
       "dam" = list(
         "path" = "/DAM_data/results",
         "description" = "A path to a folder containing MonitorXX.txt files"
         ),
-      "ethoscope" = list(
-        "path" = "/ethoscope_data/results",
-        "description" = "A path to a folder containing an ethoscope database of sqlite3 files"
-      ),
-      "ethoscope_cache" = list(
-        "path" = "/ethoscope_data/cache",
-        "description" = "A path to a folder containing rds files for fast reloading of data loaded in a previous run.
-        The files here are generated automatically everytime a new fly is loaded with rethomics.
-        A separate file is created for each fly"
-      ),
       "ethoscope_sessions" = list(
         "path" = "/ethoscope_data/sessions",
         "description" = "A path to a folder containign rds files for fast reloading of data loaded in a previous run.
         The files are created when the user presses the save button in fslretho. The whole dataset loaded there is saved to a single rds file."
       )
-    )
+    ))
+
+
 
     index <- which(sapply(config_file, is.writable) & file.exists(config_file))
     if(length(index) == 0) index <- 1
