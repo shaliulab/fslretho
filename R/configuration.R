@@ -12,6 +12,7 @@
 #' @method initialize something
 #' @field content List of configuration items
 #' @field config_file Default configuration file path
+#'
 FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public = list(
 
   content = list(),
@@ -23,7 +24,7 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
   initialize = function(config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"), "fslretho.conf")) {
 
     content <- scopr::scoprConfiguration$new()$content
-    content <- append(content, list("debug" = TRUE, "ncores" = 2, "stop_backups" = TRUE, port = 3838))
+    content <- append(content, list("debug" = FALSE, "stop_backups" = TRUE, port = 3838))
 
     content$folders <- append(content$folders, list(
       "dam" = list(
@@ -88,7 +89,7 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     if (is.null(config_file))
       config_file <- self$config_file
 
-    message(paste0("Saving ", config_file))
+    if(self$content$debug) message(paste0("Saving ", config_file))
     write(x = json, file = config_file)
   },
 
@@ -105,7 +106,7 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     if (!file.exists(config_file) & !is.null(config_file))
       self$save(config_file)
     else {
-      message(paste0("Loading ", config_file))
+      if(self$content$debug) message(paste0("Loading ", config_file))
       json <- rjson::fromJSON(file = config_file)
       self$content <- modifyList(self$content, json)
     }
