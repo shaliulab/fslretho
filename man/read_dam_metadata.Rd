@@ -2,10 +2,13 @@
 % Please edit documentation in R/metadata.R
 \name{read_dam_metadata}
 \alias{read_dam_metadata}
-\title{Load a DAN metadata .csv into R}
+\title{Load a DAM metadata .csv into R}
 \usage{
 read_dam_metadata(metadata_path)
 }
+\arguments{
+\item{metadata_path}{Path to a metadata file}
+}
 \description{
-Load a DAN metadata .csv into R
+Load a DAM metadata .csv into R
 }

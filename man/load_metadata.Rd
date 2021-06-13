@@ -4,13 +4,13 @@
 \alias{load_metadata}
 \title{Read and validate provided metadata}
 \usage{
-load_metadata(metadata_datapath, monitor)
+load_metadata(metadata_path, monitor)
 }
 \arguments{
+\item{metadata_path}{Absolute path to a metadata.csv file}
+
 \item{monitor}{Name of the monitor that generated the data the passed metadata is trying to load
 This information is used to select the right validation function}
-
-\item{metadata_path}{Absolute path to a metadata.csv file}
 }
 \description{
 Read and validate provided metadata

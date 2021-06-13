@@ -13,6 +13,3 @@
 [submodule "inst/inst/dependencies/ggetho"]
 	path = inst/dependencies/ggetho
 	url = git@github.com:shaliulab/ggetho
-[submodule "inst/inst/dependencies/esquisse"]
-	path = inst/dependencies/esquisse
-	url = git@github.com:shaliulab/esquisse
