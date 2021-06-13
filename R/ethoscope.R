@@ -1,4 +1,7 @@
-
+NCORES <- FSLRethoConfiguration$new()$content$scopr$ncores
+CACHE <- FSLRethoConfiguration$new()$content$scopr$folders$cache$path
+VERBOSE <- TRUE
+TESTING <- FSLRethoConfiguration$new()$content$testing
 
 progressBarServer <- function(id, metadata) {
 
@@ -8,7 +11,9 @@ progressBarServer <- function(id, metadata) {
 
       updateProgress <- reactive({
 
-        if (! fslretho::FSLRethoConfiguration$new()$content$testing) {
+        # disable shiny functionality while testing
+        # not ideal but I think tests dont work if I dont disable this
+        if (! TESTING) {
           progress <- shiny::Progress$new()
           on.exit(progress$close())
 
@@ -16,7 +21,7 @@ progressBarServer <- function(id, metadata) {
           n <- nrow(metadata())
 
           function(detail = NULL) {
-            if (FSLRethoConfiguration$new()$content[["ncores"]] == 1) {
+            if (NCORES == 1) {
               progress$inc(amount = 1 / n, detail = detail)
             } else {
               shiny::showNotification(detail, type = "message", duration = 2)
@@ -46,11 +51,10 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
         dt_raw <- scopr::load_ethoscope(
           metadata = metadata(),
           reference_hour = NA,
-          ncores = FSLRethoConfiguration$new()$content$ncores,
-          cache = FSLRethoConfiguration$new()$content$folders$ethoscope_cache$path,
-          verbose = TRUE,
-          updateProgress_load = updateProgress_load(),
-          updateProgress_annotate = updateProgress_annotate()
+          ncores = NCORES,
+          cache = CACHE,
+          verbose = VERBOSE,
+          updateProgress_load = updateProgress_load()
         )
         # needed to be able to save the dt
         # because the column file_info is a list
@@ -68,9 +72,11 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
         }
       })
 
-      observe(
-        dt_raw_validated()
-      )
+      # This breaks the submit / reload mechanism. Changes in the input
+      # always trigger a reload before it is actually requested
+      # observe(
+      #   dt_raw_validated()
+      # )
 
       return(dt_raw)
     })
@@ -82,6 +88,8 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
 #' @import shiny
 #' @noRd
 loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_dir) {
+
+  last_reaction <- 0
 
   moduleServer(
     id,
@@ -103,18 +111,22 @@ loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_di
         updateProgress_load=updateProgress_load, updateProgress_annotate=updateProgress_annotate
       )
 
-      observeEvent(c(submit, reload()), {
+      observeEvent(c(submit(), reload()), {
+
         message("Reload or submit detected")
-        if(isTruthy(metadata())) {
+        if((submit() + reload()) > last_reaction) {
+          message("I do call dt_raw")
           rv$data <- dt_raw()
           rv$name <- basename(metadata_datapath())
           rv$time <- as.numeric(Sys.time())
+          last_reaction <<- last_reaction+1
         } else {
+          message("I dont call dt_raw")
           rv$data <- NULL
           rv$name <- NULL
           rv$time <- NULL
         }
-      }, ignoreInit = TRUE)
+      }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
       return(rv)
     }
