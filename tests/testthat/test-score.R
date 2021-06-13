@@ -38,16 +38,54 @@ test_that("app scores when supplying any of the 3 score parameters", {
     # so we are less lenient with how much the fly can move and still
     # be considered sleep
 
-    n_rows <- nrow(monitors_dt$ethoscope$data)
+    nrows <- nrow(monitors_dt$ethoscope$data)
 
     session$setInputs(
       time_window_length=20
     )
-    n_rows2 <- nrow(monitors_dt$ethoscope$data)
+    nrows2 <- nrow(monitors_dt$ethoscope$data)
 
     expect_true(nrows2 < nrows) # the bins are bigger so there are less bins
 
 
+  })
+})
+
+test_that("app loads and scores", {
+
+  reload <- reactiveVal(0)
+  metadata_path <- file.path(fslretho::fslretho_example_dir(), "ethoscope_metadata.csv")
+  dir <- paste0(scopr::scopr_example_dir(), "/ethoscope_results/")
+  options("sparse_data" = TRUE)
+
+  testLoadScoreModule <- function(id, ...) {
+    moduleServer(id,
+                 function(input, output, session) {
+
+                   raw_data <- loadDataServer("load", ...)
+                   scored_data <- scoreDataServer("score", raw_data)
+                   return(scored_data$ethoscope$data)
+                 })
+  }
+
+  testServer(testLoadScoreModule, args = list("reload" = reload), {
+
+    conf <- fslretho:::FSLRethoConfiguration$new()
+    # why: to disable the update progress functionality, which throws warnings while testing without GUI
+    conf$content$testing <- TRUE
+    # why:
+    conf$content$reference_hour_required <- TRUE
+    conf$save(conf$config_file)
+
+    session$setInputs(`load-metadata`=list(datapath=metadata_path), `load-result_dir_ethoscope`=dir, `load-submit`=0)
+    session$setInputs(`load-submit`=1)
+    reload(reload() + 1)
+    metadata <- behavr::meta(scored_data$ethoscope$data)
+    data <- data.table::as.data.table(scored_data$ethoscope$data)
+
+    expect_true(nrow(metadata) == 20)
+    expect_true(nrow(data) == 220)
+    expect_true("asleep" %in% colnames(data))
   })
 })
 

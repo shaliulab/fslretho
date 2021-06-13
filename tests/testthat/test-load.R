@@ -15,7 +15,8 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
 
     dir <- paste0(scopr::scopr_example_dir(), "/ethoscope_results/")
 
-    metadata <- data.table(machine_name = c("E_014"),
+    metadata <- data.table(region_id = 1,
+                           machine_name = c("E_014"),
                            date = c("2016-01-25"),
                            time = c("21:46:14"),
                            test=c(1),
@@ -29,12 +30,27 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
     conf$content$reference_hour_required <- TRUE
     conf$save()
 
-    session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir)
+    messages <- c()
+    withCallingHandlers(
+      session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir, submit=0),
+      message = function(m) {
+        messages <<- c(messages, gsub(pattern = "\n", replacement = "", x = m$message))
+      }
+    )
+
+    expect_true("searching the provided database for data matching query" %in% messages)
+    expect_false("Data loaded into R successfully" %in% messages)
 
     expect_null(rv$ethoscope$data)
-    session$setInputs(submit=1)
+
+    messages <- c()
+    withCallingHandlers(session$setInputs(submit=1), message = function(m) {
+      messages <<- c(messages, gsub(pattern = "\n", replacement = "", x = m$message))
+    })
+    expect_true("Data loaded into R successfully" %in% messages)
+
     expect_is(rv$ethoscope$data, "behavr")
-    expect_true(nrow(rv$ethoscope$data) == 271)
+    expect_true(nrow(rv$ethoscope$data) == 56)
 
     returned <- session$getReturned()
     expect_identical(rv$ethoscope$data, returned$ethoscope$data)
@@ -48,13 +64,14 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
 
 test_that("loadDataServer can reload ethoscope data", {
 
-  reload <- reactiveVal(value = 0, label = "reload")
+  reload <- reactiveVal(0)
 
   testServer(loadDataServer, args = list("reload" = reload), {
 
     dir <- paste0(scopr::scopr_example_dir(), "/ethoscope_results/")
 
-    metadata <- data.table(machine_name = c("E_014"),
+    metadata <- data.table(region_id = 1,
+                           machine_name = c("E_014"),
                            date = c("2016-01-25"),
                            time = c("21:46:14"),
                            test=c(1),
@@ -65,24 +82,39 @@ test_that("loadDataServer can reload ethoscope data", {
 
 
     conf <- fslretho:::FSLRethoConfiguration$new()
+    # why
     conf$content$testing <- TRUE
+    # why
     conf$content$reference_hour_required <- TRUE
-    conf$save()
+    conf$save(conf$config_file)
 
-    session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir)
+    session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir, submit=0)
     session$setInputs(submit=1)
+    first_data <- rv$ethoscope$data
     first_time <- rv$ethoscope$time
 
     # make a metadata copy, upload it and check whether the application responds
-    metadata$test <- 2
+    metadata$region_id <- 2
     temp_file <- upload_metadata(metadata)
     session$setInputs(metadata=list(datapath=temp_file))
-    reload(reload() + 1); session$flushReact()
 
-    expect_false(rv$ethoscope$time == first_time)
-    expect_true(all(rv$ethoscope$data[, meta=T]$test == 2))
+    reload(reload() + 1); session$flushReact()
+    # if it reloaded the data, the times and data should be different
+    second_time <- rv$ethoscope$time
+    second_data <- rv$ethoscope$data
+    expect_false(second_time == first_time)
+    expect_false(identical(second_data, first_data))
+    expect_true(all(rv$ethoscope$data[, meta=T]$region_id == 2))
+
+    # however reloading again nothing to the data
+    reload(reload() + 1); session$flushReact()
+    expect_identical(rv$ethoscope$data, second_data)
+
+    # it still changes the time because Sys.time() is not reactive expression,
+    # but a function (i.e. it's not cached)
+    expect_false(rv$ethoscope$time == second_time)
 
     conf$content$testing <- NULL
-    conf$save()
+    conf$save(conf$config_file)
   })
 })
