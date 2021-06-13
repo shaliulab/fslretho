@@ -27,7 +27,6 @@ Called by running `FSLRethoConfiguration$new()`}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{FSLRethoConfiguration$new()}}
-\item \href{#method-verify}{\code{FSLRethoConfiguration$verify()}}
 \item \href{#method-save}{\code{FSLRethoConfiguration$save()}}
 \item \href{#method-load}{\code{FSLRethoConfiguration$load()}}
 \item \href{#method-clone}{\code{FSLRethoConfiguration$clone()}}
@@ -38,34 +37,13 @@ Called by running `FSLRethoConfiguration$new()`}
 \if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$new(
-  config_file = file.path(c(file.path(Sys.getenv("HOME"), ".config"), "/etc"),
-    "fslretho.conf")
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$new(config_file = "/etc/fslretho.conf")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{config_file}}{Path to the default configuration file
-Make sure all folders that fslretho needs are writable
-if they are not, recreate them as needed in the HOME folder}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-verify"></a>}}
-\if{latex}{\out{\hypertarget{method-verify}{}}}
-\subsection{Method \code{verify()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$verify(config_file = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{config_file}}{Configuration file path
 Save the configuration in to a config_file
 
 Save the configuration stored in self$content
@@ -79,7 +57,7 @@ If the passed config_file is null, use the instance's default}
 \if{latex}{\out{\hypertarget{method-save}{}}}
 \subsection{Method \code{save()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$save(config_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$save(config_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -99,7 +77,7 @@ If it exists, load its contents and update the configuration}
 \if{latex}{\out{\hypertarget{method-load}{}}}
 \subsection{Method \code{load()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$load(config_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$load(config_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
