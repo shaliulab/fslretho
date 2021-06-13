@@ -81,7 +81,7 @@ get_dbfile_path <- function(results_folder, machine_id, machine_name, datetime) 
   return(dbfile_path)
 }
 
-#' @importFrom fslbehavr toy_ethoscope_data
+#' @importFrom behavr toy_ethoscope_data
 #' @importFrom dplyr select
 #' @export
 write_sqlite <- function(raw_data, var_map, metadata, roi_map, dbfile_path=NULL, nrows = 1e5, temp=FALSE, ...) {
@@ -113,7 +113,7 @@ write_sqlite <- function(raw_data, var_map, metadata, roi_map, dbfile_path=NULL,
 #' @export
 #' @importFrom data.table data.table
 #' @importFrom dplyr select
-#' @importFrom fslbehavr toy_ethoscope_data
+#' @importFrom behavr toy_ethoscope_data
 make_toy_ethoscope_sqlite <- function(nrows=1e4) {
 
   set.seed(2021)
@@ -132,7 +132,7 @@ make_toy_ethoscope_sqlite <- function(nrows=1e4) {
   )
 
   # create the ROI_1 table as da.table
-  raw_data <- fslbehavr::toy_ethoscope_data()
+  raw_data <- behavr::toy_ethoscope_data()
   raw_data$t <- raw_data$t * 1000
   raw_data <- raw_data %>% dplyr::select(., t:x)
   raw_data <- raw_data[1:nrows]

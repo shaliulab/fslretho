@@ -22,7 +22,7 @@ binDataUI <- function(id) {
 }
 
 
-#' @import fslbehavr
+#' @import behavr
 #' @import shiny
 #' @importFrom data.table copy
 binDataServer <- function(id, grouped_data, preproc_FUN=NULL, ...) {

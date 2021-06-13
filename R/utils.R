@@ -48,7 +48,7 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 #   }
 #
 #   data.table::setkey(x, id)
-#   fslbehavr::behavr(x = x, metadata = metadata)
+#   behavr::behavr(x = x, metadata = metadata)
 # }
 
 #' Make a writable behavr object
@@ -63,7 +63,7 @@ fortify <- function(data, meta = FALSE) {
   if(meta) {
     metadata <- data[, meta = T]
     metadata <- fortify(metadata, FALSE)
-    fslbehavr::setmeta(data, metadata)
+    behavr::setmeta(data, metadata)
   }
 
   types <- sapply(1:ncol(data), function(i) {
@@ -175,7 +175,7 @@ watch_input <- function(rv, ...) {
 #' and instead a rejoin()ed data.table
 #'
 #' @importFrom tibble as_tibble
-#' @importFrom fslbehavr rejoin
+#' @importFrom behavr rejoin
 #' @param rv A reactiveValues with data and name slots. Data carries a behavr table.
 #' @return A reactive values where data is a rejoined behavr i.e. plain data.table.
 rejoin_rv <- function(rv) {
@@ -184,7 +184,7 @@ rejoin_rv <- function(rv) {
 
   observe({
     req(rv$data)
-    new_rv$data <- tibble::as_tibble(fslbehavr::rejoin(rv$data))
+    new_rv$data <- tibble::as_tibble(behavr::rejoin(rv$data))
     new_rv$name <- rv$name
   })
 

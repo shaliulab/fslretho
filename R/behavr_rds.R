@@ -22,6 +22,6 @@ readRDS_behavr <- function(file, ...) {
 
   main_table <- readRDS(file = main_table_file, ...)
   meta_table <- readRDS(file = meta_table_file, ...)
-  x <- fslbehavr::setmeta(main_table, meta_table)
+  x <- behavr::setmeta(main_table, meta_table)
   return(x)
 }

@@ -94,7 +94,7 @@ behavr_placeholder <- function() {
   # create a placeholder behavr table using the placeholder
   data.table::setkey(metadata, id)
   data.table::setkey(dt, id)
-  fslbehavr::setmeta(dt, metadata)
+  behavr::setmeta(dt, metadata)
   return(dt)
 }
 

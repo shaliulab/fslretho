@@ -19,19 +19,19 @@ sleepInteractionsServer <- function(id, data) {
         req(data$data$t)
         req(data$data$asleep)
         req(data$data[, meta = T]$region_id)
-        data <- fslbehavr::rejoin(data$data)
+        data <- behavr::rejoin(data$data)
 
         sleep_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = asleep)) +
-          fslggetho::stat_pop_etho() +
-          fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
+          ggetho::stat_pop_etho() +
+          ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
           ggplot2::facet_grid(region_id ~ .)
 
         if (isTruthy(data$data$interactions)) {
           interactions_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = interactions)) +
-            fslggetho::stat_pop_etho() +
-            fslggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA)  +
+            ggetho::stat_pop_etho() +
+            ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA)  +
             ggplot2::facet_grid(region_id ~ .) +
-            fslggetho::scale_x_hours()
+            ggetho::scale_x_hours()
 
           output_plot <- cowplot::plot_grid(sleep_trace, interactions_trace, ncol = 2)
         } else {
