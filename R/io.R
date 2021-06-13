@@ -19,11 +19,11 @@ loadDataUI <- function(id, help_text = "") {
 
         shiny::textInput(
           inputId = ns("result_dir_ethoscope"), label = "",
-          value = FSLRethoConfiguration$new()$content[["folders"]][["ethoscope"]][["path"]]
+          value = FSLRethoConfiguration$new()$content$scopr$folders$results$path
         ),
         shiny::textInput(
           inputId = ns("result_dir_dam"), label = "",
-          value = FSLRethoConfiguration$new()$content[["folders"]][["dam"]][["path"]]
+          value = FSLRethoConfiguration$new()$content$damr$folders$results$path
         ),
 
         shiny::actionButton(ns("submit"), label = "Submit")

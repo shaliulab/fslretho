@@ -4,7 +4,7 @@ saveLoadServer <- function(id, data) {
     id,
     function(input, output, session) {
       cache_dir <- file.path(
-        FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]], "sessions"
+        FSLRethoConfiguration$new()$content$scopr$folders$cache$path, "sessions"
       )
 
       observeEvent(input$save, {
