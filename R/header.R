@@ -1,6 +1,6 @@
 get_sessions <- function() {
   cache_dir <- file.path(
-    FSLRethoConfiguration$new()$content[["folders"]][["ethoscope_cache"]][["path"]], "sessions"
+    FSLRethoConfiguration$new()$content$scopr$folders$cache$path, "sessions"
   )
 
   fslretho_sessions <- list.files(path = cache_dir)#,pattern = "rds")
