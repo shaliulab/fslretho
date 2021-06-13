@@ -1,3 +1,7 @@
+SPARSE_DATA <- getOption("sparse_data", FALSE)
+CURATE <- ifelse(SPARSE_DATA, FALSE, TRUE)
+
+
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
   ns <- shiny::NS(id)
@@ -11,15 +15,14 @@ scoreDataUI <- function(id) {
 }
 
 #' Annotate behavior coming from DAM or ethoscope
-#' @importFrom fslscopr annotate_all
-#' @importFrom fslsleepr sleep_annotation sleep_dam_annotation
+#' @importFrom scopr annotate_all
+#' @importFrom sleepr sleep_annotation sleep_dam_annotation
 #' @export
 score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
 
   # reactive({
   # TODO Can this be a reactiveValues?
     # user_input <- reactive({list(
-    # browser()
 
   rv <- reactiveValues(
     data = NULL,
@@ -37,31 +40,32 @@ score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
         "min_time_immobile" = ifelse(is.null(input$min_time_immobile), 300, input$min_time_immobile),
         "time_window_length" = ifelse(is.null(input$time_window_length), 10, input$time_window_length)
       )
-    # })
 
-    req(input$velocity_correction_coef)
-    req(input$min_time_immobile)
-    req(input$time_window_length)
+  # browser()
+  if (SPARSE_DATA) {
+    message("Analyzing the sparse dataset used in testing")
+    user_input$time_window_length <- hours(1)
+  }
+
     print(raw_data[[monitor]]$time)
     req(raw_data[[monitor]]$time)
 
     if (!isTruthy(raw_data[[monitor]]$data)) return(NULL)
     FUNCTION_MAP <- list(
       "sleep_annotation" = list(
-        "ethoscope" = fslsleepr::sleep_annotation,
-        "dam" = fslsleepr::sleep_dam_annotation
+        "ethoscope" = sleepr::sleep_annotation,
+        "dam" = sleepr::sleep_dam_annotation
       )
     )
 
     passed_function <- FUNCTION_MAP$sleep_annotation[[monitor]]
-    req(passed_function)
     scoring_function <- attr(passed_function, "updater")(user_input)
 
     progress <- shiny::Progress$new()
     on.exit(progress$close())
 
     progress$set(message = "Scoring ", value = 0)
-    # TODO make sure the below statement returns alwas the same
+    # TODO make sure the below statement returns always the same
     n <- nrow(raw_data[[monitor]]$data[, meta = T])
 
     updateProgress <- function(detail = NULL) {
@@ -69,7 +73,8 @@ score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
     }
 
     if (isTruthy(raw_data[[monitor]]$data)) {
-      data_annotated <- fslscopr::annotate_all(data = raw_data[[monitor]]$data, FUN = scoring_function, updateProgress = updateProgress)
+      data_annotated <- scopr::annotate_all(data = raw_data[[monitor]]$data, FUN = scoring_function, curate=CURATE, updateProgress = updateProgress)
+      # print(data_annotated)
       validate(need(nrow(data_annotated) > 0, "Data cannot be annotated. This could be due to your dataset being sparse"))
       rv$data <- data_annotated
       rv$name <- raw_data[[monitor]]$name
@@ -90,7 +95,7 @@ score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
 #' @param id Module id - character
 #' @param raw_data A shiny reactiveValues with slots data and name
 #' @importFrom shiny moduleServer reactive observe eventReactive Progress
-#' @importFrom fslbehavr bin_apply_all
+#' @importFrom behavr bin_apply_all
 #' @importFrom rlang fn_fmls
 scoreDataServer <- function(id, raw_data, trigger=reactiveVal(0)) {
 
@@ -107,9 +112,11 @@ scoreDataServer <- function(id, raw_data, trigger=reactiveVal(0)) {
       monitors_dt <- reactiveValues(ethoscope = NULL, dam = NULL)
 
       observe({
-        # trigger() # Not needed
+        message("Running scorer")
         monitors_dt$ethoscope <- score_monitor(raw_data, input, "ethoscope")
         monitors_dt$dam <- score_monitor(raw_data, input, "dam")
+        message(paste0(nrow(monitors_dt$ethoscope$data), ":", nrow(monitors_dt$dam$data)))
+
         # print(paste0("Observe is processing ", nrow(raw_data$ethoscope$data), " rows"))
       })
       return(monitors_dt)
