@@ -40,17 +40,28 @@ loadDataServer <- function(id, reload) {
     function(input, output, session) {
 
       rv <- reactiveValues(
-        ethoscope = data.table(),
-        dam = data.table()
+        ethoscope = reactiveValues(data=NULL, name=NULL, time=NULL),
+        dam = reactiveValues(data=NULL, name=NULL, time=NULL)
+      )
+
+      submit <- reactive(
+        input$submit
       )
 
       metadata_datapath <- reactive({
+        req(input$metadata)
+        validate(need(input$metadata, "Please provide a metadata"))
         input$metadata$datapath
       })
 
+
+      ethoscope_result <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope)
+      # dam_result <- loadDamServer("dam", metadata_datapath, submit, reload, input$result_dir_dam)
+#
       rv <- reactiveValues(
-        ethoscope = loadEthoscopeServer("ethoscope", metadata_datapath, input$submit, reload, input$result_dir_ethoscope),
-        dam = loadDamServer("dam", metadata_datapath, reload, input$result_dir_dam)
+       ethoscope = ethoscope_result,
+       dam = NULL
+       # dam = dam_result
       )
 
       observe({
