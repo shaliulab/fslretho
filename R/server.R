@@ -1,31 +1,47 @@
-saveLoadServer <- function(id, data) {
+builtInOrNewDataServer <- function(id, input_rv) {
+
+  output_rv <- reactiveValues(data=NULL, name=NULL, time=NULL)
 
   moduleServer(
     id,
     function(input, output, session) {
-      cache_dir <- file.path(
-        FSLRethoConfiguration$new()$content$scopr$folders$cache$path, "sessions"
-      )
+
+      observeEvent(input_rv$time, {
+        output_rv$data <- input_rv$data
+        output_rv$name <- input_rv$name
+        output_rv$time <- input_rv$time
+      })
+
+      observeEvent(input$load, {
+        read_rv <- read_reativeValuesRDS(input$rds_load)
+        output_rv$data <- read_rv$data
+        output_rv$name <- read_rv$name
+        output_rv$time <- read_rv$time
+      })
+
+      return(output_rv)
+    }
+  )
+}
+
+
+saveDataServer <- function(id, input_rv) {
+
+  cache_path <- FSLRethoConfiguration$new()$content$scopr$folders$cache$path
+
+  moduleServer(
+    id,
+    function(input, output, session) {
+      cache_dir <- file.path(cache_path, "sessions")
 
       observeEvent(input$save, {
-        tosave <- reactiveValuesToList(data)
-
-        saveRDS(
-          object = tosave,
+        save_reativeValuesRDS(
+          object = input_rv$data,
           file = file.path(cache_dir, input$rds_save)
         )
       })
-
-      saved_unified_data <- reactive({
-        readRDS(
-          file = file.path(cache_dir, input$rds_load)
-        )
-      })
-
-      return(saved_unified_data)
     }
   )
-
 }
 
 #' Server function of FSLRetho
@@ -42,37 +58,37 @@ saveLoadServer <- function(id, data) {
 #' @noRd
 server <- function(input, output, session) {
 
-  reload_button <- function() {
-    reactive({
-      req(!is.null(input$reloadData))
-      input$reloadData
-    })
-  }
 
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
+  reload <- reloadModuleServer("reload")
 
   ## Preparation ----
   # Run a simple ethoscope backup manager
   backupManagerServer("manageBackup")
 
-  ## Metadata viz ----
-  # View loaded metadata
-  viewMetadataServer("viewMetadata", unified_data)
-
-
   # Define a trigger shared across modules
   reload <- reload_button()
 
   ## Load ----
+  # Here the choice between dam or ethoscope happens
+  # After this, the data has only one module
   raw_data <- loadDataServer("loadData", reload)
 
+  # In case the user wants to use a builtin dataset
+  loaded_data <- builtInOrNewDataServer("loadSession", raw_data)
+  saveDataServer("saveSession", loaded_data)
+
+  ## Metadata viz ----
+  # View loaded metadata
+  viewMetadataServer("viewMetadata", loaded_data)
+
+
   ## Score ----
-  scored_data <- scoreDataServer("scoreData", raw_data)
+  scored_data <- scoreDataServer("scoreData", loaded_data)
 
-
-  ## Bin  sleep ----
+  ## Bin sleep ----
   sleep_data <- binDataServer("sleepData", scored_data)
   sleep_data_rejoined <- reactive({
     rejoin(binned_data())
@@ -91,20 +107,4 @@ server <- function(input, output, session) {
 
   # Plot bout result
   plotServer("boutPlot", bout_data)
-
-
-#
-#   # Save session
-#   saved_unified_data <- saveLoadServer(id="saveLoadModule", data=unified_data)
-#
-#   # Load a past session
-#   observeEvent(input$`load-saveModule`, {
-#     unified_data$data <<- saved_unified_data()$data
-#     unified_data$name <<- saved_unified_data()$name
-#     unified_data$time <<- saved_unified_data()$time
-#   })
-
-
-
-
 }
