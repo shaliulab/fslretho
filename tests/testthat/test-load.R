@@ -28,7 +28,7 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
     conf <- fslretho:::FSLRethoConfiguration$new()
     conf$content$testing <- TRUE
     conf$content$reference_hour_required <- TRUE
-    conf$save()
+    conf$save(conf$config_file)
 
     messages <- c()
     withCallingHandlers(
@@ -41,7 +41,7 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
     expect_true("searching the provided database for data matching query" %in% messages)
     expect_false("Data loaded into R successfully" %in% messages)
 
-    expect_null(rv$ethoscope$data)
+    expect_null(output_rv$ethoscope$data)
 
     messages <- c()
     withCallingHandlers(session$setInputs(submit=1), message = function(m) {
@@ -49,15 +49,15 @@ test_that("loadDataServer can load ethoscope data and return it upon submission"
     })
     expect_true("Data loaded into R successfully" %in% messages)
 
-    expect_is(rv$ethoscope$data, "behavr")
-    expect_true(nrow(rv$ethoscope$data) == 56)
+    expect_is(output_rv$ethoscope$data, "behavr")
+    expect_true(nrow(output_rv$ethoscope$data) == 56)
 
     returned <- session$getReturned()
-    expect_identical(rv$ethoscope$data, returned$ethoscope$data)
+    expect_identical(output_rv$ethoscope$data, returned$ethoscope$data)
 
 
     conf$content$testing <- NULL
-    conf$save()
+    conf$save(conf$config_file)
   })
 })
 
@@ -90,8 +90,8 @@ test_that("loadDataServer can reload ethoscope data", {
 
     session$setInputs(metadata=list(datapath=temp_file), result_dir_ethoscope=dir, submit=0)
     session$setInputs(submit=1)
-    first_data <- rv$ethoscope$data
-    first_time <- rv$ethoscope$time
+    first_data <- output_rv$ethoscope$data
+    first_time <- output_rv$ethoscope$time
 
     # make a metadata copy, upload it and check whether the application responds
     metadata$region_id <- 2
@@ -100,19 +100,19 @@ test_that("loadDataServer can reload ethoscope data", {
 
     reload(reload() + 1); session$flushReact()
     # if it reloaded the data, the times and data should be different
-    second_time <- rv$ethoscope$time
-    second_data <- rv$ethoscope$data
+    second_time <- output_rv$ethoscope$time
+    second_data <- output_rv$ethoscope$data
     expect_false(second_time == first_time)
     expect_false(identical(second_data, first_data))
-    expect_true(all(rv$ethoscope$data[, meta=T]$region_id == 2))
+    expect_true(all(output_rv$ethoscope$data[, meta=T]$region_id == 2))
 
     # however reloading again nothing to the data
     reload(reload() + 1); session$flushReact()
-    expect_identical(rv$ethoscope$data, second_data)
+    expect_identical(output_rv$ethoscope$data, second_data)
 
     # it still changes the time because Sys.time() is not reactive expression,
     # but a function (i.e. it's not cached)
-    expect_false(rv$ethoscope$time == second_time)
+    expect_false(output_rv$ethoscope$time == second_time)
 
     conf$content$testing <- NULL
     conf$save(conf$config_file)
