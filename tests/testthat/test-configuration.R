@@ -2,13 +2,13 @@ library(testthat)
 
 context("configuration")
 
-expect_that("configuration initialization works as expected", {
+test_that("configuration initialization works as expected", {
   conf <- FSLRethoConfiguration$new()
   expect_is(conf$content, "list")
-  expect_true(all(c("debug", "ncores", "stop_backups", "port") %in% names(conf$content)))
+  expect_true(all(c("debug", "port") %in% names(conf$content)))
 })
 
-expect_that("configuration file can be moved elsewhere if not writable", {
+test_that("configuration file can be moved elsewhere if not writable", {
   conf <- tryCatch({
     FSLRethoConfiguration$new("/etc/fslretho.conf")
   }, error = function(e) {
@@ -18,10 +18,12 @@ expect_that("configuration file can be moved elsewhere if not writable", {
 
 })
 
-expect_that("configuration file paths dont get corrupted with duplicates", {
+test_that("configuration file paths dont get corrupted with duplicates", {
   conf <- FSLRethoConfiguration$new()
   conf <- FSLRethoConfiguration$new()
   conf <- FSLRethoConfiguration$new()
+
+
   # this block of code  checks the same folder name
   # is not present more than once on every path
   # i.e. we dont have something like /ethoscope_data/results/ethoscope_data/results/foo
