@@ -105,7 +105,6 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
     function(input, output, session) {
 
       datapath <- reactive({
-        req(metadata_path())
         metadata_path()[sapply(metadata_path(), get_monitor_name) == monitor]
       })
 
@@ -133,13 +132,6 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
         }
       })
 
-      observe({
-        metadata_link_validated()
-      })
-
-      # observeEvent(reload(), {
-      #   browser()
-      # })
       return(metadata_linked)
     }
   )
