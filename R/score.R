@@ -1,6 +1,20 @@
-SPARSE_DATA <- getOption("sparse_data", FALSE)
-CURATE <- ifelse(SPARSE_DATA, FALSE, TRUE)
+FUNCTION_MAP <- list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation)
 
+
+#' Produce a Shiny progress bar
+#' @param steps Number of steps in the progress bar i.e. the number of times
+#' the progress bar needs to be advanced by 1 to have it completed
+get_progress_bar <- function(steps) {
+  progress <- Progress$new()
+  on.exit(progress$close())
+  progress$set(message = "Scoring ", value = 0)
+
+  progress_bar <- function(detail = NULL) {
+
+    progress$inc(amount = 1 / steps, detail = detail)
+  }
+  return(progress_bar)
+}
 
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
@@ -15,76 +29,53 @@ scoreDataUI <- function(id) {
 }
 
 #' Annotate behavior coming from DAM or ethoscope
+#'
+#' This function takes dependence on reactiveValues.
+#' Thus it needs to be run on a reactive environment (observe/reactive)
 #' @importFrom scopr annotate_all
 #' @importFrom sleepr sleep_annotation sleep_dam_annotation
+#' @param input_rv reactiveValues, incoming dataset with data, name and time slots
+#' @param updateProgress function optionally taking a character that executes every time a new individual is processed
+#' @param ... Additional arguments to scoring function
 #' @export
-score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
+score_monitor <- function(input_rv, FUN, updateProgress, ...) {
 
-  # reactive({
-  # TODO Can this be a reactiveValues?
-    # user_input <- reactive({list(
+  SPARSE_DATA <- getOption("sparse_data", FALSE)
+  CURATE <- ifelse(SPARSE_DATA, FALSE, TRUE)
 
-  rv <- reactiveValues(
+  output_rv <- reactiveValues(
     data = NULL,
     name = NULL,
     time = NULL
   )
 
+  data <- input_rv$data
 
-  if (is.null(raw_data[[monitor]]$data)) {
-    return(rv)
-  }
+  scoring_parameters <- list(...)[[1]]
 
-  user_input <- list(
-        "velocity_correction_coef" = ifelse(is.null(input$velocity_correction_coef), 0.004, input$velocity_correction_coef),
-        "min_time_immobile" = ifelse(is.null(input$min_time_immobile), 300, input$min_time_immobile),
-        "time_window_length" = ifelse(is.null(input$time_window_length), 10, input$time_window_length)
-      )
-
-  # browser()
   if (SPARSE_DATA) {
-    message("Analyzing the sparse dataset used in testing")
-    user_input$time_window_length <- hours(1)
+    message("score module overrides time_window_length to 1 hour")
+    scoring_parameters$time_window_length <- hours(1)
   }
 
-    print(raw_data[[monitor]]$time)
-    req(raw_data[[monitor]]$time)
-
-    if (!isTruthy(raw_data[[monitor]]$data)) return(NULL)
-    FUNCTION_MAP <- list(
-      "sleep_annotation" = list(
-        "ethoscope" = sleepr::sleep_annotation,
-        "dam" = sleepr::sleep_dam_annotation
-      )
+  # Annotate all ROIS with all scoring FUN passed by the user
+  args <- append(
+    scoring_parameters,
+    list(
+      data = data,
+      FUN = FUN,
+      curate = CURATE,
+      updateProgress = updateProgress
     )
+  )
 
-    passed_function <- FUNCTION_MAP$sleep_annotation[[monitor]]
-    scoring_function <- attr(passed_function, "updater")(user_input)
+  data_annotated <- do.call(scopr::annotate_all, args)
 
-    progress <- shiny::Progress$new()
-    on.exit(progress$close())
-
-    progress$set(message = "Scoring ", value = 0)
-    # TODO make sure the below statement returns always the same
-    n <- nrow(raw_data[[monitor]]$data[, meta = T])
-
-    updateProgress <- function(detail = NULL) {
-      progress$inc(amount = 1 / n, detail = detail)
-    }
-
-    if (isTruthy(raw_data[[monitor]]$data)) {
-      data_annotated <- scopr::annotate_all(data = raw_data[[monitor]]$data, FUN = scoring_function, curate=CURATE, updateProgress = updateProgress)
-      # print(data_annotated)
-      validate(need(nrow(data_annotated) > 0, "Data cannot be annotated. This could be due to your dataset being sparse"))
-      rv$data <- data_annotated
-      rv$name <- raw_data[[monitor]]$name
-      rv$time <- raw_data[[monitor]]$time
-    } else {
-      rv$data <- NULL
-      rv$name <- NULL
-      rv$time <- NULL
-    }
-    rv
+  validate(need(nrow(data_annotated) > 0, "Data cannot be annotated. This could be due to your dataset being sparse"))
+  output_rv$data <- data_annotated
+  output_rv$name <- input_rv$name
+  output_rv$time <- input_rv$time
+  return(output_rv)
 }
 
 
@@ -93,32 +84,74 @@ score_monitor <- function(raw_data, input, monitor=c("ethoscope", "dam")) {
 #' Provide a multi-animal reactive behavr and return the scored version
 #'
 #' @param id Module id - character
-#' @param raw_data A shiny reactiveValues with slots data and name
+#' @param input_rv reactiveValues with one slot per monitor
+#' @param pb logical, if TRUE, a shiny progress bar will track the processing of each individual
 #' @importFrom shiny moduleServer reactive observe eventReactive Progress
 #' @importFrom behavr bin_apply_all
 #' @importFrom rlang fn_fmls
-scoreDataServer <- function(id, raw_data, trigger=reactiveVal(0)) {
+scoreDataServer <- function(id, input_rv, pb=TRUE) {
 
   moduleServer(
     id,
     function(input, output, session) {
-      # at least data from one monitor must be available
-      observe({
-        req(c(raw_data$ethoscope, raw_data$dam))
+
+      output_rv <- reactiveValues(
+        ethoscope = reactiveValues(data  = NULL, name = NULL, time = NULL),
+        dam = reactiveValues(data  = NULL, name = NULL, time = NULL)
+      )
+
+      # Get just the annotation parameters
+      scoring_parameters <- reactive(
+        list(
+          velocity_correction_coef = input$velocity_correction_coef,
+          min_time_immobile = input$min_time_immobile,
+          time_window_length = input$time_window_length
+        )
+      )
+
+      # remove the parameters that the DAM scoring function does not need
+      # it would error otherwise, Error in FUN: unused arguments
+      # (velocity_correction_coef = 3e-04, time_window_length = 10, curate = TRUE)
+
+      dam_scoring_parameters <- reactive({
+        x <- scoring_parameters()
+        x$time_window_length <- NULL
+        x$curate <- NULL
+        x$velocity_correction_coef <- NULL
+        x
       })
 
-      # TODO If this is done with BiocParallel, these would be loaded in parallel
-      # On the other hand, loading DAM is very fast, so it's not really needed
-      monitors_dt <- reactiveValues(ethoscope = NULL, dam = NULL)
-
-      observe({
-        message("Running scorer")
-        monitors_dt$ethoscope <- score_monitor(raw_data, input, "ethoscope")
-        monitors_dt$dam <- score_monitor(raw_data, input, "dam")
-        message(paste0(nrow(monitors_dt$ethoscope$data), ":", nrow(monitors_dt$dam$data)))
-
-        # print(paste0("Observe is processing ", nrow(raw_data$ethoscope$data), " rows"))
+      ethoscope_pb <- reactive({
+        if (pb) {
+          n_individuals <- nrow(input_rv$ethoscope$data[, meta = T])
+          get_progress_bar(n_individuals)
+        } else {
+          NULL
+        }
       })
-      return(monitors_dt)
+
+
+      dam_pb <- reactive({
+        if (pb) {
+          n_individuals <- nrow(input_rv$dam$data[, meta = T])
+          get_progress_bar(n_individuals)
+        } else {
+          NULL
+        }
+      })
+
+      # Score ethoscope
+      observeEvent(c(input_rv$ethoscope$time, scoring_parameters()), {
+        req(input_rv$ethoscope$data)
+        output_rv$ethoscope <- score_monitor(input_rv$ethoscope, ethoscope_pb(), scoring_parameters(), FUN=FUNCTION_MAP$ethoscope)
+      }, ignoreInit = TRUE)
+
+      # Score DAM
+      observeEvent(c(input_rv$dam$time, scoring_parameters()), {
+        req(input_rv$dam$data)
+        output_rv$dam <- score_monitor(input_rv$dan, dam_pb(), dam_scoring_parameters(), FUN=FUNCTION_MAP$dam)
+      }, ignoreInit = TRUE)
+
+      return(output_rv)
   })
 }

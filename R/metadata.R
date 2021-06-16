@@ -62,7 +62,7 @@ load_metadata <- function(metadata_path, monitor) {
     metadata_list <- lapply(metadata_path, read_function)
     metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
     }, error = function(e) {
-      print(e)
+      warning(e)
       stop(paste0("Problem combining ", monitor, " metadatas!"))
     }
   )

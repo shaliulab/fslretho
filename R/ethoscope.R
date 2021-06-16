@@ -118,6 +118,7 @@ loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_di
           message("I do call dt_raw")
           rv$data <- dt_raw()
           rv$name <- basename(metadata_datapath())
+          # signal the reactiveValue is updated to downstream observeEvent blocks
           rv$time <- as.numeric(Sys.time())
           last_reaction <<- last_reaction+1
         } else {

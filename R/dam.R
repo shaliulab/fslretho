@@ -1,4 +1,4 @@
-loadDamServer <- function(id, metadata_datapath, reload, input, session){
+loadDamServer <- function(id, metadata_datapath, submit, reload, input, session){
 
     rv <- reactiveValues(
         data = NULL,
@@ -85,7 +85,7 @@ loadDamServer <- function(id, metadata_datapath, reload, input, session){
       })
 
 
-      observeEvent(c(input$submit, reload()), {
+      observeEvent(c(submit(), reload()), {
         # browser()
         if(isTruthy(dam_metadata_datapath())) {
           rv$data <- dt_raw_validated()

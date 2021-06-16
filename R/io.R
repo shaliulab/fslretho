@@ -39,7 +39,7 @@ loadDataServer <- function(id, reload) {
     id,
     function(input, output, session) {
 
-      rv <- reactiveValues(
+      output_rv <- reactiveValues(
         ethoscope = reactiveValues(data=NULL, name=NULL, time=NULL),
         dam = reactiveValues(data=NULL, name=NULL, time=NULL)
       )
@@ -55,21 +55,15 @@ loadDataServer <- function(id, reload) {
       })
 
 
-      ethoscope_result <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope)
+      output_rv$ethoscope <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope)
       # dam_result <- loadDamServer("dam", metadata_datapath, submit, reload, input$result_dir_dam)
-#
-      rv <- reactiveValues(
-       ethoscope = ethoscope_result,
-       dam = NULL
-       # dam = dam_result
-      )
 
       observe({
-        req(rv$ethoscope)
-        req(rv$dam)
+        req(output_rv$ethoscope)
+        # req(output_rv$dam)
       })
 
-      return(rv)
+      return(output_rv)
     }
   )
 }
