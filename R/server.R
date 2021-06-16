@@ -1,49 +1,3 @@
-builtInOrNewDataServer <- function(id, input_rv) {
-
-  output_rv <- reactiveValues(data=NULL, name=NULL, time=NULL)
-
-  moduleServer(
-    id,
-    function(input, output, session) {
-
-      observeEvent(input_rv$time, {
-        output_rv$data <- input_rv$data
-        output_rv$name <- input_rv$name
-        output_rv$time <- input_rv$time
-      })
-
-      observeEvent(input$load, {
-        read_rv <- read_reativeValuesRDS(input$rds_load)
-        output_rv$data <- read_rv$data
-        output_rv$name <- read_rv$name
-        output_rv$time <- read_rv$time
-      })
-
-      return(output_rv)
-    }
-  )
-}
-
-
-saveDataServer <- function(id, input_rv) {
-
-  cache_path <- FSLRethoConfiguration$new()$content$scopr$folders$cache$path
-
-  moduleServer(
-    id,
-    function(input, output, session) {
-      cache_dir <- file.path(cache_path, "sessions")
-
-      observeEvent(input$save, {
-        save_reativeValuesRDS(
-          object = input_rv$data,
-          file = file.path(cache_dir, input$rds_save)
-        )
-      })
-    }
-  )
-}
-
 #' Server function of FSLRetho
 #'
 #' @import shiny
@@ -62,14 +16,13 @@ server <- function(input, output, session) {
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
+  # Define a trigger shared across modules
   reload <- reloadModuleServer("reload")
 
   ## Preparation ----
   # Run a simple ethoscope backup manager
   backupManagerServer("manageBackup")
 
-  # Define a trigger shared across modules
-  reload <- reload_button()
 
   ## Load ----
   # Here the choice between dam or ethoscope happens
@@ -77,8 +30,8 @@ server <- function(input, output, session) {
   raw_data <- loadDataServer("loadData", reload)
 
   # In case the user wants to use a builtin dataset
-  loaded_data <- builtInOrNewDataServer("loadSession", raw_data)
-  saveDataServer("saveSession", loaded_data)
+  loaded_data <- saveLoadServer("sessions", raw_data)
+
 
   ## Metadata viz ----
   # View loaded metadata
