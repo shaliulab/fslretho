@@ -1,6 +1,8 @@
 reloadUI <- function(id) {
+
+  ns <- NS(id)
   tags$li(
-    actionButton("button", "", icon = icon("redo")),
+    actionButton(ns("button"), "", icon = icon("redo")),
     class = "dropdown user user-menu"
     )
 }
