@@ -13,7 +13,7 @@
 # that encapsulate the save / load behavior
 
 save_reactiveValuesRDS <- function(object = rv, ...) {
-  d <- reactiveValuesToList(rv)
+  d <- reactiveValuesToList(object)
   saveRDS(object = d, ...)
 }
 

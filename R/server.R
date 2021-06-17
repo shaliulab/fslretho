@@ -11,7 +11,6 @@
 #' @noRd
 server <- function(input, output, session) {
 
-
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 
@@ -28,22 +27,26 @@ server <- function(input, output, session) {
   raw_data <- loadDataServer("loadData", reload)
 
   # In case the user wants to use a builtin dataset
-  loaded_data <- saveLoadServer("sessions", raw_data)
-
+  loaded_data <- saveLoadSessionServer("sessions", raw_data)
 
   ## Metadata viz ----
   # View loaded metadata
   viewMetadataServer("viewMetadata", loaded_data)
 
-
   ## Score ----
   scored_data <- scoreDataServer("scoreData", loaded_data)
+  selected_data <- monitorSelectorServer("selectData", scored_data)
 
   ## Bin sleep ----
-  sleep_data <- binDataServer("sleepData", scored_data)
+  sleep_data <- binDataServer("sleepData", selected_data)
 
   ## Bin bouts ----
-  bout_data   <- binDataServer("boutData", loaded_data, preproc_FUN = bout_analysis, var = "asleep")
+  bout_data <- binDataServer("boutData", loaded_data, preproc_FUN = bout_analysis, var = "asleep")
+
+  observeEvent(sleep_data$data, {
+
+    browser()
+  }, ignoreInit=TRUE)
 
   ## Plot ----
   # Plot sleep result
