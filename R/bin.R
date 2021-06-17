@@ -7,7 +7,7 @@
 
 FUN_choices <- c("sleep amount", "max", "min", "P_doze", "P_wake")
 
-functions <- c(mean, median, max, min, fslsleepr::p_doze, fslsleepr::p_wake)
+functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
 
 binDataUI <- function(id) {
@@ -25,43 +25,46 @@ binDataUI <- function(id) {
 #' @import behavr
 #' @import shiny
 #' @importFrom data.table copy
-binDataServer <- function(id, grouped_data, preproc_FUN=NULL, ...) {
+binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
+
+  output_rv <- reactiveValues(data = NULL, name = NULL, time = NULL)
+
   moduleServer(
     id,
     function(input, output, session) {
 
-      x_bin_length <- reactive({
-        ifelse(is.null(input$summary_time_window), behavr::mins(30), input$summary_time_window)
-      })
-
-      FUN <- reactive({
-        functions[ifelse(is.null(input$summary_FUN), "sleep_amount", input$summary_FUN)]
-      })
-
-      data <- reactive({
+      preproc_data <- reactive({
 
         if (is.null(preproc_FUN)) {
-          grouped_data$data
+          # just use the data as is
+          input_rv$data
         } else {
-          preproc_FUN(grouped_data$data, ...)
+          # preprocess it
+          preproc_FUN(data=input_rv$data, ...)
         }
       })
 
-      binned_data <- reactive({
-        behavr::bin_apply_all(
-          data(),
+      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window), {
+
+        req(input_rv$data)
+        binned_dataset <- behavr::bin_apply_all(
+          preproc_data(),
           x = "t",
           y = input$y,
-          x_bin_length = x_bin_length(),
-          FUN = FUN()
+          x_bin_length = behavr::mins(input$summary_time_window),
+          FUN = functions[[input$summary_FUN]]
         )
-      })
 
-      return(binned_data)
+        output_rv$data <- behavr::rejoin(binned_dataset)
+        output_rv$name <- input_rv$name
+        output_rv$time <- input_rv$time
+      }, ignoreInit = TRUE)
+
+      return(output_rv)
     }
   )}
 
 
 bout_analysis <- function(data, ...) {
-  sleepr::bout_analysis(data = data, ...)
+  sleepr::bout_analysis_standard(data = data, ...)
 }
