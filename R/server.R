@@ -3,7 +3,6 @@
 #' @import shiny
 #' @import behavr
 #' @importFrom shinylogs track_usage store_json
-#' @importFrom esquisse esquisserServer
 #' @importFrom sleepr bout_analysis
 #' @importFrom ggplot2 ggplot facet_wrap aes facet_grid
 #' @importFrom ggetho stat_ld_annotations stat_pop_etho
@@ -22,7 +21,6 @@ server <- function(input, output, session) {
   ## Preparation ----
   # Run a simple ethoscope backup manager
   backupManagerServer("manageBackup")
-
 
   ## Load ----
   # Here the choice between dam or ethoscope happens
@@ -43,16 +41,9 @@ server <- function(input, output, session) {
 
   ## Bin sleep ----
   sleep_data <- binDataServer("sleepData", scored_data)
-  sleep_data_rejoined <- reactive({
-    rejoin(binned_data())
-  })
-
 
   ## Bin bouts ----
-  bout_data   <- binDataServer("boutData", unified_data, preproc_FUN = bout_analysis, var = "asleep")
-  bout_data_rejoined <- reactive({
-    rejoin(bout_data())
-  })
+  bout_data   <- binDataServer("boutData", loaded_data, preproc_FUN = bout_analysis, var = "asleep")
 
   ## Plot ----
   # Plot sleep result
