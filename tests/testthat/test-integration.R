@@ -43,8 +43,6 @@ test_that("app loads and scores", {
     # press submit button
     message("Submit")
     session$setInputs(`load-submit`=1)
-    # not needed?
-    reload(reload() + 1)
 
     # get the resulting dataset
     metadata <- behavr::meta(scored_data$ethoscope$data)
@@ -56,5 +54,4 @@ test_that("app loads and scores", {
     expect_true("asleep" %in% colnames(data))
   })
   options("sparse_data" = FALSE)
-
 })
