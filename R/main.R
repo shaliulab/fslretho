@@ -9,6 +9,7 @@ main <- function(display_mode=FALSE, port=NULL) {
   # launch the app in a separate browser window
   options(shiny.launch.browser = FALSE)
 
+  check_installation()
 
   # always on the same port: 3838
   if (is.null(port)) {
