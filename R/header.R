@@ -29,6 +29,12 @@ get_header <- function() {
     binDataUI("boutBin")
   )
 
+  download_ui <- shinydashboardPlus::dropdownBlock(
+    id = "download_center",
+    title = "Download datasets",
+    downloadServerUI("sleep_download")
+  )
+
   saveload_ui <- saveLoadSessionUI("sessions")
   # save_ui <- saveSessionUI("sessions-save")
   # load_ui <- loadSessionUI("sessions-load")
@@ -43,6 +49,7 @@ get_header <- function() {
       scoring_ui,
       sleep_binning_ui,
       bout_binning_ui,
+      download_ui,
 
       # save_ui[[1]], save_ui[[2]]
       # save_ui

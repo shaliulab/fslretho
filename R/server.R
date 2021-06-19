@@ -41,18 +41,32 @@ server <- function(input, output, session) {
   sleep_data <- binDataServer("sleepBin", selected_data)
 
   ## Bin bouts ----
-  # bout_data <- binDataServer("boutBin", selected_data, preproc_FUN = bout_analysis, var = "asleep")
+  bout_data <- binDataServer("boutBin", selected_data,
+                             # compute bouts
+                             preproc_FUN = bout_analysis,
+                             # of the var asleep
+                             var = "asleep")
 
   ## Plot ----
   # Plot sleep result
 
-  esquisse_rv <- esquisse::esquisse_server("sleepPlot",
+  sleep_module <- esquisse::esquisse_server("sleepPlot",
                                            data_rv = sleep_data,
                                            data_modal = FALSE,
                                            # pass this from the conf
                                            t_unit = "hours"
   )
 
-  # Plot bout result
-  # plotServer("boutPlot", bout_data, mapping = aes(x = t, y = target_))
+  observeEvent(sleep_module$time, {
+    browser()
+  })
+
+  # sleep_bout_module <- esquisse::esquisse_server("boutPlot",
+  #                                           data_rv = bout_data,
+  #                                           data_modal = FALSE,
+  #                                           # pass this from the conf
+  #                                           t_unit = "hours"
+  # )
+
+  downloadServer("sleep_download", sleep_module, loaded_data$name)
 }
