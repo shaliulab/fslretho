@@ -1,5 +1,8 @@
 FUNCTION_MAP <- list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation)
 
+conf <- FSLRethoConfiguration$new()
+DEBUG <- conf$content$debug
+
 
 #' Produce a Shiny progress bar
 #' @param steps Number of steps in the progress bar i.e. the number of times
@@ -69,6 +72,7 @@ score_monitor <- function(input_rv, FUN, updateProgress, ...) {
     )
   )
 
+  if (DEBUG) message("Running behavioral annotation")
   data_annotated <- do.call(scopr::annotate_all, args)
 
   validate(need(nrow(data_annotated) > 0, "Data cannot be annotated. This could be due to your dataset being sparse"))

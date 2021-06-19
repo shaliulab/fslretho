@@ -10,6 +10,9 @@ FUN_choices <- c("sleep amount", "max", "min", "P_doze", "P_wake")
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
 
+conf <- FSLRethoConfiguration$new()
+DEBUG <- TRUE
+
 binDataUI <- function(id) {
 
   ns <- NS(id)
