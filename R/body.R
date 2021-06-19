@@ -9,7 +9,7 @@ get_body <- function() {
 # Welcome tab: the user lands here
   welcome_tab <- shinydashboard::tabItem(tabName = 'welcome', welcomePageUI())
 
-  esquisse_ui <- esquisse::esquisse_ui(
+  sleep_ui <- esquisse::esquisse_ui(
     "sleepPlot",
     header = FALSE,
     container = esquisse::esquisseContainer(fixed = FALSE, height = "700px"),
@@ -17,12 +17,17 @@ get_body <- function() {
     insert_code = FALSE
   )
 
+  bout_ui <- esquisse::esquisse_ui(
+    "boutPlot",
+    header = FALSE,
+    container = esquisse::esquisseContainer(fixed = FALSE, height = "700px"),
+    controls = c("labs", "parameters", "appearance", "filters", "code"),
+    insert_code = FALSE
+  )
 
   load_tab <- shinydashboard::tabItem(tabName = 'load', loadDataUI("loadData"))
-  sleep_tab <- shinydashboard::tabItem(tabName = 'sleep', esquisse_ui)
-
-
-  bout_tab <- shinydashboard::tabItem(tabName = 'bout', plotUI("boutPlot"))
+  sleep_tab <- shinydashboard::tabItem(tabName = 'sleep', sleep_ui)
+  bout_tab <- shinydashboard::tabItem(tabName = 'bout', bout_ui)
 
   metadata_tab <- shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
   backup_tab <- shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
@@ -38,6 +43,7 @@ get_body <- function() {
       welcome_tab,
       load_tab,
       sleep_tab,
+      bout_tab,
       metadata_tab,
       backup_tab
 

@@ -13,14 +13,14 @@ names(functions) <- FUN_choices
 conf <- FSLRethoConfiguration$new()
 DEBUG <- TRUE
 
-binDataUI <- function(id) {
+binDataUI <- function(id, binning_variable="asleep") {
 
   ns <- NS(id)
   shiny::tagList(
     shiny::sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
     shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "sleep amount"),
-    shiny::textInput(ns("y"), label = "Y axis", value="asleep")
+    shiny::textInput(ns("y"), label = "Y axis", value=binning_variable)
   )
 }
 
@@ -60,7 +60,6 @@ binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
         )
 
         rejoined_dataset <- behavr::rejoin(binned_dataset)
-        rejoined_dataset$target_ <- rejoined_dataset[[input$y]]
         output_rv$data <- rejoined_dataset
         output_rv$name <- input_rv$name
         output_rv$time <- input_rv$time

@@ -57,16 +57,14 @@ server <- function(input, output, session) {
                                            t_unit = "hours"
   )
 
-  observeEvent(sleep_module$time, {
-    browser()
-  })
 
-  # sleep_bout_module <- esquisse::esquisse_server("boutPlot",
-  #                                           data_rv = bout_data,
-  #                                           data_modal = FALSE,
-  #                                           # pass this from the conf
-  #                                           t_unit = "hours"
-  # )
+  sleep_bout_module <- esquisse::esquisse_server("boutPlot",
+                                            data_rv = bout_data,
+                                            data_modal = FALSE,
+                                            # pass this from the conf
+                                            t_unit = "hours"
+  )
 
-  downloadServer("sleep_download", sleep_module, loaded_data$name)
+  downloadServer("sleep_download", sleep_module, sleep_data$name)
+  downloadServer("sleep_bout_download", sleep_bout_module, sleep_bout_module$name)
 }

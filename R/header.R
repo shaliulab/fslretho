@@ -20,19 +20,22 @@ get_header <- function() {
   sleep_binning_ui <- shinydashboardPlus::dropdownBlock(
     id = "sleep_binningInput",
     title = "Sleep binning parameters",
-    binDataUI("sleepBin")
+    binDataUI("sleepBin", binning_variable = "asleep")
   )
 
   bout_binning_ui <- shinydashboardPlus::dropdownBlock(
     id = "bout_binningInput",
     title = "Bout binning parameters",
-    binDataUI("boutBin")
+    binDataUI("boutBin", binning_variable = "duration")
   )
 
   download_ui <- shinydashboardPlus::dropdownBlock(
     id = "download_center",
     title = "Download datasets",
-    downloadServerUI("sleep_download")
+    tagList(
+      downloadServerUI("sleep_download"),
+      downloadServerUI("sleep_bout_download")
+    )
   )
 
   saveload_ui <- saveLoadSessionUI("sessions")

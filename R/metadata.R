@@ -145,24 +145,25 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
 #' Display a data table output of the uploaded metadata
 #' It can be filtered by column values and sorted
 #' @import shiny
+#' @importFrom behavr meta
 viewMetadataUI <- function(id) {
 
-  ns <- shiny::NS(id)
-  shiny::dataTableOutput(ns("metadata"))
+  ns <- NS(id)
+  dataTableOutput(ns("metadata"))
 }
 
 # Generate a data table of the metadata for display in the UI
-viewMetadataServer <- function(id, rv) {
+viewMetadataServer <- function(id, input_rv) {
 
-  shiny::moduleServer(
+  moduleServer(
     id,
     function(input, output, session) {
 
-      metadata <- shiny::reactive({
-        rv$data[, meta = T]
+      metadata <- reactive({
+        behavr::meta(input_rv$data)
       })
 
-      output$metadata <- shiny::renderDataTable({
+      output$metadata <- renderDataTable({
         metadata()
       })
     }
