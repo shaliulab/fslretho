@@ -17,12 +17,17 @@ get_header <- function() {
     scoreDataUI("scoreData")
   )
 
-  binning_ui <- shinydashboardPlus::dropdownBlock(
-    id = "binningInput",
-    title = "Binning parameters",
-    binDataUI("binData")
+  sleep_binning_ui <- shinydashboardPlus::dropdownBlock(
+    id = "sleep_binningInput",
+    title = "Sleep binning parameters",
+    binDataUI("sleepBin")
   )
 
+  bout_binning_ui <- shinydashboardPlus::dropdownBlock(
+    id = "bout_binningInput",
+    title = "Bout binning parameters",
+    binDataUI("boutBin")
+  )
 
   saveload_ui <- saveLoadSessionUI("sessions")
   # save_ui <- saveSessionUI("sessions-save")
@@ -36,7 +41,9 @@ get_header <- function() {
     leftUi = tagList(
       browserButton,
       scoring_ui,
-      binning_ui,
+      sleep_binning_ui,
+      bout_binning_ui,
+
       # save_ui[[1]], save_ui[[2]]
       # save_ui
 

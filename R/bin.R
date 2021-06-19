@@ -19,7 +19,7 @@ binDataUI <- function(id) {
   shiny::tagList(
     shiny::sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
-    shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices),
+    shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "sleep amount"),
     shiny::textInput(ns("y"), label = "Y axis", value="asleep")
   )
 }
@@ -50,6 +50,7 @@ binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
       observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window), {
 
         req(input_rv$data)
+        if (DEBUG) message(paste0("Binning data using ", input$summary_FUN))
         binned_dataset <- behavr::bin_apply_all(
           preproc_data(),
           x = "t",
@@ -58,7 +59,9 @@ binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
           FUN = functions[[input$summary_FUN]]
         )
 
-        output_rv$data <- behavr::rejoin(binned_dataset)
+        rejoined_dataset <- behavr::rejoin(binned_dataset)
+        rejoined_dataset$target_ <- rejoined_dataset[[input$y]]
+        output_rv$data <- rejoined_dataset
         output_rv$name <- input_rv$name
         output_rv$time <- input_rv$time
       }, ignoreInit = TRUE)

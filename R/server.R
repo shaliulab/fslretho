@@ -38,20 +38,21 @@ server <- function(input, output, session) {
   selected_data <- monitorSelectorServer("selectData", scored_data)
 
   ## Bin sleep ----
-  sleep_data <- binDataServer("sleepData", selected_data)
+  sleep_data <- binDataServer("sleepBin", selected_data)
 
   ## Bin bouts ----
-  bout_data <- binDataServer("boutData", loaded_data, preproc_FUN = bout_analysis, var = "asleep")
-
-  observeEvent(sleep_data$data, {
-
-    browser()
-  }, ignoreInit=TRUE)
+  # bout_data <- binDataServer("boutBin", selected_data, preproc_FUN = bout_analysis, var = "asleep")
 
   ## Plot ----
   # Plot sleep result
-  plotServer("sleepPlot", sleep_data)
+
+  esquisse_rv <- esquisse::esquisse_server("sleepPlot",
+                                           data_rv = sleep_data,
+                                           data_modal = FALSE,
+                                           # pass this from the conf
+                                           t_unit = "hours"
+  )
 
   # Plot bout result
-  plotServer("boutPlot", bout_data)
+  # plotServer("boutPlot", bout_data, mapping = aes(x = t, y = target_))
 }

@@ -4,8 +4,16 @@
 \alias{score_monitor}
 \title{Annotate behavior coming from DAM or ethoscope}
 \usage{
-score_monitor(raw_data, input, monitor = c("ethoscope", "dam"))
+score_monitor(input_rv, FUN, updateProgress, ...)
+}
+\arguments{
+\item{input_rv}{reactiveValues, incoming dataset with data, name and time slots}
+
+\item{updateProgress}{function optionally taking a character that executes every time a new individual is processed}
+
+\item{...}{Additional arguments to scoring function}
 }
 \description{
-Annotate behavior coming from DAM or ethoscope
+This function takes dependence on reactiveValues.
+Thus it needs to be run on a reactive environment (observe/reactive)
 }

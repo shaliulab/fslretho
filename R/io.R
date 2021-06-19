@@ -53,7 +53,13 @@ loadDataServer <- function(id, reload) {
       })
 
 
-      output_rv$ethoscope <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope)
+      ethoscope_result <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope)
+
+      observeEvent(ethoscope_result$time, {
+        output_rv$ethoscope$data <- ethoscope_result$data
+        output_rv$ethoscope$name <- ethoscope_result$name
+        output_rv$ethoscope$time <- ethoscope_result$time
+      })
       # dam_result <- loadDamServer("dam", metadata_datapath, submit, reload, input$result_dir_dam)
 
       return(output_rv)

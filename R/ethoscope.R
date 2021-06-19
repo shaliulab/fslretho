@@ -1,7 +1,9 @@
-NCORES <- FSLRethoConfiguration$new()$content$scopr$ncores
-CACHE <- FSLRethoConfiguration$new()$content$scopr$folders$cache$path
+conf <- FSLRethoConfiguration$new()
+NCORES <- conf$content$scopr$ncores
+CACHE <- conf$content$scopr$folders$cache$path
 VERBOSE <- TRUE
-TESTING <- FSLRethoConfiguration$new()$content$testing
+TESTING <- conf$content$testing
+DEBUG <- conf$content$debug
 
 progressBarServer <- function(id, metadata) {
 
@@ -47,7 +49,7 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
     function(input, output, session) {
       dt_raw <- reactive({
 
-        message("Calling scopr::load_ethoscope")
+        if (DEBUG) message("Running ethoscope data load")
         dt_raw <- scopr::load_ethoscope(
           metadata = metadata(),
           reference_hour = NA,
@@ -59,7 +61,6 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
         # needed to be able to save the dt
         # because the column file_info is a list
         dt_raw <- fortify(dt_raw, meta = TRUE)
-        message("Data loaded into R successfully")
 
         attr(dt_raw, "monitor") <- "ethoscope"
         dt_raw
@@ -71,12 +72,6 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
           shiny::validate(shiny::need(FALSE, label = ""))
         }
       })
-
-      # This breaks the submit / reload mechanism. Changes in the input
-      # always trigger a reload before it is actually requested
-      # observe(
-      #   dt_raw_validated()
-      # )
 
       return(dt_raw)
     })
@@ -90,11 +85,12 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
 loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_dir) {
 
   last_reaction <- 0
+  debug <- FALSE
 
   moduleServer(
     id,
     function(input, output, session) {
-      rv <- reactiveValues(
+      output_rv <- reactiveValues(
         data = NULL,
         name = NULL,
         time = NULL
@@ -113,23 +109,22 @@ loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_di
 
       observeEvent(c(submit(), reload()), {
 
-        message("Reload or submit detected")
+        if (DEBUG) message("Reload or submit detected")
+        # req(submit() + reload() > last_reaction)
         if((submit() + reload()) > last_reaction) {
-          message("I do call dt_raw")
-          rv$data <- dt_raw()
-          rv$name <- basename(metadata_datapath())
+          output_rv$data <- dt_raw()
+          output_rv$name <- basename(metadata_datapath())
           # signal the reactiveValue is updated to downstream observeEvent blocks
-          rv$time <- as.numeric(Sys.time())
+          output_rv$time <- as.numeric(Sys.time())
           last_reaction <<- last_reaction+1
         } else {
-          message("I dont call dt_raw")
-          rv$data <- NULL
-          rv$name <- NULL
-          rv$time <- NULL
+          output_rv$data <- NULL
+          output_rv$name <- NULL
+          output_rv$time <- NULL
         }
       }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
-      return(rv)
+      return(output_rv)
     }
   )
 }

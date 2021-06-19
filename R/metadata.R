@@ -1,3 +1,6 @@
+conf <- FSLRethoConfiguration$new()
+DEBUG <- conf$content$debug
+
 #' Given a metadata file, infer what type of monitor it is
 #'
 #' @importFrom data.table fread
@@ -59,6 +62,7 @@ load_metadata <- function(metadata_path, monitor) {
 
   metadata <- tryCatch({
     # TODO Do I want to handle multiple metadatas?
+    if (DEBUG) message("Running read_metadata")
     metadata_list <- lapply(metadata_path, read_function)
     metadata_list %>% lapply(., function(x) x[, colnames(metadata_list[[1]]), with=F]) %>% do.call(rbind, .)
     }, error = function(e) {

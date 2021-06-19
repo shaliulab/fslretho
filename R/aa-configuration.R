@@ -6,10 +6,9 @@
 #' default values for hardware defined parameters can be set dynamically
 #' via a config file
 #'
-#' @name FSLREthoConfiguration
-#' @export
 #' @importFrom R6 R6Class
 #' @importFrom rjson fromJSON toJSON
+#' @export
 #' @method initialize something
 #' @field content List of configuration items
 #' @field config_file Default configuration file path
