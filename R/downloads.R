@@ -1,8 +1,8 @@
-downloadServerUI <- function(id) {
+downloadServerUI <- function(id, label) {
 
   ns <- NS(id)
 
-  downloadButton(ns("button"), label = "Binned data", icon = icon("download"))
+  downloadButton(ns("button"), label = label, icon = icon("download"))
 }
 
 downloadServer <- function(id, input_rv, dataset_name) {

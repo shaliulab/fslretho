@@ -33,8 +33,8 @@ get_header <- function() {
     id = "download_center",
     title = "Download datasets",
     tagList(
-      downloadServerUI("sleep_download"),
-      downloadServerUI("sleep_bout_download")
+      downloadServerUI("sleep_download", "Sleep"),
+      downloadServerUI("sleep_bout_download", "Sleep bouts")
     )
   )
 
