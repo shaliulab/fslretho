@@ -7,7 +7,7 @@
 #' @importFrom ggplot2 ggplot facet_wrap aes facet_grid
 #' @importFrom ggetho stat_ld_annotations stat_pop_etho
 #' @importFrom cowplot plot_grid
-#' @importFrom rlang expr
+#' @importFrom rlang expr current_env
 #' @noRd
 server <- function(input, output, session) {
 
@@ -16,6 +16,7 @@ server <- function(input, output, session) {
 
   # Define a trigger shared across modules
   reload <- reloadModuleServer("reload")
+  debugModuleServer("debug", envir = rlang::current_env())
 
   ## Preparation ----
   # Run a simple ethoscope backup manager
@@ -29,13 +30,16 @@ server <- function(input, output, session) {
   # In case the user wants to use a builtin dataset
   loaded_data <- saveLoadSessionServer("sessions", raw_data)
 
-  ## Metadata viz ----
-  # View loaded metadata
-  viewMetadataServer("viewMetadata", loaded_data)
-
   ## Score ----
   scored_data <- scoreDataServer("scoreData", loaded_data)
   selected_data <- monitorSelectorServer("selectData", scored_data)
+  monitor <- reactive({
+    selected_data$monitor
+  })
+
+  ## Metadata viz ----
+  # View loaded metadata
+  viewMetadataServer("viewMetadata", selected_data)
 
   ## Bin sleep ----
   sleep_data <- binDataServer("sleepBin", selected_data)
@@ -50,21 +54,26 @@ server <- function(input, output, session) {
   ## Plot ----
   # Plot sleep result
 
-  sleep_module <- esquisse::esquisse_server("sleepPlot",
-                                           data_rv = sleep_data,
-                                           data_modal = FALSE,
-                                           # pass this from the conf
-                                           t_unit = "hours"
-  )
-
-
-  sleep_bout_module <- esquisse::esquisse_server("boutPlot",
-                                            data_rv = bout_data,
-                                            data_modal = FALSE,
+  sleep_module <- esquisseModuleServer("sleepPlot", sleep_data,
+                                       # pass this from the conf
+                                       t_unit = "hours")
+  sleep_bout_module <- esquisseModuleServer("boutPlot", bout_data,
                                             # pass this from the conf
-                                            t_unit = "hours"
-  )
+                                            t_unit = "hours")
 
-  downloadServer("sleep_download", sleep_module, sleep_data$name)
-  downloadServer("sleep_bout_download", sleep_bout_module, sleep_bout_module$name)
+
+  sleep_summary <- summaryStatisticServer("sleepSummary", sleep_module)
+  bout_summary <- summaryStatisticServer("boutSummary", sleep_bout_module)
+
+
+  sleep_module_summary <- esquisseModuleServer("sleepPlotSummary", sleep_summary)
+  sleep_bout_module_summary <- esquisseModuleServer("boutPlotSummary", bout_summary)
+
+
+  downloadServer("binned-sleep", sleep_module, sleep_data$name)
+  downloadServer("sequence-sleep", scored_data, selected_data$name, monitor)
+  downloadServer("raw-data", raw_data, selected_data$name, monitor)
+  downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
+  downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
+  downloadServer("bouts-summary", sleep_bout_module, sleep_bout_module_summary$name)
 }

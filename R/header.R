@@ -29,12 +29,28 @@ get_header <- function() {
     binDataUI("boutBin", binning_variable = "duration")
   )
 
+  sleep_summary_ui <- shinydashboardPlus::dropdownBlock(
+    id = "sleepSummaryInput",
+    title = "Sleep summary",
+    summaryStatisticUI("sleepSummary", var="asleep")
+  )
+
+  bout_summary_ui <- shinydashboardPlus::dropdownBlock(
+    id = "boutSummaryInput",
+    title = "Bout summary",
+    summaryStatisticUI("boutSummary", var="duration")
+  )
+
   download_ui <- shinydashboardPlus::dropdownBlock(
     id = "download_center",
     title = "Download datasets",
     tagList(
-      downloadServerUI("sleep_download", "Sleep"),
-      downloadServerUI("sleep_bout_download", "Sleep bouts")
+      downloadServerUI("binned-sleep", "Sleep binned"),
+      downloadServerUI("sequence-sleep", "Sleep sequence"),
+      downloadServerUI("raw-data", "Sleep raw"),
+      downloadServerUI("bouts-sleep", "Sleep bouts"),
+      downloadServerUI("sleep-summary", "Sleep summary"),
+      downloadServerUI("bouts-summary", "Sleep bouts summary")
     )
   )
 
@@ -42,6 +58,8 @@ get_header <- function() {
   # save_ui <- saveSessionUI("sessions-save")
   # load_ui <- loadSessionUI("sessions-load")
   reload_button <- reloadUI("reload")
+
+  debug_ui <- debugModuleUI("debug")
 
   ### Put togethero
   header <- shinydashboardPlus::dashboardHeader(
@@ -52,7 +70,10 @@ get_header <- function() {
       scoring_ui,
       sleep_binning_ui,
       bout_binning_ui,
+      sleep_summary_ui,
+      bout_summary_ui,
       download_ui,
+      debug_ui,
 
       # save_ui[[1]], save_ui[[2]]
       # save_ui

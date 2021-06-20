@@ -2,13 +2,13 @@
 #' @importFrom tools toTitleCase
 loadDataUI <- function(id, help_text = "") {
 
-  ns <- shiny::NS(id)
+  ns <- NS(id)
 
-  shiny::tagList(
-    shiny::mainPanel(
+  tagList(
+    mainPanel(
       h2(tools::toTitleCase("Metadata input (DAM/ethoscope)")),
-      shiny::fluidRow(
-        shiny::fileInput(inputId = ns("metadata"), label = "",
+      fluidRow(
+        fileInput(inputId = ns("metadata"), label = "",
                          multiple = TRUE,
                          accept = c(
                            "text/csv",
@@ -17,19 +17,19 @@ loadDataUI <- function(id, help_text = "") {
                          ),
         ),
 
-        shiny::textInput(
+        textInput(
           inputId = ns("result_dir_ethoscope"), label = "",
           value = FSLRethoConfiguration$new()$content$scopr$folders$results$path
         ),
-        shiny::textInput(
+        textInput(
           inputId = ns("result_dir_dam"), label = "",
           value = FSLRethoConfiguration$new()$content$damr$folders$results$path
         ),
 
-        shiny::actionButton(ns("submit"), label = "Submit")
+        actionButton(ns("submit"), label = "Submit")
       )
     ),
-    shiny::sidebarPanel(p(help_text))
+    sidebarPanel(p(help_text))
   )
 }
 
@@ -57,7 +57,7 @@ loadDataServer <- function(id, reload) {
 
       observeEvent(ethoscope_result$time, {
         output_rv$ethoscope$data <- ethoscope_result$data
-        output_rv$ethoscope$name <- ethoscope_result$name
+        output_rv$ethoscope$name <- input$metadata[1, "name"]
         output_rv$ethoscope$time <- ethoscope_result$time
       })
       # dam_result <- loadDamServer("dam", metadata_datapath, submit, reload, input$result_dir_dam)
