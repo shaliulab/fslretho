@@ -49,8 +49,9 @@ reproducibilityModuleServer <- function(id,  envir = rlang::env()) {
        VERBOSE <- TRUE
        TESTING <- conf$content$testing
        DEBUG <- conf$content$debug
-       params <- list(result_dir = "/ethoscope_data/results/", velocity_correction_coef = 0.0048, time_window_length = 10, min_time_immobile = 300, summary_time_window = 30, summary_FUN = "mean")
+       # params <- list(result_dir = "/ethoscope_data/results/", velocity_correction_coef = 0.0048, time_window_length = 10, min_time_immobile = 300, summary_time_window = 30, summary_FUN = "mean")
        lines <- list(
+         "# Install behavioral analysis backend",
          "# please mind these libraries are modified versions of https://github.com/rethomics",
          "# reproducibility is not guaranteed if installing from https://github.com/rethomics",
          "# instead install like this",
@@ -58,7 +59,12 @@ reproducibilityModuleServer <- function(id,  envir = rlang::env()) {
          "# devtools::install_github('shaliulab/scopr@deployment')",
          "# devtools::install_github('shaliulab/sleepr@deployment')",
          "# devtools::install_github('shaliulab/ggetho@deployment')",
+         "# data.table is a behavr dependency",
+         "# ggplot2 is a ggetho dependency",
+         "# both will be loaded when we load behavr and ggetho respectively,",
+         "# but it is still nice to load them separately just to show they are used separately",
          "library(data.table)",
+         "library(ggplot2)",
          "library(behavr)",
          "library(scopr)",
          "library(sleepr)",
@@ -136,7 +142,7 @@ reproducibilityModuleServer <- function(id,  envir = rlang::env()) {
          "data.table::fwrite(x = data, 'binned_dataset.csv')",
          "data.table::fwrite(x = dt, 'scored_dataset.csv')",
          "data.table::fwrite(x = dt_raw, 'raw_dataset.csv')",
-         "ggplot::ggsave(plot = gg, 'plot.png', height = 10, width = 20)"
+         "ggplot2::ggsave(plot = gg, 'plot.png', height = 10, width = 20)"
        )
 
        script <- paste(lines, collapse = "\n")
