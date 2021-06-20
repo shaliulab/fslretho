@@ -10,6 +10,10 @@ get_body <- function() {
   welcome_tab <- shinydashboard::tabItem(tabName = 'welcome', welcomePageUI())
 
   load_tab <- shinydashboard::tabItem(tabName = 'load', loadDataUI("loadData"))
+  raw_tab <- shinydashboard::tabItem(tabName = "raw", rawPlotsUI("rawPlots"))
+
+  premade_tab <- shinydashboard::tabItem(tabName = "premade", premadePlotsUI("premadePlots"))
+
   sleep_tab <- shinydashboard::tabItem(tabName = 'sleep', esquisseModuleUI("sleepPlot"), esquisseModuleUI("sleepPlotSummary"))
   bout_tab <- shinydashboard::tabItem(tabName = 'bout', esquisseModuleUI("boutPlot"), esquisseModuleUI("boutPlotSummary"))
 
@@ -26,6 +30,8 @@ get_body <- function() {
     shinydashboard::tabItems(
       welcome_tab,
       load_tab,
+      raw_tab,
+      premade_tab,
       sleep_tab,
       bout_tab,
       metadata_tab,

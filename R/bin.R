@@ -5,7 +5,7 @@
 #' TRUE state in each window
 #' Relevant for moving, asleep and interactions variables
 
-FUN_choices <- c("sleep amount", "max", "min", "P_doze", "P_wake")
+FUN_choices <- c("mean", "max", "min", "P_doze", "P_wake")
 
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
@@ -19,16 +19,18 @@ binDataUI <- function(id, binning_variable="asleep") {
   tagList(
     sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
-    selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "sleep amount"),
+    selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean"),
     textInput(ns("y"), label = "Y axis", value=binning_variable)
   )
 }
 
 
+#' @param y column to bin over, overrides whatever the user may pass in the input
+#' @param summary_time_window width of the bins, in minutes, overrides whatever the user may pass in the input
 #' @import behavr
 #' @import shiny
 #' @importFrom data.table copy
-binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
+binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, summary_FUN = NULL, preproc_FUN=NULL, ...) {
 
   output_rv <- reactiveValues(data = NULL, name = NULL, time = NULL)
 
@@ -54,9 +56,9 @@ binDataServer <- function(id, input_rv, preproc_FUN=NULL, ...) {
         binned_dataset <- behavr::bin_apply_all(
           preproc_data(),
           x = "t",
-          y = input$y,
-          x_bin_length = behavr::mins(input$summary_time_window),
-          FUN = functions[[input$summary_FUN]]
+          y = ifelse(is.null(y), input$y, y),
+          x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+          FUN = functions[[ifelse(is.null(summary_FUN), input$summary_FUN, summary_FUN)]]
         )
 
         rejoined_dataset <- behavr::rejoin(binned_dataset)

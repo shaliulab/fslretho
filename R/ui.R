@@ -12,6 +12,8 @@ get_sidebar <- function() {
     shinydashboard::sidebarMenu(
       shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = shiny::icon('info')),
       shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
+      shinydashboard::menuItem("Raw", tabName = 'raw', icon = shiny::icon('upload')),
+      shinydashboard::menuItem("Premade", tabName = 'premade', icon = shiny::icon('upload')),
       shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
       shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = shiny::icon('moon')),
       shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table')),

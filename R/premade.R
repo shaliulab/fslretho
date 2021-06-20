@@ -1,46 +1,49 @@
+premadePlotsUI <- function(id) {
+
+  ns <- NS(id)
+
+  tagList(
+    plotOutput(ns("plot_sleep")),
+    plotOutput(ns("plot_interactions"))
+  )
+}
+
 #' Premade plots without any user tweaking
 #'
-#' @param data reactiveValues with a data slot containing an ethoscope behavr table
+#' @param input_rv reactiveValues with a data slot containing an ethoscope behavr table
 #' @importFrom cowplot plot_grid
-sleepInteractionsServer <- function(id, data) {
+#' @import ggetho
+premadePlotsServer <- function(id, sleep_rv, interactions_rv) {
 
   moduleServer(
     id,
     function(input, output, session) {
 
-      analyse_sleep_00 <- reactiveVal(NULL)
-
-      output$sleep_interactions_plot <- renderPlot({
-        input$refresh_analyseSleep_00
-        analyse_sleep_00()
+      sleep_data <- eventReactive(sleep_rv$time, {
+        req(sleep_rv$data)
+        sleep_rv$data
       })
 
-      observeEvent(data$data, {
-        req(data$data$t)
-        req(data$data$asleep)
-        req(data$data[, meta = T]$region_id)
-        data <- behavr::rejoin(data$data)
+      interactions_data <- eventReactive(interactions_rv$time, {
+        req(interactions_rv$data)
+        interactions_rv$data
+      })
 
-        sleep_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = asleep)) +
-          ggetho::stat_pop_etho() +
+      output$plot_sleep <- renderPlot({
+        ggplot(data = sleep_data(), aes(x = t, y = asleep)) +
+          ggetho::geom_pop_etho() +
+          ggetho::scale_x_hours() +
           ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
-          ggplot2::facet_grid(region_id ~ .)
+          facet_wrap("id")
+      })
 
-        if (isTruthy(data$data$interactions)) {
-          interactions_trace <- ggplot2::ggplot(data = data, ggplot2::aes(x = t, y = interactions)) +
-            ggetho::stat_pop_etho() +
-            ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA)  +
-            ggplot2::facet_grid(region_id ~ .) +
-            ggetho::scale_x_hours()
-
-          output_plot <- cowplot::plot_grid(sleep_trace, interactions_trace, ncol = 2)
-        } else {
-          output_plot <- sleep_trace
-        }
-
-        analyse_sleep_00(output_plot)
-
-      }, ignoreNULL = TRUE)
+      output$plot_interactions <- renderPlot({
+        ggplot(data = interactions_data(), aes(x = t, y = interactions)) +
+          ggetho::geom_pop_etho() +
+          ggetho::scale_x_hours() +
+          ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
+          facet_wrap("id")
+      })
     }
   )
 }

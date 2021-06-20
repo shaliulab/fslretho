@@ -43,6 +43,13 @@ server <- function(input, output, session) {
 
   ## Bin sleep ----
   sleep_data <- binDataServer("sleepBin", selected_data)
+  interactions_data <- binDataServer(
+    "sleepBin", selected_data,
+    y="interactions", summary_time_window = 30, summary_FUN = "mean"
+  )
+
+  premadePlotsServer("premadePlots", sleep_data, interactions_data)
+  raw_datasets <- rawPlotsServer("rawPlots", raw_data, scored_data, sleep_data, monitor)
 
   ## Bin bouts ----
   bout_data <- binDataServer("boutBin", selected_data,
@@ -75,5 +82,5 @@ server <- function(input, output, session) {
   downloadServer("raw-data", raw_data, selected_data$name, monitor)
   downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
   downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
-  downloadServer("bouts-summary", sleep_bout_module, sleep_bout_module_summary$name)
+  downloadServer("bouts-summary", sleep_bout_module_summary, sleep_bout_module_summary$name)
 }
