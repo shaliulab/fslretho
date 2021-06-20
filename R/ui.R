@@ -17,7 +17,8 @@ get_sidebar <- function() {
       shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
       shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = shiny::icon('moon')),
       shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table')),
-      shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = shiny::icon('save'))
+      shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = shiny::icon('save')),
+      shinydashboard::menuItem("Reproducibility script", tabName = 'reproducibility', icon = shiny::icon('save'))
     )
   )
 }

@@ -71,7 +71,10 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
     }
   )}
 
-
+#' A version of sleepr::bout_analysis that allows programmatic input
+#' @seealso sleepr::bout_analysis
+#' @inheritParams sleepr::bout_analysis
+#' @export
 bout_analysis <- function(data, ...) {
   sleepr::bout_analysis_standard(data = data, ...)
 }

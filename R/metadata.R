@@ -5,6 +5,7 @@ DEBUG <- conf$content$debug
 #'
 #' @importFrom data.table fread
 #' @param metadata_path Path to a metadata file
+#' @export
 #' @return character either dam or ethoscope
 get_monitor_name <- function(metadata_path) {
 

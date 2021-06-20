@@ -39,6 +39,8 @@ server <- function(input, output, session) {
 
   sqliteDBZIPServer("sqliteDB", selected_data, monitor)
 
+  reproducibilityModuleServer("reproducibility", envir = rlang::current_env())
+
   ## Metadata viz ----
   # View loaded metadata
   viewMetadataServer("viewMetadata", selected_data)

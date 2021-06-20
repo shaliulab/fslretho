@@ -19,6 +19,7 @@ get_body <- function() {
 
   metadata_tab <- shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
   backup_tab <- shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
+  reproducibility_tab <- shinydashboard::tabItem(tabName = 'reproducibility', reproducibilityModuleUI("reproducibility"))
 
 
   # TODO Place somewhere the UI for scoreData
@@ -35,8 +36,8 @@ get_body <- function() {
       sleep_tab,
       bout_tab,
       metadata_tab,
-      backup_tab
-
+      backup_tab,
+      reproducibility_tab
     )
   )
 
