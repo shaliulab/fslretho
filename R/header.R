@@ -45,6 +45,7 @@ get_header <- function() {
     id = "download_center",
     title = "Download datasets",
     tagList(
+      sqliteDBZIPUI("sqliteDB"),
       downloadServerUI("binned-sleep", "Sleep binned"),
       downloadServerUI("sequence-sleep", "Sleep sequence"),
       downloadServerUI("raw-data", "Sleep raw"),

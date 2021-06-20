@@ -37,6 +37,8 @@ server <- function(input, output, session) {
     selected_data$monitor
   })
 
+  sqliteDBZIPServer("sqliteDB", selected_data, monitor)
+
   ## Metadata viz ----
   # View loaded metadata
   viewMetadataServer("viewMetadata", selected_data)
