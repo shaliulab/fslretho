@@ -11,6 +11,7 @@
 #' @noRd
 server <- function(input, output, session) {
 
+  welcomePageServer("welcome")
   # Log relevant events made by the user
   shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
 

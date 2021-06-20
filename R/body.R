@@ -7,7 +7,7 @@ get_body <- function() {
 
   # TABS
 # Welcome tab: the user lands here
-  welcome_tab <- shinydashboard::tabItem(tabName = 'welcome', welcomePageUI())
+  welcome_tab <- shinydashboard::tabItem(tabName = 'welcome', welcomePageUI("welcome"))
 
   load_tab <- shinydashboard::tabItem(tabName = 'load', loadDataUI("loadData"))
   raw_tab <- shinydashboard::tabItem(tabName = "raw", rawPlotsUI("rawPlots"))
