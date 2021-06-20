@@ -4,21 +4,6 @@ conf <- FSLRethoConfiguration$new()
 DEBUG <- conf$content$debug
 
 
-#' Produce a Shiny progress bar
-#' @param steps Number of steps in the progress bar i.e. the number of times
-#' the progress bar needs to be advanced by 1 to have it completed
-get_progress_bar <- function(steps) {
-  progress <- Progress$new()
-  on.exit(progress$close())
-  progress$set(message = "Scoring ", value = 0)
-
-  progress_bar <- function(detail = NULL) {
-
-    progress$inc(amount = 1 / steps, detail = detail)
-  }
-  return(progress_bar)
-}
-
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
   ns <- shiny::NS(id)
@@ -104,6 +89,8 @@ scoreDataServer <- function(id, input_rv, pb=TRUE) {
         dam = reactiveValues(data  = NULL, name = NULL, time = NULL)
       )
 
+      progress_bar <- reactiveValues(progress = NULL, update = NULL)
+
       # Get just the annotation parameters
       scoring_parameters <- reactive(
         list(
@@ -125,35 +112,37 @@ scoreDataServer <- function(id, input_rv, pb=TRUE) {
         x
       })
 
-      ethoscope_pb <- reactive({
-        if (pb) {
-          n_individuals <- nrow(input_rv$ethoscope$data[, meta = T])
-          get_progress_bar(n_individuals)
-        } else {
-          NULL
-        }
+
+
+      observeEvent(input_rv$ethoscope$data, {
+        req(input_rv$ethoscope$data)
+        n_individuals <- nrow(input_rv$ethoscope$data[, meta = T])
+        pb <- get_progress_bar(n_individuals, "Scoring")
+        progress_bar$progress <- pb$progress
+        progress_bar$update <- pb$update
       })
 
 
-      dam_pb <- reactive({
-        if (pb) {
-          n_individuals <- nrow(input_rv$dam$data[, meta = T])
-          get_progress_bar(n_individuals)
-        } else {
-          NULL
-        }
+      observeEvent(input_rv$dam$data, {
+        req(input_rv$dam$data)
+        n_individuals <- nrow(input_rv$dam$data[, meta = T])
+        pb <- get_progress_bar(n_individuals, "Scoring")
+        progress_bar$progress <- pb$progress
+        progress_bar$update <- pb$update
       })
 
       # Score ethoscope
       observeEvent(c(input_rv$ethoscope$time, scoring_parameters()), {
         req(input_rv$ethoscope$data)
-        output_rv$ethoscope <- score_monitor(input_rv$ethoscope, ethoscope_pb(), scoring_parameters(), FUN=FUNCTION_MAP$ethoscope)
+        output_rv$ethoscope <- score_monitor(input_rv$ethoscope, progress_bar$update, scoring_parameters(), FUN=FUNCTION_MAP$ethoscope)
+        on.exit(progress_bar$progress$close())
       }, ignoreInit = TRUE)
 
       # Score DAM
       observeEvent(c(input_rv$dam$time, scoring_parameters()), {
         req(input_rv$dam$data)
-        output_rv$dam <- score_monitor(input_rv$dan, dam_pb(), dam_scoring_parameters(), FUN=FUNCTION_MAP$dam)
+        output_rv$dam <- score_monitor(input_rv$dan, progress_bar$update, dam_scoring_parameters(), FUN=FUNCTION_MAP$dam)
+        on.exit(progress_bar$progress$close())
       }, ignoreInit = TRUE)
 
       return(output_rv)

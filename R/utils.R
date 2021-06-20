@@ -210,3 +210,25 @@ get_writable_path <- function(path) {
 }
 
 
+#' Produce a Shiny progress bar
+#' @param n Number of steps in the progress bar i.e. the number of times
+#' the progress bar needs to be advanced by 1 to have it completed
+#' @importFrom shiny showNotification
+get_progress_bar <- function(n, message, duration=2, ncores=1) {
+
+  rv <- reactiveValues(progress = NULL, update = NULL)
+  rv$progress <- shiny::Progress$new()
+  rv$progress$set(message = message, value = 0)
+  # on.exit(progress$close())
+
+  rv$update <- function(detail = NULL) {
+    if (ncores == 1) {
+      rv$progress$inc(amount = 1 / n, detail = detail)
+    } else {
+      showNotification(detail, type = "message", duration = duration)
+    }
+  }
+
+  # return(update)
+  return(rv)
+}

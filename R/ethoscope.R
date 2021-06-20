@@ -5,49 +5,15 @@ VERBOSE <- TRUE
 TESTING <- conf$content$testing
 DEBUG <- conf$content$debug
 
-progressBarServer <- function(id, metadata) {
-
-  moduleServer(
-    id,
-    function(input, output, server) {
-
-      updateProgress <- reactive({
-
-        # disable shiny functionality while testing
-        # not ideal but I think tests dont work if I dont disable this
-        if (! TESTING) {
-          progress <- shiny::Progress$new()
-          on.exit(progress$close())
-
-          progress$set(message = "", value = 0)
-          n <- nrow(metadata())
-
-          function(detail = NULL) {
-            if (NCORES == 1) {
-              progress$inc(amount = 1 / n, detail = detail)
-            } else {
-              shiny::showNotification(detail, type = "message", duration = 2)
-            }
-          }
-        } else {
-          function(detail = NULL) {
-            message(detail)
-          }
-        }
-      })
-
-      return(updateProgress)
-
-    }
-  )
-}
-
-
-loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annotate) {
+loadDtServer <- function(id, metadata) {
   moduleServer(
     id,
     function(input, output, session) {
       dt_raw <- reactive({
+
+        progress_bar <- get_progress_bar(nrow(metadata()), "Loading data to memory (R)", ncores=NCORES)
+        on.exit(progress_bar$progress$close())
+
 
         if (DEBUG) message("Running ethoscope data load")
         dt_raw <- scopr::load_ethoscope(
@@ -56,7 +22,7 @@ loadDtServer <- function(id, metadata, updateProgress_load, updateProgress_annot
           ncores = NCORES,
           cache = CACHE,
           verbose = VERBOSE,
-          updateProgress_load = updateProgress_load()
+          updateProgress_load = progress_bar$update
         )
         # needed to be able to save the dt
         # because the column file_info is a list
@@ -100,17 +66,13 @@ loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_di
       metadata <- loadMetadataServer("metadata-ethoscope", metadata_datapath, "ethoscope", result_dir)
 
       message("Loading dt_raw")
-      updateProgress_load <- progressBarServer("ethoscope-load", metadata)
-      updateProgress_annotate <- progressBarServer("ethoscope-annotate", metadata)
       dt_raw <- loadDtServer(
-        "dt_raw-ethoscope", metadata,
-        updateProgress_load=updateProgress_load, updateProgress_annotate=updateProgress_annotate
+        "dt_raw-ethoscope", metadata
       )
 
       observeEvent(c(submit(), reload()), {
 
         if (DEBUG) message("Reload or submit detected")
-        # req(submit() + reload() > last_reaction)
         if((submit() + reload()) > last_reaction) {
           output_rv$data <- dt_raw()
           output_rv$name <- basename(metadata_datapath())
@@ -122,7 +84,7 @@ loadEthoscopeServer <- function(id, metadata_datapath, submit, reload, result_di
           output_rv$name <- NULL
           output_rv$time <- NULL
         }
-      }, ignoreInit = TRUE, ignoreNULL = TRUE)
+      }, ignoreInit = TRUE)
 
       return(output_rv)
     }
