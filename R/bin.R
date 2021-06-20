@@ -16,11 +16,11 @@ DEBUG <- TRUE
 binDataUI <- function(id, binning_variable="asleep") {
 
   ns <- NS(id)
-  shiny::tagList(
-    shiny::sliderInput(ns("summary_time_window"), label = "Summary time window",
+  tagList(
+    sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
-    shiny::selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "sleep amount"),
-    shiny::textInput(ns("y"), label = "Y axis", value=binning_variable)
+    selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "sleep amount"),
+    textInput(ns("y"), label = "Y axis", value=binning_variable)
   )
 }
 
