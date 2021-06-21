@@ -11,7 +11,6 @@ premadePlotsUI <- function(id) {
 #' Premade plots without any user tweaking
 #'
 #' @param input_rv reactiveValues with a data slot containing an ethoscope behavr table
-#' @importFrom cowplot plot_grid
 #' @import ggetho
 premadePlotsServer <- function(id, sleep_rv, interactions_rv) {
 

@@ -24,4 +24,10 @@ check_installation <- function() {
   status <- file.access(sessions_folder, mode = 2)
   if (status != 0) stop(paste0("Cache directory ", sessions_folder, " is not writable.
                                Please make sure it exists and is writable"))
+
+  logs_folder  <- conf$content$folders$logs$path
+  status <- file.access(sessions_folder, mode = 2)
+  if (status != 0) stop(paste0("Logs directory ", logs_folder, " is not writable.
+                               Please make sure it exists and is writable"))
+
 }

@@ -36,6 +36,10 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
         "path" = "/ethoscope_data/sessions",
         "description" = "A path to a folder containing rds files for fast reloading of data loaded in a previous run.
         The files are created when the user presses the save button in fslretho. The whole dataset loaded there is saved to a single rds file."
+      ),
+      "logs" = list(
+        "path" = "/fslretho_data/logs",
+        "description" = "A path to a folder containing log files tracking the application's usage"
       )
     ))
 

@@ -11,7 +11,6 @@ is.writable <- function(path) {
 }
 
 #' Consistent and informative error
-#' @importFrom glue glue
 #' @importFrom rlang abort
 #'
 #' @param arg The name of the argument not being correct
@@ -20,10 +19,10 @@ is.writable <- function(path) {
 #'
 #' Taken from https://adv-r.hadley.nz/conditions.html#signalling-conditions
 abort_bad_argument <- function(arg, must, not = NULL) {
-  msg <- glue::glue("`{arg}` must {must}")
+  msg <- paste0("`", arg, "` must ", must)
   if (!is.null(not)) {
     not <- typeof(not)
-    msg <- glue::glue("{msg}; not {not}.")
+    msg <- paste0(msg, "; not ", not, ".")
   }
 
   rlang::abort("error_bad_argument",
@@ -57,7 +56,6 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 #' @return A behavr table with no columns of type list
 #' TODO Possibly this should be part of a fwrite_behavr function in behavr
 #' @importFrom dplyr pull
-#' @importFrom purrr map
 fortify <- function(data, meta = FALSE) {
 
   if(meta) {
@@ -77,7 +75,7 @@ fortify <- function(data, meta = FALSE) {
     for (column in which(types)) {
 
       single_column <- dplyr::pull(data[, column, with = F])
-      single_column <- purrr::map_chr(single_column, ~.[[1]])
+      single_column <- lapply(single_column, function(x) x[[1]])
       cmd <- sprintf("%s := single_column", names(types)[column])
       data[, eval(parse(text = cmd))]
     }
@@ -102,7 +100,7 @@ datetime_filename <- function(filename) {
   )
 
   date_split <- c(year(Sys_time),
-    purrr::map_chr(rest, ~stringr::str_pad(string = ., side = 'left', width = 2, pad = '0'))
+    lapply(rest, function(x) stringr::str_pad(string = x, side = 'left', width = 2, pad = '0'))
   )
 
   datetime_char <- paste(
@@ -174,7 +172,6 @@ watch_input <- function(rv, ...) {
 #' so the content of data is not a behavr table anymore
 #' and instead a rejoin()ed data.table
 #'
-#' @importFrom tibble as_tibble
 #' @importFrom behavr rejoin
 #' @param rv A reactiveValues with data and name slots. Data carries a behavr table.
 #' @return A reactive values where data is a rejoined behavr i.e. plain data.table.
@@ -184,7 +181,7 @@ rejoin_rv <- function(rv) {
 
   observe({
     req(rv$data)
-    new_rv$data <- tibble::as_tibble(behavr::rejoin(rv$data))
+    new_rv$data <- behavr::rejoin(rv$data)
     new_rv$name <- rv$name
   })
 

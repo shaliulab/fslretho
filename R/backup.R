@@ -131,7 +131,6 @@ backupManagerUI <- function(id) {
 
 }
 
-#' @importFrom glue glue
 #' @import shiny
 backupManagerServer <- function(id) {
 
@@ -182,7 +181,7 @@ backupManagerServer <- function(id) {
         observeEvent(input[[bt]], {
           etho <- gsub(pattern = "_button", replacement = "", x = bt)
           pattern <- gsub(pattern = "ETHOSCOPE_", replacement = "", x = etho)
-          backup_cmd <- glue::glue('{python_binary} {backup_tool.py} --safe --debug --ethoscope {pattern}')
+          backup_cmd <- paste0(python_binary, " backup_tool.py --safe --debug --ethoscope ", pattern)
           message(sprintf("CMD: %s", backup_cmd))
 
           tryCatch({

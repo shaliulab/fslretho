@@ -7,7 +7,6 @@ create_roi_table <- function(conn) {
 
 #' Generate fake data for a fly
 #' @importFrom RSQLite dbExecute
-#' @importFrom glue glue
 populate_table <- function(conn, data_table, table_name, every=100, id=TRUE) {
 
   i <- 1
@@ -18,7 +17,7 @@ populate_table <- function(conn, data_table, table_name, every=100, id=TRUE) {
     values <- paste(row, collapse=",")
     if (id) values <- paste0(i, ",", values)
 
-    statement <- glue::glue("INSERT INTO {table_name} ({header}) VALUES ({values});")
+    statement <- paste0("INSERT INTO ", table_name, " (", header, ") VALUES (", values, " );")
     message(statement)
     RSQLite::dbExecute(conn = conn, statement = statement)
 

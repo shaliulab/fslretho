@@ -20,38 +20,44 @@ use_description(fields = list(
 )
 use_mit_license(name = "Liu Lab")
 
-# Import Rethomics suite
+# Core
+use_package("shiny", "Imports")
 use_package("data.table", "Imports")
 use_package("ggplot2", "Imports")
-use_package("fslbehavr", "Imports")
-use_package("fsldamr", "Imports")
-use_package("fslscopr", "Imports")
-use_package("fslsleepr", "Imports")
-use_package("fslggetho", "Imports")
+use_package("RSQLite", "Imports")
+use_package("shaliulab/esquisse", "Remotes")
+
+# Import Rethomics suite
+use_package("shaliulab/behavr", "Remotes")
+use_package("shaliulab/damr", "Remotes")
+use_package("shaliulab/scopr", "Remotes")
+use_package("shaliulab/sleepr", "Remotes")
+use_package("shaliulab/ggetho", "Remotes")
 
 # Import tidyverse dependencies
-use_package("purrr", "Imports")
 use_package("rlang", "Imports")
 
 
 # Import GUI dependencies
-use_package("shiny", "Imports")
 use_package("shinydashboard", "Imports")
 use_package("shinydashboardPlus", "Imports")
-use_package("shinythemes", "Imports")
-use_package("fslggetho", "Imports")
+use_package("shinywidgets", "Imports")
+use_package("shinybusy", "Imports")
+
+use_package("stringr", "Imports")
+use_package("lubridate", "Imports")
+use_package("dplyr", "Imports")
 
 
 # Import R6 and rjson to support FSLRethoConfiguration
 use_package("R6", "Imports")
 use_package("rjson", "Imports")
 
-# Import glue to support Hadley's custom error objects
-use_package("glue", "Imports")
 
 # Suggestions
 use_package("knitr", "Suggests")
-
+use_package("reactlog", "Suggests")
+use_package("shinylogs", "Suggests")
 
 
 use_news_md()

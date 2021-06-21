@@ -1,19 +1,13 @@
 #' Server function of FSLRetho
 #'
 #' @import shiny
-#' @import behavr
 #' @importFrom shinylogs track_usage store_json
-#' @importFrom sleepr bout_analysis
-#' @importFrom ggplot2 ggplot facet_wrap aes facet_grid
-#' @importFrom ggetho stat_ld_annotations stat_pop_etho
-#' @importFrom cowplot plot_grid
-#' @importFrom rlang expr current_env
+#' @importFrom rlang current_env
 #' @noRd
 server <- function(input, output, session) {
 
   welcomePageServer("welcome")
-  # Log relevant events made by the user
-  shinylogs::track_usage(storage_mode = shinylogs::store_json(path = "logs/"))
+  track_usage()
 
   # Define a trigger shared across modules
   reload <- reloadModuleServer("reload")
