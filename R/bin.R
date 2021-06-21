@@ -5,7 +5,7 @@
 #' TRUE state in each window
 #' Relevant for moving, asleep and interactions variables
 
-FUN_choices <- c("mean", "max", "min", "P_doze", "P_wake")
+FUN_choices <- c("mean", "median", "max", "min", "P_doze", "P_wake")
 
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
@@ -20,7 +20,12 @@ binDataUI <- function(id, binning_variable="asleep") {
     sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
     selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean"),
-    textInput(ns("y"), label = "Y axis", value=binning_variable)
+    # textInput(ns("y"), label = "Y axis", value=binning_variable),
+    selectizeInput(inputId = ns("y"), label = "Y axis", choices = binning_variable,
+                   multiple=TRUE,
+                   selected = binning_variable
+                   )
+    # uiOutput(ns("y_ui"))
   )
 }
 
@@ -49,22 +54,52 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         }
       })
 
-      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window), {
+      # output$y_ui <- renderUI({
+      #   message("Rendeing UI")
+      #   input_rv$time
+      # })
+
+      input_y <- reactive(input$y)
+      observe({
+        input_y()
+      })
+
+      observeEvent(input_rv$time, {
+        updateSelectizeInput(inputId = "y", choices = input_rv$variables, selected = input_rv$variables[1])
+      }, ignoreInit = TRUE)
+
+      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$y), {
 
         req(input_rv$data)
+        req(input$y)
+        # if (length(input$y) > 1) browser()
         if (DEBUG) message(paste0("Binning data using ", input$summary_FUN))
-        binned_dataset <- behavr::bin_apply_all(
-          preproc_data(),
+
+        if (is.null(y))
+          y_passed <- input_y()
+        else
+          y_passed <- y
+
+        kept_y <- y_passed %in% colnames(preproc_data())
+        y_passed <- y_passed[kept_y]
+        if (!all(kept_y) & sum(kept_y) > 0)
+          warning("Some variables are not in the data")
+
+        req(any(kept_y))
+
+        binned_dataset <- behavr::bin_all(
+          data = preproc_data(),
+          y = y_passed,
           x = "t",
-          y = ifelse(is.null(y), input$y, y),
           x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
           FUN = functions[[ifelse(is.null(summary_FUN), input$summary_FUN, summary_FUN)]]
         )
 
+
         rejoined_dataset <- behavr::rejoin(binned_dataset)
         output_rv$data <- rejoined_dataset
         output_rv$name <- input_rv$name
-        output_rv$time <- input_rv$time
+        output_rv$time <- Sys.time()
       }, ignoreInit = TRUE)
 
       return(output_rv)

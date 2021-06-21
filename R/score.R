@@ -1,4 +1,7 @@
-FUNCTION_MAP <- list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation)
+FUNCTION_MAP <- list(
+  `sleep annotation` = list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation),
+  `distance annotation` = list(ethoscope = sleepr::sum_movement_detector, dam = NULL)
+)
 
 conf <- FSLRethoConfiguration$new()
 DEBUG <- conf$content$debug
@@ -11,7 +14,7 @@ scoreDataUI <- function(id) {
     shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001),
     shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
     shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
-    shiny::selectizeInput(ns("FUN"), label = "", choices = c("sleep_annotation"))
+    shiny::selectizeInput(ns("FUN"), label = "", choices = c("sleep annotation", "distance annotation"), selected = "sleep annotation", multiple=TRUE)
   )
   # shiny::uiOutput(ns("scoringInput"))
 }
@@ -39,7 +42,7 @@ score_monitor <- function(input_rv, FUN, updateProgress, ...) {
 
   data <- input_rv$data
 
-  scoring_parameters <- list(...)[[1]]
+  scoring_parameters <- list(...)
 
   if (SPARSE_DATA) {
     message("score module overrides time_window_length to 1 hour")
@@ -113,16 +116,6 @@ scoreDataServer <- function(id, input_rv, pb=TRUE) {
       })
 
 
-
-      observeEvent(input_rv$ethoscope$data, {
-        req(input_rv$ethoscope$data)
-        n_individuals <- nrow(input_rv$ethoscope$data[, meta = T])
-        pb <- get_progress_bar(n_individuals, "Scoring")
-        progress_bar$progress <- pb$progress
-        progress_bar$update <- pb$update
-      })
-
-
       observeEvent(input_rv$dam$data, {
         req(input_rv$dam$data)
         n_individuals <- nrow(input_rv$dam$data[, meta = T])
@@ -131,10 +124,28 @@ scoreDataServer <- function(id, input_rv, pb=TRUE) {
         progress_bar$update <- pb$update
       })
 
+
+      FUN <- reactive({
+        lapply(input$FUN, function(f) FUNCTION_MAP[[f]]$ethoscope)
+      })
+
       # Score ethoscope
-      observeEvent(c(input_rv$ethoscope$time, scoring_parameters()), {
+      observeEvent(c(input_rv$ethoscope$time, scoring_parameters(), FUN()), {
+
         req(input_rv$ethoscope$data)
-        output_rv$ethoscope <- score_monitor(input_rv$ethoscope, progress_bar$update, scoring_parameters(), FUN=FUNCTION_MAP$ethoscope)
+        req(FUN())
+        req(scoring_parameters())
+
+        n_individuals <- nrow(input_rv$ethoscope$data[, meta = T])
+        pb <- get_progress_bar(n_individuals, "Scoring")
+        progress_bar$progress <- pb$progress
+        progress_bar$update <- pb$update
+
+        args <- append(list(input_rv=input_rv$ethoscope, updateProgress = progress_bar$update, FUN = FUN()), scoring_parameters())
+        output_rv$ethoscope <- do.call(score_monitor, args)
+        output_rv$ethoscope$time <- Sys.time()
+        # just a sapply returns a matrix, so I need lapply and unlist
+        output_rv$ethoscope$variables <- unlist(lapply(FUN(), function(f) {attr(f, "variables")()}))
         on.exit(progress_bar$progress$close())
       }, ignoreInit = TRUE)
 

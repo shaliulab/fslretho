@@ -8,9 +8,9 @@ monitorSelectorServer <- function(id, input_rv) {
 
       for (monitor in c("dam", "ethoscope")) {
         observeEvent(input_rv[[monitor]]$time, {
-          output_rv$data <- input_rv[[monitor]]$data
-          output_rv$time <- input_rv[[monitor]]$time
-          output_rv$name <- input_rv[[monitor]]$name
+          for (field in names(input_rv[[monitor]])) {
+              output_rv[[field]] <- input_rv[[monitor]][[field]]
+          }
           output_rv$monitor <- monitor
         }, ignoreInit= TRUE)
       }
