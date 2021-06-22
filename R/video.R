@@ -1,4 +1,4 @@
-ethoscope_imager <- function(path, id=NULL, video=F) {
+ethoscope_imager <- function(path, id=NULL, video=F, fps=NULL) {
 
   binary <- "/home/antortjim/anaconda3/bin/python"
   script <- "/home/antortjim/Dropbox/FSLLab/Git/ethoscope-imager/imager.py"
@@ -8,7 +8,7 @@ ethoscope_imager <- function(path, id=NULL, video=F) {
   }
 
   if (video) {
-    cmd <- paste0(cmd, " --video")
+    cmd <- paste0(cmd, " --video", " --fps", " ", fps)
   }
 
   print(cmd)
@@ -49,6 +49,7 @@ snapshotViewerUI <- function(id) {
       uiOutput(ns("ids_ui")),
       actionButton(ns("annotate"), label = "Annotate"),
       uiOutput(ns("index_ui")),
+      numericInput(ns("fps"), label = "FPS", value = 10, min = 1, max = 30),
       downloadButton(ns("video"), label = "Make .mp4 video")
     ),
   # wellPanel(
@@ -145,8 +146,19 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
         sqlite(the_dbfile(), "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
 
+      available_ids <- reactive({
+        filenames <- ethoscope_imager(path=the_dbfile())
+        ids <- as.integer(sapply(filenames, function(x) unlist(strsplit(basename(x), split = "_"))[1]))
+        unique(c(1, ids))
+      })
+
+      # observeEvent(ids(), {
+      #   browser()
+      #   available_ids()
+      # })
+
       output$ids_ui <- renderUI({
-        selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = ids()[1], multiple=T)
+        selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = available_ids(), multiple=T)
       })
 
 
@@ -155,11 +167,19 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
       })
 
 
+      selected_shot <- reactiveVal(1)
+
       index_ui <- reactive({
         sliderInput(session$ns("index"), label = "Shot", min = 1, max = length(files()), value = 1, step = 1)
       })
 
+
       output$index_ui <- renderUI({index_ui()})
+
+      observeEvent(input$index, selected_shot(input$index), ignoreInit = TRUE)
+      observeEvent(input$annotate, {
+        updateSliderInput(session = session, inputId = "index", value = selected_shot())
+      })
 
       outfile <- reactive({
 
@@ -172,7 +192,7 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
       output$video <- downloadHandler(filename = function() {
         paste0(the_dbfile(), ".mp4")
       }, content = function(file) {
-        video <- ethoscope_imager(path = the_dbfile(), video=TRUE)
+        video <- ethoscope_imager(path = the_dbfile(), video=TRUE, fps=input$fps)
         file.copy(video, file)
       })
 
