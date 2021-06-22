@@ -1,4 +1,4 @@
-ethoscope_imager <- function(path, id=NULL) {
+ethoscope_imager <- function(path, id=NULL, video=F) {
 
   binary <- "/home/antortjim/anaconda3/bin/python"
   script <- "/home/antortjim/Dropbox/FSLLab/Git/ethoscope-imager/imager.py"
@@ -6,6 +6,11 @@ ethoscope_imager <- function(path, id=NULL) {
   if (!is.null(id)) {
     cmd <- paste0(cmd, " --id ", paste0(id, collapse=" "))
   }
+
+  if (video) {
+    cmd <- paste0(cmd, " --video")
+  }
+
   print(cmd)
   files <- system(
     command = cmd,
@@ -43,7 +48,8 @@ snapshotViewerUI <- function(id) {
     wellPanel(
       uiOutput(ns("ids_ui")),
       actionButton(ns("annotate"), label = "Annotate"),
-      uiOutput(ns("index_ui"))
+      uiOutput(ns("index_ui")),
+      downloadButton(ns("video"), label = "Make .mp4 video")
     ),
   # wellPanel(
   #   imageOutput(ns("viewer"))
@@ -75,7 +81,6 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
     function(input, output, session) {
 
       absolute_paths <- eventReactive(input_rv$ethoscope$time, {
-        browser()
         req(behavr::meta(input_rv$ethoscope$data)$file_info)
       }, ignoreInit = TRUE)
 
@@ -118,7 +123,6 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
 
       summary <- eventReactive(c(the_dbfile(), trigger()), {
 
-        browser()
         data <- data.table::data.table(path = character(), count = integer())
 
         # for (i in 1:length(the_dbfile())) {
@@ -162,6 +166,14 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
         outfile <- files()[as.integer(req(input$index))]
         message(outfile)
         outfile
+      })
+
+
+      output$video <- downloadHandler(filename = function() {
+        paste0(the_dbfile(), ".mp4")
+      }, content = function(file) {
+        video <- ethoscope_imager(path = the_dbfile(), video=TRUE)
+        file.copy(video, file)
       })
 
 
