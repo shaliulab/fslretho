@@ -25,6 +25,8 @@ server <- function(input, output, session) {
   # In case the user wants to use a builtin dataset
   loaded_data <- saveLoadSessionServer("sessions", raw_data)
 
+  snapshotViewerServer("snapshot_viewer", loaded_data)
+
   ## Score ----
   scored_data <- scoreDataServer("scoreData", loaded_data)
   selected_data <- monitorSelectorServer("selectData", scored_data)
@@ -48,7 +50,7 @@ server <- function(input, output, session) {
   )
 
   premadePlotsServer("premadePlots", sleep_data, interactions_data)
-  raw_datasets <- rawPlotsServer("rawPlots", raw_data, scored_data, sleep_data, monitor)
+  raw_datasets <- rawPlotsServer("rawPlots", loaded_data, scored_data, sleep_data, monitor)
 
   ## Bin bouts ----
   bout_data <- binDataServer("boutBin", selected_data,
@@ -78,7 +80,7 @@ server <- function(input, output, session) {
 
   downloadServer("binned-sleep", sleep_module, sleep_data$name)
   downloadServer("sequence-sleep", scored_data, selected_data$name, monitor)
-  downloadServer("raw-data", raw_data, selected_data$name, monitor)
+  downloadServer("raw-data", loaded_data, selected_data$name, monitor)
   downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
   downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
   downloadServer("bouts-summary", sleep_bout_module_summary, sleep_bout_module_summary$name)
