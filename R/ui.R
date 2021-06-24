@@ -10,16 +10,16 @@
 get_sidebar <- function() {
   sidebar <- shinydashboard::dashboardSidebar(
     shinydashboard::sidebarMenu(
-      shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = shiny::icon('info')),
-      shinydashboard::menuItem("Load", tabName = 'load', icon = shiny::icon('upload')),
-      shinydashboard::menuItem("Snapshot viewer", tabName = 'snapshot', icon = shiny::icon('upload')),
-      shinydashboard::menuItem("Raw", tabName = 'raw', icon = shiny::icon('upload')),
-      shinydashboard::menuItem("Premade", tabName = 'premade', icon = shiny::icon('upload')),
-      shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = shiny::icon('moon')),
-      shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = shiny::icon('moon')),
-      shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = shiny::icon('table')),
-      shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = shiny::icon('save')),
-      shinydashboard::menuItem("Reproducibility script", tabName = 'reproducibility', icon = shiny::icon('save'))
+      shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = icon('info')),
+      shinydashboard::menuItem("Load", tabName = 'load', icon = icon('upload')),
+      shinydashboard::menuItem("Snapshot viewer", tabName = 'snapshot', icon = icon('file-video')),
+      shinydashboard::menuItem("Raw", tabName = 'raw'),
+      shinydashboard::menuItem("Premade", tabName = 'premade'),
+      shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = icon('moon')),
+      shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = icon('moon')),
+      shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = icon('table')),
+      shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = icon('save')),
+      shinydashboard::menuItem("Reproducibility script", tabName = 'reproducibility', icon = icon('info'))
     )
   )
 }
