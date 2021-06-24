@@ -48,6 +48,7 @@ snapshotViewerUI <- function(id) {
     wellPanel(
       uiOutput(ns("ids_ui")),
       actionButton(ns("annotate"), label = "Annotate"),
+      actionButton(ns("sd_ids"), label = "SD only"),
       uiOutput(ns("index_ui")),
       numericInput(ns("fps"), label = "FPS", value = 10, min = 1, max = 30),
       downloadButton(ns("video"), label = "Make .mp4 video")
@@ -55,11 +56,39 @@ snapshotViewerUI <- function(id) {
   # wellPanel(
   #   imageOutput(ns("viewer"))
   # ),
-  wellPanel(
-    imageOutput(ns("rois"))
+    wellPanel(
+      imageOutput(ns("rois"))
+    )
   )
+}
 
-)
+#' Parse the json data extracted from the METADATA - selected_options of a dbfile
+#' into an R list
+#' @param metadata list produced by reading into R the result of the SELECT * FROM METADATA statement
+#' and putting each row into an element of the list, where the field is the list element's name and the value is the list element's value
+get_selected_options <- function(metadata) {
+
+  selected_options <- metadata$selected_options %>%
+    gsub(x = ., pattern = "'", replacement = '"') %>%
+    gsub(x = ., pattern = "<class ", replacement = "") %>%
+    gsub(x=., pattern = ">", replacement = "") %>%
+    gsub(x=., pattern = "\\(\\)", replacement = '""') %>%
+    jsonlite::parse_json(json = .)
+  return(selected_options)
+}
+
+get_metadata <- function(FILE) {
+
+  metadata <- as.data.table(sqlite(FILE, "SELECT * FROM METADATA;"))
+  value <- as.list(metadata$value)
+  names(value) <- metadata$field
+  metadata <- value
+  metadata$selected_options <- get_selected_options(metadata)
+  metadata$date_time <- as.numeric(metadata$date_time)
+  metadata$frame_width <- as.numeric(metadata$frame_width)
+  metadata$frame_height <- as.numeric(metadata$frame_height)
+
+  return(metadata)
 }
 
 
@@ -122,6 +151,12 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
       })
 
 
+      metadata <- reactive({
+        get_metadata(the_dbfile())
+      })
+
+
+
       summary <- eventReactive(c(the_dbfile(), trigger()), {
 
         data <- data.table::data.table(path = character(), count = integer())
@@ -143,7 +178,7 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
       })
 
       ids <- reactive({
-        sqlite(the_dbfile(), "SELECT id FROM IMG_SNAPSHOTS;")$id
+        sqlite(file = the_dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
 
       available_ids <- reactive({
@@ -160,6 +195,33 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
       output$ids_ui <- renderUI({
         selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = available_ids(), multiple=T)
       })
+
+
+      observeEvent(input$sd_ids, {
+
+        date_range <- metadata()$selected_options$interactor$kwargs$date_range
+
+        if (! is.null(date_range)) {
+
+          date_range <- date_range  %>% strsplit(., split = "  ") %>% unlist
+          date_range <- as.numeric(as.POSIXct(date_range, tz = "GMT"))
+          t_range <- round((date_range - metadata()$date_time) * 1000) # ms
+
+          # this should return the number of shots during SD
+          sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+          if (sqlite(the_dbfile(), sql_statement)$count != 0) {
+            sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+            ids <- sqlite(the_dbfile(), sql_statement)$id
+            updateSelectizeInput(inputId = "ids", selected = ids)
+
+          } else {
+            message("No snapshots detected during SD")
+          }
+        } else {
+          message("Interactor has no date_range")
+        }
+      }, ignoreInit = FALSE)
+
 
 
       files <- eventReactive(input$annotate, {
