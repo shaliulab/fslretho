@@ -1,3 +1,82 @@
+ANNOTATION_OFFSET <- 51
+ANNOTATE <- TRUE
+GEAR_WIDTH <- 50
+
+
+find_gears <- function(roi_map, roi_side) {
+  roi_map <- data.table::copy(roi_map)
+  roi_map[side == "left", x := x - GEAR_WIDTH]
+  roi_map[side == "right", x := x + w]
+  roi_map[, y := y - 10]
+  roi_map[, w := GEAR_WIDTH]
+  roi_map[, h := 50]
+  roi_map[side %in% roi_side, ]
+  return(roi_map)
+
+}
+
+imageModule <- function(id, image_reactive, deleteFile = TRUE, ...) {
+  moduleServer(
+    id,
+    function(input, output, session) {
+
+      image_file <- reactive({
+        image_file <- tempfile(fileext = ".png")
+        message(image_file)
+        magick::image_write(image = image_reactive(), path = image_file)
+        image_file
+      })
+
+      output$image <- renderImage({
+        list(
+          src = image_file(),
+          contentType = 'image/png',
+          ...
+        )}, deleteFile = deleteFile)
+    }
+  )
+}
+
+imageModuleUI <- function(id) {
+
+  ns <- NS(id)
+  imageOutput(ns("image"))
+}
+
+
+crop_regions <- function(loaded_image, roi_map, offset = c(0, 0)) {
+  width <- magick::image_info(loaded_image)$width
+  height <- magick::image_info(loaded_image)$height
+
+  # roi_map <- roi_map[roi_value %in% c(1, 2, 11, 12), ]
+
+  # TODO Find a nice value that is always more than what the ethoscopes give us
+  # for both w and h
+  w <- max(roi_map$w) # to include the gear
+  h <- max(roi_map$h)
+
+
+  roi_images <- lapply(roi_map$roi_value, function(roi) {
+    args <- roi_map[roi_value == roi, .(x,y)] %>% as.list
+    # I cannot use the roi's w and h because it must be the same for all rois
+    args$w <- w
+    args$h <- h
+    args$x  <- args$x + offset[1]
+    args$y  <- args$y + offset[2]
+
+    args <- append(list(border=0), args)
+    args <- append(list(img=loaded_image), args)
+    do.call(crop_roi, args)
+  })
+
+  names(roi_images) <- paste0("ROI_", roi_map$roi_value)
+
+  column1 <- append_roi(lapply(roi_map[side == "left", roi_value], function(i) roi_images[[paste0("ROI_", i)]]), stack=TRUE)
+  column2 <- append_roi(lapply(roi_map[side == "right", roi_value], function(i) roi_images[[paste0("ROI_", i)]]), stack=TRUE)
+  rois <- magick::image_append(c(column1, column2), stack=F)
+  return(rois)
+}
+
 ethoscope_imager <- function(path, id=NULL, video=F, fps=NULL) {
 
   binary <- "/home/antortjim/anaconda3/bin/python"
@@ -34,9 +113,6 @@ append_roi <- function(roi_list, ...) {
 }
 
 
-ANNOTATION_OFFSET <- 51
-ANNOTATE <- TRUE
-
 snapshotViewerUI <- function(id) {
 
   ns <- NS(id)
@@ -53,11 +129,12 @@ snapshotViewerUI <- function(id) {
       numericInput(ns("fps"), label = "FPS", value = 10, min = 1, max = 30),
       downloadButton(ns("video"), label = "Make .mp4 video")
     ),
-  # wellPanel(
-  #   imageOutput(ns("viewer"))
-  # ),
     wellPanel(
-      imageOutput(ns("rois"))
+      fluidRow(
+        column(2, imageModuleUI(ns("gears_left"))),
+        column(8, imageModuleUI(ns("rois"))),
+        column(2, imageModuleUI(ns("gears_right")))
+      )
     )
   )
 }
@@ -187,10 +264,6 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
         unique(c(1, ids))
       })
 
-      # observeEvent(ids(), {
-      #   browser()
-      #   available_ids()
-      # })
 
       output$ids_ui <- renderUI({
         selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = available_ids(), multiple=T)
@@ -273,42 +346,40 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
 
       ## --- ROIS
 
-      roi_map <- reactive({
-        as.data.table(sqlite(req(the_dbfile()), "SELECT roi_value,x,y,w,h FROM ROI_MAP"))
-      })
-
       image <- reactive({
         magick::image_read(outfile())
       })
 
+
+      roi_map <- reactive({
+
+        roi_map <- as.data.table(sqlite(req(the_dbfile()), "SELECT roi_value,x,y,w,h FROM ROI_MAP"))
+        width <- magick::image_info(image())$width
+
+        roi_map[, side := NA_character_]
+        roi_map[x < (width / 2), side := "left"]
+        roi_map[x > (width / 2), side := "right"]
+        roi_map
+      })
+
+
       datetime_banner <- reactive({
-        w <- magick::image_info(image())$width
-        magick::image_crop(image(), paste0(w, "x", ANNOTATION_OFFSET, "+0+0"))
+        width <- magick::image_info(image())$width
+        magick::image_crop(image(), paste0(width, "x", ANNOTATION_OFFSET, "+0+0"))
       })
 
       rois <- reactive({
-        req(image())
-        req(roi_map())
-        # TODO Find a nice value that is always more than what the ethoscopes give us
-        # for both w and h
-        w <- max(roi_map()$w)
-        h <- max(roi_map()$h)
+        crop_regions(req(image()), req(roi_map()), offset=c(0, ANNOTATION_OFFSET))
+      })
 
-        roi_images <- lapply(1:nrow(roi_map()), function(roi) {
-          args <- roi_map()[roi_value == roi, .(x,y)] %>% as.list
-          # I cannot use the roi's w and h because it must be the same for all rois
-          args$w <- w
-          args$h <- h
-          if (ANNOTATE) args$y  <- args$y + ANNOTATION_OFFSET
-          args <- append(list(img=image(), border=0), args)
-          do.call(crop_roi, args)
-        })
 
-        names(roi_images) <- roi_map()$roi_value
+      gears_left <- reactive({
+        crop_regions(req(image()), find_gears(req(roi_map()), "left"), offset=c(0, ANNOTATION_OFFSET))
+      })
 
-        column1 <- append_roi(lapply(1:10, function(i) roi_images[[i]]), stack=TRUE)
-        column2 <- append_roi(lapply(11:20, function(i) roi_images[[i]]), stack=TRUE)
-        rois <- magick::image_append(c(column1, column2), stack=F)
+
+      gears_right <- reactive({
+        crop_regions(req(image()), find_gears(req(roi_map()), "right"), offset=c(0, ANNOTATION_OFFSET))
       })
 
       rois_with_banner <- reactive({
@@ -318,21 +389,11 @@ snapshotViewerServer <- function(id, input_rv, dbfile=reactiveVal(NULL), trigger
         magick::image_append(c(banner_resized, rois()), stack=TRUE)
       })
 
-      roi_file <- reactive({
-        roi_file <- tempfile(fileext = ".png")
-        magick::image_write(image = rois_with_banner(), path = roi_file)
-        roi_file
-      })
+      imageModule("gears_left", gears_left, width=80, height = 960, alt = "gears_left")
+      imageModule("rois", rois_with_banner, width=1280, height = 960, alt = "ROIS")
+      imageModule("gears_right", gears_left, width=80, height = 960, alt = "gears_right")
 
 
-      output$rois <- renderImage({
-        list(
-          src = roi_file(),
-          contentType = 'image/png',
-          width = 1280,
-          height = 960,
-          alt = "Cropped rois"
-      )}, deleteFile = TRUE)
 
     }
   )
