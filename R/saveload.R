@@ -43,7 +43,9 @@ get_sessions <- function() {
   sessions <- sapply(sessions, function(x) strsplit(x, split = "\\.rds") %>% unlist %>% .[1])
   names(sessions) <- sessions %>% sapply(., function(x) substr(x, 1, 10))
   sessions <- as.list(sessions)
-  sessions <- ifelse(length(sessions) == 0, list("Empty_cache" = ""), sessions)
+  if(length(sessions) == 0) {
+     sessions <- list("Empty_cache" = "")
+  }
   return(sessions)
 }
 
