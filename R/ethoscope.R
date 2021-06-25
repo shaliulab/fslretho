@@ -24,9 +24,19 @@ loadDtServer <- function(id, metadata) {
           verbose = VERBOSE,
           updateProgress_load = progress_bar$update
         )
+
+
         # needed to be able to save the dt
         # because the column file_info is a list
         dt_raw <- fortify(dt_raw, meta = TRUE)
+
+        qc <- load_ethoscope_qc(
+          metadata = metadata()
+        )
+        # browser()
+        # if(!is.null(qc)) {
+        #   dt_raw <- merge_behavr(dt_raw, qc)
+        # }
 
         attr(dt_raw, "monitor") <- "ethoscope"
         dt_raw

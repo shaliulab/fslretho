@@ -6,7 +6,7 @@
 #' Relevant for moving, asleep and interactions variables
 
 FUN_choices <- c("mean", "median", "max", "min", "P_doze", "P_wake")
-
+PARETO <- TRUE
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
 
@@ -20,6 +20,7 @@ binDataUI <- function(id, binning_variable="asleep") {
     sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
     selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean"),
+    checkboxInput(ns("pareto"), label = "Apply pareto principle", value = FALSE),
     # textInput(ns("y"), label = "Y axis", value=binning_variable),
     selectizeInput(inputId = ns("y"), label = "Y axis", choices = binning_variable,
                    multiple=TRUE,
@@ -35,7 +36,7 @@ binDataUI <- function(id, binning_variable="asleep") {
 #' @import behavr
 #' @import shiny
 #' @importFrom data.table copy
-binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, summary_FUN = NULL, preproc_FUN=NULL, ...) {
+binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, summary_FUN = NULL, preproc_FUN=NULL, allow_pareto=FALSE, ...) {
 
   output_rv <- reactiveValues(data = NULL, name = NULL, time = NULL)
 
@@ -68,7 +69,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         updateSelectizeInput(inputId = "y", choices = input_rv$variables, selected = input_rv$variables[1])
       }, ignoreInit = TRUE)
 
-      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$y), {
+      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$pareto, input$y), {
 
         req(input_rv$data)
         req(input$y)
@@ -87,14 +88,34 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
         req(any(kept_y))
 
+        FUN <- functions[[ifelse(is.null(summary_FUN), input$summary_FUN, summary_FUN)]]
+
         binned_dataset <- behavr::bin_all(
           data = preproc_data(),
           y = y_passed,
           x = "t",
           x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
-          FUN = functions[[ifelse(is.null(summary_FUN), input$summary_FUN, summary_FUN)]]
+          FUN = FUN
         )
 
+
+        if (allow_pareto & input$pareto) {
+
+          pareto_dataset <- behavr::bin_all(
+            data = preproc_data(),
+            y = "x",
+            x = "t",
+            x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+            FUN = pareto_sd
+          )
+
+          setkey(binned_dataset, id, t)
+          setkey(pareto_dataset, id, t)
+          merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
+          merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
+          setkey(merged_dataset, id)
+          binned_dataset <- merged_dataset
+        }
 
         rejoined_dataset <- behavr::rejoin(binned_dataset)
         output_rv$data <- rejoined_dataset
