@@ -53,6 +53,7 @@ use_package("dplyr", "Imports")
 use_package("R6", "Imports")
 use_package("rjson", "Imports")
 
+use_package("magick", "Imports")
 
 # Suggestions
 use_package("knitr", "Suggests")
