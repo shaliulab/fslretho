@@ -30,6 +30,8 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     # content$damr <- damr::damrConfiguration$new(testing=testing)$content
     content$damr <- list(folders = list(results = list(path = "/DAM_data/results")))
     content <- append(content, list("debug" = FALSE, port = 3838, testing=FALSE))
+    content$binaries <- list('python' = system("which python", intern = TRUE))
+    content$dependencies <- list("ethoscope_imager" = "/opt/ethoscope-imager/imager.py")
 
     content$folders <- append(content$folders, list(
       "ethoscope_sessions" = list(

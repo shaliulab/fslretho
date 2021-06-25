@@ -30,4 +30,16 @@ check_installation <- function() {
   if (status != 0) stop(paste0("Logs directory ", logs_folder, " is not writable.
                                Please make sure it exists and is writable"))
 
+
+  conf <- FSLRethoConfiguration$new()
+  binary <- conf$content$binaries$python
+  script <- conf$content$dependencies$ethoscope_imager
+
+  if (!file.exists(binary)) {
+    stop(paste0("Cannot find python binary under ", binary))
+  }
+
+  if (!file.exists(binary)) {
+    stop(paste0("Cannot find ethoscope_imager library under ", script))
+  }
 }

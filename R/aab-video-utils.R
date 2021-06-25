@@ -57,10 +57,21 @@ paste_regions <- function(roi_images, roi_map) {
   rois
 }
 
+#' Save ethoscope snapshots to disk with Python
+#' The sqlite3 library in Python is well suited to interface
+#' with dbfiles produced in the ethoscope platform
+#' @param path Absolute path to a sqlite3 file produced with an ethoscope
+#' @param id Numeric vector of ids matching ids in the IMG_SNAPSHOTS table of the dbfile
+#' @param video If TRUE, produce a video with the supplied ids.
+#' Alternatively, if no ids are passed,
+#' then with all the cached (already saved outside of the dbfile) snapshots
+#' @param fps Frame rate of the resulting video
 ethoscope_imager <- function(path, id=NULL, video=F, fps=NULL) {
 
-  binary <- "/home/antortjim/anaconda3/bin/python"
-  script <- "/home/antortjim/Dropbox/FSLLab/Git/ethoscope-imager/imager.py"
+  conf <- FSLRethoConfiguration$new()
+  binary <- conf$content$binaries$python
+  script <- conf$content$dependencies$ethoscope_imager
+
   cmd <- paste0(binary, " ", script, " --path ", path)
   if (!is.null(id)) {
     cmd <- paste0(cmd, " --id ", paste0(id, collapse=" "))
@@ -71,9 +82,15 @@ ethoscope_imager <- function(path, id=NULL, video=F, fps=NULL) {
   }
 
   print(cmd)
-  files <- system(
-    command = cmd,
-    intern = TRUE
+  files <- tryCatch({
+    system(
+      command = cmd,
+      intern = TRUE
+    )},
+    error = function(e) {
+      message("Could not run ethoscope_imager")
+      warning(e)
+    }
   )
   return(files)
 }
