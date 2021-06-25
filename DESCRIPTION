@@ -39,9 +39,9 @@ Suggests:
 RoxygenNote: 7.1.1
 Remotes:
     shaliulab/esquisse,
-    shaliulab/behavr,
+    shaliulab/behavr (>= 0.3.3),
     shaliulab/damr,
-    shaliulab/scopr,
-    shaliulab/sleepr,
-    shaliulab/ggetho,
+    shaliulab/scopr (>= 0.3.3),
+    shaliulab/sleepr (>= 0.3.3),
+    shaliulab/ggetho (>= 0.3.5),
     shaliulab/zeitgebr
