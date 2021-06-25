@@ -44,7 +44,8 @@ snapshotViewerUI <- function(id) {
       downloadButton(ns("video"), label = "Make .mp4 video")
     ),
     wellPanel(
-      roiManagerUI(ns("roi_manager")),
+      imageModuleUI(ns("snapshot")),
+      # roiManagerUI(ns("roi_manager")),
       style = paste0("height:", HEIGHT, "px")
     )
   )
@@ -126,7 +127,7 @@ selectDBFileServer <- function(id, input_rv, dbfile_user=reactiveVal(NULL)) {
         if(is.null(input$path)) {
           req(dbfile_user())
         } else {
-          selected_file()
+          unlist(selected_file())
         }
       })
 
@@ -148,7 +149,6 @@ snapshotManager <- function(id, dbfile, metadata) {
     function(input, output, session) {
 
       output_rv <- reactiveValues(ids = NULL, outfile = NULL, snapshots = NULL)
-
 
       ids <- reactive({
         sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
@@ -289,9 +289,9 @@ roiManager <- function(id, image, dbfile) {
         magick::image_append(c(banner_resized, rois_pasted()), stack=TRUE)
       })
 
-      imageModule("gears_left", gears_left_pasted, width=80, height = HEIGHT, alt = "gears_left")
-      imageModule("rois", rois_with_banner, width=1280, height = HEIGHT, alt = "ROIS")
-      imageModule("gears_right", gears_right_pasted, width=80, height = HEIGHT, alt = "gears_right")
+      # imageModule("gears_left", gears_left_pasted, width=80, height = HEIGHT, alt = "gears_left")
+      # imageModule("rois", rois_with_banner, width=1280, height = HEIGHT, alt = "ROIS")
+      # imageModule("gears_right", gears_right_pasted, width=80, height = HEIGHT, alt = "gears_right")
 
     }
   )
@@ -342,7 +342,7 @@ snapshotViewerServer <- function(id, input_rv, dbfile_user = reactiveVal(NULL), 
       })
 
       ## --- ROIS
-
+      imageModule("snapshot", image, width=1280, height = HEIGHT, alt = "snapshot")
       roiManager("roi_manager", image, dbfile)
 
       output$video <- downloadHandler(filename = function() {
