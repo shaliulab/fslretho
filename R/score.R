@@ -145,7 +145,7 @@ scoreDataServer <- function(id, input_rv, pb=TRUE) {
         output_rv$ethoscope <- do.call(score_monitor, args)
         output_rv$ethoscope$time <- Sys.time()
         # just a sapply returns a matrix, so I need lapply and unlist
-        output_rv$ethoscope$variables <- unlist(lapply(FUN(), function(f) {attr(f, "variables")()}))
+        output_rv$ethoscope$variables <- tryCatch(unlist(lapply(FUN(), function(f) {attr(f, "variables")()})), error = function(e) {"asleep"})
         on.exit(progress_bar$progress$close())
       }, ignoreInit = TRUE)
 
