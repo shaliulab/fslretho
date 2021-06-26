@@ -17,7 +17,7 @@ esquisseModuleServer <- function(id, input_rv, ...) {
       )
 
       observeEvent(c(input_rv$time, input_rv$data), {
-        esquisse_rv$data <- coerce_columns(input_rv$data)
+        esquisse_rv$data <- coerce_columns(behavr::rejoin(input_rv$data))
         esquisse_rv$name <- input_rv$name
         esquisse_rv$time <- input_rv$time
       })

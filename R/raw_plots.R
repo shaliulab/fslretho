@@ -73,7 +73,7 @@ rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
         req(sleep_data$data)
         req(animal_id())
 
-        d <- sleep_data$data[id == animal_id()]
+        d <- behavr::rejoin(sleep_data$data)[id == animal_id()]
         d
       })
 

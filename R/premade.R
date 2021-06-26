@@ -20,12 +20,12 @@ premadePlotsServer <- function(id, sleep_rv, interactions_rv) {
 
       sleep_data <- eventReactive(sleep_rv$time, {
         req(sleep_rv$data)
-        sleep_rv$data
+        behavr::rejoin(sleep_rv$data)
       })
 
       interactions_data <- eventReactive(interactions_rv$time, {
         req(interactions_rv$data)
-        interactions_rv$data
+        behavr::rejoin(interactions_rv$data)
       })
 
       output$plot_sleep <- renderPlot({
