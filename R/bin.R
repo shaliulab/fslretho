@@ -117,8 +117,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           binned_dataset <- merged_dataset
         }
 
-        rejoined_dataset <- behavr::rejoin(binned_dataset)
-        output_rv$data <- rejoined_dataset
+        output_rv$data <- binned_dataset
         output_rv$name <- input_rv$name
         output_rv$time <- Sys.time()
       }, ignoreInit = TRUE)
