@@ -55,6 +55,19 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         }
       })
 
+      variables <- reactive({
+
+        req(preproc_data())
+
+        x <- input_rv$variables
+        if (!is.null(preproc_FUN)) {
+          x <- c(attr(preproc_FUN, "variables")(), x)
+        }
+        x <- x[x %in% colnames(preproc_data())]
+        x
+
+      })
+
       # output$y_ui <- renderUI({
       #   message("Rendeing UI")
       #   input_rv$time
@@ -66,7 +79,8 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
       })
 
       observeEvent(input_rv$time, {
-        updateSelectizeInput(inputId = "y", choices = input_rv$variables, selected = input_rv$variables[1])
+        message("Updataing bin-y")
+        updateSelectizeInput(inputId = "y", choices = variables(), selected = variables()[1])
       }, ignoreInit = TRUE)
 
       observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$pareto, input$y), {
@@ -133,3 +147,4 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 bout_analysis <- function(data, ...) {
   sleepr::bout_analysis_standard(data = data, ...)
 }
+attr(bout_analysis, "variables") <- function() {"duration"}
