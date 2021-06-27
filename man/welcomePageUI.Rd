@@ -4,7 +4,7 @@
 \alias{welcomePageUI}
 \title{UI for the FSLRetho welcome page}
 \usage{
-welcomePageUI()
+welcomePageUI(id)
 }
 \description{
 UI for the FSLRetho welcome page

@@ -10,7 +10,7 @@ i.e. if mean is used, the time series is the fraction of time spent in the
 TRUE state in each window
 Relevant for moving, asleep and interactions variables}
 \format{
-An object of class \code{character} of length 5.
+An object of class \code{character} of length 6.
 }
 \usage{
 FUN_choices
