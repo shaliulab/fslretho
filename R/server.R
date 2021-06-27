@@ -62,20 +62,46 @@ server <- function(input, output, session) {
   ## Plot ----
   # Plot sleep result
 
-  sleep_module <- esquisseModuleServer("sleepPlot", sleep_data,
-                                       # pass this from the conf
-                                       t_unit = "hours")
-  sleep_bout_module <- esquisseModuleServer("boutPlot", bout_data,
-                                            # pass this from the conf
-                                            t_unit = "hours")
+  sleep_module <- esquisseModuleServer(
+    "sleepPlot", sleep_data,
+    # pass this from the conf
+    x_unit = c(t = "hours"),
+    hardcoded_dragula = list(
+      mapping = list(xvar="t", yvar="asleep"),
+      geom = "pop_etho"
+    )
+  )
+  sleep_bout_module <- esquisseModuleServer(
+    "boutPlot", bout_data,
+    hardcoded_dragula = list(
+      mapping = list(xvar="t", yvar="duration"),
+      geom = "pop_etho"
+    ),
+    # pass this from the conf
+    x_unit = c(t = "hours")
+  )
 
 
+  # TODO summaryStatisticServer module can probably be replaced with binDataServer using
+  # x_bin_length=Inf (make a single bin for all the data)
   sleep_summary <- summaryStatisticServer("sleepSummary", sleep_module)
   bout_summary <- summaryStatisticServer("boutSummary", sleep_bout_module)
 
+  sleep_module_summary <- esquisseModuleServer(
+    "sleepPlotSummary", sleep_summary,
+    hardcoded_dragula = list(
+      mapping = list(xvar="id", yvar="mean-asleep"),
+      geom = "bar"
+    )
+  )
+  sleep_bout_module_summary <- esquisseModuleServer(
+    "boutPlotSummary", bout_summary,
+      hardcoded_dragula = list(
+        mapping = list(xvar="id", yvar="mean-duration"),
+        geom = "bar"
+      )
+  )
 
-  sleep_module_summary <- esquisseModuleServer("sleepPlotSummary", sleep_summary)
-  sleep_bout_module_summary <- esquisseModuleServer("boutPlotSummary", bout_summary)
 
 
   downloadServer("binned-sleep", sleep_module, sleep_data$name)
