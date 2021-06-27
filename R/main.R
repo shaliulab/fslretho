@@ -30,7 +30,8 @@ main <- function(display_mode=FALSE, port=NULL) {
   options(display.mode = display_mode)
 
   # Provide a browsable tree of reactive expressions, inputs, and outputs (reactlog)
-  reactlog::reactlog_enable()
+  if (requireNamespace("reactlog", quietly = TRUE)) reactlog::reactlog_enable()
+
   options(shiny.fullstacktrace = TRUE)
 
   shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
