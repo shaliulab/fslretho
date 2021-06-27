@@ -45,7 +45,7 @@ server <- function(input, output, session) {
   ## Bin sleep ----
   sleep_data <- binDataServer("sleepBin", selected_data, allow_pareto=TRUE)
   interactions_data <- binDataServer(
-    "sleepBin", selected_data,
+    "interactionsBin", selected_data,
     y="interactions", summary_time_window = 30, summary_FUN = "mean"
   )
 
