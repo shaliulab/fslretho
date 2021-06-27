@@ -51,7 +51,9 @@ get_header <- function() {
       downloadServerUI("raw-data", "Sleep raw"),
       downloadServerUI("bouts-sleep", "Sleep bouts"),
       downloadServerUI("sleep-summary", "Sleep summary"),
-      downloadServerUI("bouts-summary", "Sleep bouts summary")
+      downloadServerUI("bouts-summary", "Sleep bouts summary"),
+      downloadServerUI("periodogram_dataset", "Periodogram dataset"),
+      downloadServerUI("spectrogram_dataset", "Spectrogram dataset")
     )
   )
 

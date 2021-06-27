@@ -16,6 +16,7 @@ get_body <- function() {
 
   sleep_tab <- shinydashboard::tabItem(tabName = 'sleep', esquisseModuleUI("sleepPlot"), esquisseModuleUI("sleepPlotSummary"))
   bout_tab <- shinydashboard::tabItem(tabName = 'bout', esquisseModuleUI("boutPlot"), esquisseModuleUI("boutPlotSummary"))
+  period_tab <- shinydashboard::tabItem(tabName = 'period', periodAnalysisUI("periodAnalysis"))
 
   metadata_tab <- shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
   backup_tab <- shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
@@ -37,6 +38,7 @@ get_body <- function() {
       premade_tab,
       sleep_tab,
       bout_tab,
+      period_tab,
       metadata_tab,
       backup_tab,
       reproducibility_tab

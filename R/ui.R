@@ -17,6 +17,7 @@ get_sidebar <- function() {
       shinydashboard::menuItem("Premade", tabName = 'premade'),
       shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = icon('moon')),
       shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = icon('moon')),
+      shinydashboard::menuItem("Period analysis", tabName = 'period', icon = icon('clock')),
       shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = icon('table')),
       shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = icon('save')),
       shinydashboard::menuItem("Reproducibility script", tabName = 'reproducibility', icon = icon('info'))

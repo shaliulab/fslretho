@@ -102,6 +102,9 @@ server <- function(input, output, session) {
       )
   )
 
+  # apply the filters from esquisse to the original data
+  sleep_replay <- esquisseReplayServer("replay", sleep_data, sleep_module)
+  circadian_data <- periodAnalysisServer("periodAnalysis", sleep_replay)
 
 
   downloadServer("binned-sleep", sleep_module, sleep_data$name)
@@ -110,4 +113,6 @@ server <- function(input, output, session) {
   downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
   downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
   downloadServer("bouts-summary", sleep_bout_module_summary, sleep_bout_module_summary$name)
+  downloadServer("periodogram_dataset", circadian_data$periodogram, circadian_data$periodogram$name)
+  downloadServer("spectrogram_dataset", circadian_data$spectrogram, circadian_data$spectrogram$name)
 }
