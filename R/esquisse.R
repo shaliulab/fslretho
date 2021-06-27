@@ -17,9 +17,12 @@ esquisseModuleServer <- function(id, input_rv, ...) {
       )
 
       observeEvent(c(input_rv$time, input_rv$data), {
-        esquisse_rv$data <- coerce_columns(behavr::rejoin(input_rv$data))
+
+        data <- req(input_rv$data)
+        if ("behavr" %in% class(data)) data <- behavr::rejoin(data)
+        esquisse_rv$data <- coerce_columns(data)
         esquisse_rv$name <- input_rv$name
-        esquisse_rv$time <- input_rv$time
+        esquisse_rv$time <- Sys.time()
       })
 
       output_rv <- esquisse::esquisse_server(
@@ -29,7 +32,9 @@ esquisseModuleServer <- function(id, input_rv, ...) {
         ...
       )
 
+
       observeEvent(output_rv$time, {
+        output_rv$data
         output_rv$name <- input_rv$name
       }, ignoreInit = TRUE)
 
@@ -51,5 +56,31 @@ esquisseModuleUI <- function(id, ...) {
     controls = c("labs", "parameters", "appearance", "filters", "code"),
     insert_code = FALSE,
     ...
+  )
+}
+
+
+#' @import dplyr
+esquisseReplayServer <- function(id, data_rv, esquisse_rv) {
+
+  moduleServer(
+    id,
+    function(input, output, session) {
+
+      output_rv <- reactiveValues(data =  NULL, name = NULL , time = NULL)
+
+      observeEvent(c(data_rv$time, esquisse_rv$time), {
+        req(data_rv$data)
+        req(esquisse_rv$data)
+        # data  <- list(req(data_rv$data))
+        # names(data) <- data_rv$name
+        # filtered_data <- rlang::eval_tidy(expr = req(esquisse_rv$code_filters), data = data)
+        output_rv$data <- behavr::unjoin(data_rv$data, esquisse_rv$data)
+        output_rv$name <- data_rv$name
+        output_rv$time <- Sys.time()
+      }, ignoreInit = TRUE)
+
+      return(output_rv)
+    }
   )
 }
