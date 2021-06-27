@@ -2,7 +2,6 @@
 #'
 #' @param display_mode Whether to show the code alongside the application or not
 #' @param port Port on which fslretho2 should run
-#' @importFrom reactlog reactlog_enable
 #' @import shiny
 #' @export
 main <- function(display_mode=FALSE, port=NULL) {
