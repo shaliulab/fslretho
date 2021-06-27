@@ -38,10 +38,10 @@ Suggests:
     testthat (>= 2.1.0)
 RoxygenNote: 7.1.1
 Remotes:
-    shaliulab/esquisse,
-    shaliulab/behavr (>= 0.3.3),
+    shaliulab/esquisse@1.0.1.9400,
+    shaliulab/behavr@0.3.3,
     shaliulab/damr,
-    shaliulab/scopr (>= 0.3.3),
-    shaliulab/sleepr (>= 0.3.3),
-    shaliulab/ggetho (>= 0.3.5),
-    shaliulab/zeitgebr
+    shaliulab/scopr@0.3.3,
+    shaliulab/sleepr@0.3.3,
+    shaliulab/ggetho@0.3.6,
+    shaliulab/zeitgebr@0.3.1
