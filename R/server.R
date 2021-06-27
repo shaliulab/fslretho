@@ -1,7 +1,6 @@
 #' Server function of FSLRetho
 #'
 #' @import shiny
-#' @importFrom shinylogs track_usage store_json
 #' @importFrom rlang current_env
 #' @noRd
 server <- function(input, output, session) {
