@@ -30,26 +30,26 @@ RUN R -e 'install.packages(c(\
 
 RUN apt-get install -y git
 
-RUN R -e "devtools::install_github('shaliulab/behavr@0.3.3')"
-RUN R -e "devtools::install_github('shaliulab/scopr@0.3.3')"
-RUN R -e "devtools::install_github('shaliulab/sleepr@0.3.3')"
-RUN R -e "devtools::install_github('shaliulab/ggetho@0.3.6')"
-RUN R -e "devtools::install_github('shaliulab/zeitgebr@0.3.2')"
-RUN R -e "devtools::install_github('shaliulab/esquisse@1.0.1.9400')"
 
 RUN apt-get install -y python3
 RUN which python3
 
 # install ethoscope_imager
 RUN git clone https://github.com/shaliulab/ethoscope-imager /opt/ethoscope-imager
-RUN echo `pwd`
 
+
+RUN R -e "devtools::install_github('shaliulab/behavr@deployment')"
+RUN R -e "devtools::install_github('shaliulab/scopr@0.3.3')"
+RUN R -e "devtools::install_github('shaliulab/damr@deployment')"
+RUN R -e "devtools::install_github('shaliulab/sleepr@0.3.3')"
+RUN R -e "devtools::install_github('shaliulab/ggetho@0.3.6')"
+RUN R -e "devtools::install_github('shaliulab/zeitgebr@0.3.2')"
+RUN R -e "devtools::install_github('shaliulab/esquisse@1.0.1.9400')"
 
 # set up configuration files
 # TODO They should be created on the spot as needed
 COPY inst/configuration/scopr.conf /etc/scopr.conf
 COPY inst/configuration/fslretho.conf /etc/fslretho.conf
-
 
 
 ARG USER_ID=1000
@@ -83,13 +83,10 @@ RUN sudo chown -R shiny:shiny /srv/shiny-server
 
 # set up data folders
 RUN sudo mkdir -p /DAM_data /ethoscope_data /fslretho_data 
-
-
 RUN sudo chown shiny:shiny /DAM_data
 RUN sudo chown shiny:shiny /ethoscope_data
 RUN sudo chown shiny:shiny /fslretho_data
 
-RUN R -e "devtools::install_github('shaliulab/damr')"
 
 # run app
 CMD ["/usr/bin/shiny-server"]
