@@ -2,7 +2,10 @@
 #' @importFrom data.table as.data.table
 list_ethoscopes <- function(FILE="/etc/ethoscope-node.db", sorted = TRUE) {
 
-  if(!file.exists(FILE)) {stop(paste0(FILE, ", the ethoscope resource database does not exist"))}
+  if(!file.exists(FILE)) {
+    message(paste0(FILE, ", the ethoscope resource database does not exist"))
+    return(NULL)
+  }
 
   con <- RSQLite::dbConnect(RSQLite::SQLite(), FILE, flags = RSQLite::SQLITE_RO)
   ethos <- tryCatch({
@@ -48,7 +51,7 @@ add_backupoff <- function(x, etho) {
 
 generate_tBody_ui <- function(ethos) {
 
-  if (length(ethos) != 0) {
+  if (!is.null(ethos) && length(ethos) != 0) {
 
     rows <- lapply(1:length(ethos), function(i) {
       etho <- ethos[i]
