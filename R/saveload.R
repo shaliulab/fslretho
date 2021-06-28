@@ -1,6 +1,6 @@
 conf <- FSLRethoConfiguration$new()
 DEBUG <- conf$content$debug
-session_folder <- conf$content$folders$ethoscope_sessions$path
+session_folder <- conf$content$folders$sessions$path
 
 ##
 # fslretho employs a reactiveValues data structure to transfer data between the appliation's modules,

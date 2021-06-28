@@ -34,8 +34,8 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     content$dependencies <- list("ethoscope_imager" = "/opt/ethoscope-imager/imager.py")
 
     content$folders <- append(content$folders, list(
-      "ethoscope_sessions" = list(
-        "path" = "/ethoscope_data/sessions",
+      "sessions" = list(
+        "path" = "/fslretho_data/sessions",
         "description" = "A path to a folder containing rds files for fast reloading of data loaded in a previous run.
         The files are created when the user presses the save button in fslretho. The whole dataset loaded there is saved to a single rds file."
       ),
