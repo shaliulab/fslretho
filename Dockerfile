@@ -69,6 +69,7 @@ RUN chown shiny:shiny /etc/scopr.conf
 RUN chown shiny:shiny /etc/fslretho.conf
 
 
+ARG CACHE_DATE=not_a_date
 RUN git clone https://github.com/shaliulab/fslretho /opt/fslretho
 RUN R -e "devtools::install('/opt/fslretho')"
 
@@ -83,11 +84,12 @@ RUN sudo chown -R shiny:shiny /srv/shiny-server
 # set up data folders
 RUN sudo mkdir -p /DAM_data /ethoscope_data /fslretho_data 
 
-ARG CACHE_DATE=not_a_date
 
 RUN sudo chown shiny:shiny /DAM_data
 RUN sudo chown shiny:shiny /ethoscope_data
 RUN sudo chown shiny:shiny /fslretho_data
+
+RUN R -e "devtools::install_github('shaliulab/damr')"
 
 # run app
 CMD ["/usr/bin/shiny-server"]
