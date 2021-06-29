@@ -15,25 +15,36 @@
 #' but sometimes this changes are noisy enough to again confuse the tracker.
 #' This, combined with the fact that a very sleepy fly can actually not react
 #' to a moving tube, drive the labeling algorithm to label a fly as awake when it really is asleep
+a <- function() {}
 
 
 #' Apply Pareto rule to wake behavior during SD
-#' Require significant tube exploration to label behavior as awake
+#'
+#' Require significant tube exploration to label behavior as awake.
+#'
 #' Minor movements (indicating little awakeness) or spiky artifacts during real sleep
-#' both result in a very small fraction of the tube being explored by the animal in a given interval of time
-#' This function checks at least > 20% of the tube is explored,
-#' and otherwise labels the animal as sleep
+#' both result in a very small fraction of the tube being explored by the animal in a given interval of time.
+#'
+#' This function checks that the animal did not spend > time_fraction in < space_fraction of the tube while awake,
+#' If the animal breaks this check (it spends too much time in too little space) the animal is asleep.
+#'
 #' This make sense to do during SD because the tracking quality decreases due to
 #' background changes produced by the SD itself
 #' @param x Position of the animal along the main axis of variation, normalized from 0 to 1
 #' @param n Number of splits in the ROI. default 10
+#' @param min_max_crop If TRUE, x is normalized so the minimum value is 0 and the maximum is 1
+#' This is useful if the ROI is much wider than the tube (which would mean that some sections of the tube actually cannot be explored by the fly)
+#' @param space_fraction Minimum fraction of tube that a wake animal explores. If the animal explores less than this, it is not awake
+#' @param time_fraction Maximum fraction of time that a wake animal is allowed to stay in the p fraction of the tube
+#'
 #' @return TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
 #' A result of TRUE indicates thus a problematic data
 #' Apply Pareto rule to wake behavior during SD
-#' @param x Position of the animal along the main axis of variation, normalized from 0 to 1
 #' @return TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
 #' A result of TRUE indicates thus a problematic data
-#' @usage dt <- behavr::bin_apply_all(dt_raw, x="t", y="x",  x_bin_length=behavr::mins(30), FUN=pareto_sd)
+#' @usage
+#' dt_raw <- load_ethoscope(linked_metadata)
+#' dt <- behavr::bin_apply_all(dt_raw, x="t", y="x", x_bin_length=behavr::mins(30), FUN=pareto_sd)
 #' @example
 #' \dontrun{
 #' dt_raw <- behavr::toy_ethoscope_data()
@@ -45,9 +56,9 @@
 #' setkey(dt_qc, id)
 #' }
 
-pareto_sd <- function(x, n = 10, min_max_crop=TRUE, p=0.2, accum=0.8) {
+pareto_sd <- function(x, n = 10, min_max_crop=TRUE, space_fraction=0.2, time_fraction=0.8) {
 
-  #     if (min_max_crop) x <- (x  - min(x)) / max(x)
+  if (min_max_crop) x <- (x  - min(x)) / max(x)
 
   bins <- seq(from = 0, to = 1 - 1/n, length.out=n)
 
@@ -60,14 +71,12 @@ pareto_sd <- function(x, n = 10, min_max_crop=TRUE, p=0.2, accum=0.8) {
 
   names(split_fraction) <- paste0(bins, " %")
   # get the up to 40% most frequent regions
-  n_splits <- min(n*p, length(split_fraction))
+  n_splits <- min(n*space_fraction, length(split_fraction))
   top_p <- sort(split_fraction, decreasing = T)[1:n_splits]
 
-  # did the animal spend more than accum % of the time in these p regions?
-  more_than_accum_time_in_top_p <- sum(top_p) > accum
-  #     if (is.na(more_than_accum_time_in_top_p)) {
-  #     }
-  return(more_than_accum_time_in_top_p)
+  # did the animal spend more than time_fraction % of the time in these p regions?
+  more_than_time_fraction_time_in_top_p <- sum(top_p) > time_fraction
+  return(more_than_time_fraction_time_in_top_p)
 }
 
 setattr(pareto_sd, "var_name", "pareto")
@@ -79,6 +88,13 @@ setattr(pareto_sd, "var_name", "pareto")
 #' typically the mean
 #' @return a new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
 #' awakeness for the given bin.
+#' @usage
+#' velocity_correction_coef <- 0.0048 # change as needed
+#' dt_raw <- load_ethoscope(linked_metadata)
+#' dt <- sleepr::sleep_annotation(dt, velocity_correction_coef=velocity_correction_coef)
+#' dt_binned <- behavr::bin_apply_all(data = dt, y = "asleep", x = "t", x_bin_length = behavr::mins(30), FUN=mean)
+#' dt_binned <- apply_pareto_rule(dt, dt_binned)
+#' ggplot(dt_binned, aes(x=t, y=asleep)) + stat_pop_etho()#'
 #' @rdname pareto_sd
 #' @export
 #'

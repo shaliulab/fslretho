@@ -3,23 +3,29 @@
 \name{pareto_sd}
 \alias{pareto_sd}
 \alias{apply_pareto_rule}
-\title{Quality control module
-Functionality to ensure data issues are exposed
-# Check the light intensity is stable through the experiment
- An unstable IR strip can cause the data to be corrupted because the ethoscope
- tracker is designed to track pixel intensity changes.
- In normal conditions, they follow the animal behavior,
- however an unstable IR strip can produce intensity changes independent of the animal
- which confuses the tracker and bogs the results}
+\title{Apply Pareto rule to wake behavior during SD}
 \usage{
-dt <- behavr::bin_apply_all(dt_raw, x="t", y="x",  x_bin_length=behavr::mins(30), FUN=pareto_sd)
+dt_raw <- load_ethoscope(linked_metadata)
+dt <- behavr::bin_apply_all(dt_raw, x="t", y="x", x_bin_length=behavr::mins(30), FUN=pareto_sd)
 
-apply_pareto_rule(scored_dataset, binned_dataset, ...)
+velocity_correction_coef <- 0.0048 # change as needed
+dt_raw <- load_ethoscope(linked_metadata)
+dt <- sleepr::sleep_annotation(dt, velocity_correction_coef=velocity_correction_coef)
+dt_binned <- behavr::bin_apply_all(data = dt, y = "asleep", x = "t", x_bin_length = behavr::mins(30), FUN=mean)
+dt_binned <- apply_pareto_rule(dt, dt_binned)
+ggplot(dt_binned, aes(x=t, y=asleep)) + stat_pop_etho()#'
 }
 \arguments{
 \item{x}{Position of the animal along the main axis of variation, normalized from 0 to 1}
 
 \item{n}{Number of splits in the ROI. default 10}
+
+\item{min_max_crop}{If TRUE, x is normalized so the minimum value is 0 and the maximum is 1
+This is useful if the ROI is much wider than the tube (which would mean that some sections of the tube actually cannot be explored by the fly)}
+
+\item{space_fraction}{Minimum fraction of tube that a wake animal explores. If the animal explores less than this, it is not awake}
+
+\item{time_fraction}{Maximum fraction of time that a wake animal is allowed to stay in the p fraction of the tube}
 
 \item{scored_dataset}{behavr timeseries data with at least columns x and t}
 
@@ -38,20 +44,15 @@ a new binned_dataset with an extra field 'pareto' stating whether the animal ful
 awakeness for the given bin.
 }
 \description{
-## Check the flies move through out the tube during SD,
-as opposed to stay in only a tiny fraction of the tube
-SD is another component contributing to background instability for obvious reasons:
-if the tube moves, there will be several pixels in the ROI that will change,
-independent of the animal. The tracker is robust,
-but sometimes this changes are noisy enough to again confuse the tracker.
-This, combined with the fact that a very sleepy fly can actually not react
-to a moving tube, drive the labeling algorithm to label a fly as awake when it really is asleep
-Apply Pareto rule to wake behavior during SD
-Require significant tube exploration to label behavior as awake
+Require significant tube exploration to label behavior as awake.
+}
+\details{
 Minor movements (indicating little awakeness) or spiky artifacts during real sleep
-both result in a very small fraction of the tube being explored by the animal in a given interval of time
-This function checks at least > 20% of the tube is explored,
-and otherwise labels the animal as sleep
+both result in a very small fraction of the tube being explored by the animal in a given interval of time.
+
+This function checks that the animal did not spend > time_fraction in < space_fraction of the tube while awake,
+If the animal breaks this check (it spends too much time in too little space) the animal is asleep.
+
 This make sense to do during SD because the tracking quality decreases due to
 background changes produced by the SD itself
 }
