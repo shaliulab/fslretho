@@ -28,12 +28,14 @@ summaryStatisticUI <- function(id, var) {
 
 #' @param data data.table
 #' @param col column in this data table
-#' @param f Function to summarise the data with
-summary_wrapper <- function(data, col, f) {
+#' @param func Function to summarise the data with
+summary_wrapper <- function(data, col, func) {
 
-  statistic <- attr(f, "name")()
+  statistic <- tryCatch({
+    attr(func, "name")()
+  }, error = function(e) {browser()})
   data$target__ <- data[[col]]
-  sum_data <- data[, .SD[, f(target__),], by=eval(data.table::key(data))]
+  sum_data <- data[, .SD[, func(target__),], by=eval(data.table::key(data))]
   colnames(sum_data)[colnames(sum_data) == "V1"] <- paste0(statistic, "-", col)
   return(sum_data)
 }
@@ -54,7 +56,7 @@ summaryStatisticServer <- function(id, input_rv, FUN) {
         # TODO Warn the user if this is not true!
         req(input$y %in% colnames(input_rv$data))
         FUN <- STATISTICS
-        summarised_data <- lapply(FUN, function(f) summary_wrapper(input_rv$data, input$y, f))
+        summarised_data <- lapply(FUN, function(func) summary_wrapper(input_rv$data, input$y, func))
         if (length(FUN) > 1)
           summarised_data <- Reduce(merge, summarised_data)
         else
