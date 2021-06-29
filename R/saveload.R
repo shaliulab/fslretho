@@ -36,7 +36,7 @@ read_reactiveValuesRDS <- function(file, ...) {
 
 get_sessions <- function() {
   session_folder <- file.path(
-    FSLRethoConfiguration$new()$content$folders$ethoscope_sessions
+    FSLRethoConfiguration$new()$content$folders$sessions
   )
 
   sessions <- list.files(path = session_folder, pattern = "rds")

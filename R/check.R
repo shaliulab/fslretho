@@ -20,7 +20,7 @@ check_installation <- function() {
   if (status != 0) stop(paste0("Cache directory ", ethoscope_cache, " is not writable.
                                Please make sure it exists and is writable"))
 
-  sessions_folder <- conf$content$folders$ethoscope_sessions$path
+  sessions_folder <- conf$content$folders$sessions$path
   status <- file.access(sessions_folder, mode = 2)
   if (status != 0) stop(paste0("Cache directory ", sessions_folder, " is not writable.
                                Please make sure it exists and is writable"))
