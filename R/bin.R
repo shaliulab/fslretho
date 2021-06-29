@@ -115,8 +115,8 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
         if (allow_pareto & input$pareto) {
 
-          binned_data <- apply_pareto_rule(
-            preproc_data(), binned_data,
+          binned_dataset <- apply_pareto_rule(
+            preproc_data(), binned_dataset,
             x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
           )
 

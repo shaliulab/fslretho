@@ -73,10 +73,18 @@ pareto_sd <- function(x, n = 10, min_max_crop=TRUE, p=0.2, accum=0.8) {
 setattr(pareto_sd, "var_name", "pareto")
 
 
+#' Wrap bin_apply_all and pareto_sd
+#' @param scored_dataset behavr timeseries data with at least columns x and t
+#' @param binned_dataset behavr timeseries produced by applying bin_apply_all with a function other than pareto_sd,
+#' typically the mean
+#' @return a new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
+#' awakeness for the given bin.
+#' @rdname pareto_sd
 #' @export
-apply_pareto_rule <- function(scored_data, binned_data, ...) {
-  pareto_dataset <- behavr::bin_all(
-    data = scored_data,
+#'
+apply_pareto_rule <- function(scored_dataset, binned_dataset, ...) {
+  pareto_dataset <- behavr::bin_apply_all(
+    data = scored_dataset,
     y = "x",
     x = "t",
     FUN = pareto_sd,
@@ -88,8 +96,7 @@ apply_pareto_rule <- function(scored_data, binned_data, ...) {
   merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
   merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
   setkey(merged_dataset, id)
-  binned_dataset <- merged_dataset
-  return(binned_dataset)
+  return(merged_dataset)
 }
 
 
