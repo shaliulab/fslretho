@@ -48,6 +48,7 @@ analysisUI <- function(id, module) {
     alpha,
     # sliderInput(ns("resample_period"), label = "Resample period (mins)", min = 1, max = 30, step = 1, value = 15),
     sliderInput(ns("period_range"), label = "Period range (hours)", min = 1, max = 48, value = c(16, 32), step = 1),
+    actionButton(ns("button"), label = "Run"),
     esquisseModuleUI(ns("esquisse"))
   )
 }
@@ -100,13 +101,13 @@ periodogramAnalysisServer <- function(id, input_rv) {
         d
       })
 
-      observe({
+      observeEvent(input$button, {
         req(dt())
         esquisse_rv$data <- dt()
         esquisse_rv$name <- input_rv$name
         esquisse_rv$time <- Sys.time()
         message("Outputing periodogram data")
-      })
+      }, ignoreInit = TRUE)
 
       output_rv <- esquisseModuleServer("esquisse", input_rv = esquisse_rv,
                                         hardcoded_dragula = list(
@@ -171,13 +172,13 @@ spectrogramAnalysisServer <- function(id, input_rv) {
       }, ignoreInit = TRUE)
 
 
-      observe({
+      observeEvent(input$button, {
         req(dt())
         output_rv$data <- dt()
         output_rv$name <- input_rv$name
         output_rv$time <- Sys.time()
         message("Outputing periodogram data")
-      })
+      }, ignoreInit = TRUE)
 
       output_rv <- esquisseModuleServer("esquisse", input_rv = output_rv,
                                         hardcoded_dragula = list(
