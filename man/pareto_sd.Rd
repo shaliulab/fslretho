@@ -2,6 +2,7 @@
 % Please edit documentation in R/qc.R
 \name{pareto_sd}
 \alias{pareto_sd}
+\alias{apply_pareto_rule}
 \title{Quality control module
 Functionality to ensure data issues are exposed
 # Check the light intensity is stable through the experiment
@@ -12,11 +13,18 @@ Functionality to ensure data issues are exposed
  which confuses the tracker and bogs the results}
 \usage{
 dt <- behavr::bin_apply_all(dt_raw, x="t", y="x",  x_bin_length=behavr::mins(30), FUN=pareto_sd)
+
+apply_pareto_rule(scored_dataset, binned_dataset, ...)
 }
 \arguments{
 \item{x}{Position of the animal along the main axis of variation, normalized from 0 to 1}
 
 \item{n}{Number of splits in the ROI. default 10}
+
+\item{scored_dataset}{behavr timeseries data with at least columns x and t}
+
+\item{binned_dataset}{behavr timeseries produced by applying bin_apply_all with a function other than pareto_sd,
+typically the mean}
 }
 \value{
 TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
@@ -25,6 +33,9 @@ Apply Pareto rule to wake behavior during SD
 
 TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
 A result of TRUE indicates thus a problematic data
+
+a new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
+awakeness for the given bin.
 }
 \description{
 ## Check the flies move through out the tube during SD,
