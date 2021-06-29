@@ -115,20 +115,25 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
         if (allow_pareto & input$pareto) {
 
-          pareto_dataset <- behavr::bin_all(
-            data = preproc_data(),
-            y = "x",
-            x = "t",
+          binned_data <- apply_pareto_rule(
+            preproc_data(), binned_data,
             x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
-            FUN = pareto_sd
           )
 
-          setkey(binned_dataset, id, t)
-          setkey(pareto_dataset, id, t)
-          merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
-          merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
-          setkey(merged_dataset, id)
-          binned_dataset <- merged_dataset
+          # pareto_dataset <- behavr::bin_all(
+          #   data = preproc_data(),
+          #   y = "x",
+          #   x = "t",
+          #   x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+          #   FUN = pareto_sd
+          # )
+          #
+          # setkey(binned_dataset, id, t)
+          # setkey(pareto_dataset, id, t)
+          # merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
+          # merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
+          # setkey(merged_dataset, id)
+          # binned_dataset <- merged_dataset
         }
 
         output_rv$data <- binned_dataset

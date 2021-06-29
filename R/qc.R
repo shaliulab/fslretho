@@ -72,6 +72,27 @@ pareto_sd <- function(x, n = 10, min_max_crop=TRUE, p=0.2, accum=0.8) {
 
 setattr(pareto_sd, "var_name", "pareto")
 
+
+#' @export
+apply_pareto_rule <- function(scored_data, binned_data, ...) {
+  pareto_dataset <- behavr::bin_all(
+    data = scored_data,
+    y = "x",
+    x = "t",
+    FUN = pareto_sd,
+    ...
+  )
+
+  setkey(binned_dataset, id, t)
+  setkey(pareto_dataset, id, t)
+  merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
+  merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
+  setkey(merged_dataset, id)
+  binned_dataset <- merged_dataset
+  return(binned_dataset)
+}
+
+
 load_ethoscope_qc <- function(metadata) {
 
   qc <- tryCatch({
