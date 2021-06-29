@@ -4,7 +4,10 @@ RUN apt-get update && apt-get install -y \
     libcurl4-gnutls-dev \
     libssl-dev \
     # for magick R package
-    libmagick++-dev
+    libmagick++-dev \
+    git \
+    # for ethoscope imager
+    python3
 
 
 RUN R -e 'install.packages(c(\
@@ -28,23 +31,27 @@ RUN R -e 'install.packages(c(\
           ), \
           repos = "https://packagemanager.rstudio.com/cran/__linux__/focal/2021-06-25")'
 
-RUN apt-get install -y git
-
-
-RUN apt-get install -y python3
-RUN which python3
-
 # install ethoscope_imager
 RUN git clone https://github.com/shaliulab/ethoscope-imager /opt/ethoscope-imager
 
+ARG GIT_TOKEN=not_a_token
+RUN git config --global credential.helper \
+    '!f() { echo username=antortjim; echo "password=$GIT_TOKEN"; };f'
 
-RUN R -e "devtools::install_github('shaliulab/behavr@deployment')"
-RUN R -e "devtools::install_github('shaliulab/scopr@0.3.3')"
-RUN R -e "devtools::install_github('shaliulab/damr@deployment')"
-RUN R -e "devtools::install_github('shaliulab/sleepr@0.3.3')"
-RUN R -e "devtools::install_github('shaliulab/ggetho@0.3.6')"
-RUN R -e "devtools::install_github('shaliulab/zeitgebr@0.3.2')"
-RUN R -e "devtools::install_github('shaliulab/esquisse@1.0.1.9400')"
+COPY .Renviron .Renviron
+
+RUN git clone --recursive -b deployment https://github.com/shaliulab/behavr /opt/behavr
+RUN git clone --recursive -b deployment https://github.com/shaliulab/scopr /opt/scopr
+RUN git clone --recursive -b deployment https://github.com/shaliulab/damr /opt/damr
+RUN git clone --recursive -b deployment https://github.com/shaliulab/sleepr /opt/sleepr
+RUN git clone --recursive -b deployment https://github.com/shaliulab/ggetho /opt/ggetho
+RUN git clone --recursive -b deployment https://github.com/shaliulab/zeitgebr /opt/zeitgebr
+RUN git clone --recursive -b deployment https://github.com/shaliulab/esquisse /opt/esquisse
+RUN git clone https://github.com/shaliulab/fslretho /opt/fslretho
+
+COPY inst/find_global_dependencies.sh find_global_dependencies.sh 
+COPY inst/install_dependencies.R install_dependencies.R 
+RUN /bin/bash find_global_dependencies.sh && Rscript install_dependencies.R
 
 # set up configuration files
 # TODO They should be created on the spot as needed
@@ -69,9 +76,15 @@ RUN chown shiny:shiny /etc/scopr.conf
 RUN chown shiny:shiny /etc/fslretho.conf
 
 
-ARG CACHE_DATE=not_a_date
-RUN git clone https://github.com/shaliulab/fslretho /opt/fslretho
-RUN R -e "devtools::install('/opt/fslretho')"
+#ARG CACHE_DATE=not_a_date
+RUN R -e "devtools::install('/opt/behavr')"
+RUN R -e "devtools::install('/opt/scopr')"
+RUN R -e "devtools::install('/opt/damr')"
+RUN R -e "devtools::install('/opt/sleepr')"
+RUN R -e "devtools::install('/opt/ggetho')"
+RUN R -e "devtools::install('/opt/zeitgebr')"
+RUN R -e "devtools::install('/opt/esquisse')"
+RUN R -e "devtools::install('/opt/fslretho', dependencies=TRUE)"
 
 # copy the app directory into the image
 COPY ./inst/shiny-app/* /srv/shiny-server
