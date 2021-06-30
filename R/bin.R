@@ -86,7 +86,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         updateSelectizeInput(inputId = "y", choices = variables(), selected = variables()[1])
       }, ignoreInit = TRUE)
 
-      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$pareto, input$y), {
+      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$pareto, input$pareto_sd, input$y), {
 
         req(input_rv$data)
         req(input$y)
