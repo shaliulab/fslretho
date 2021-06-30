@@ -35,7 +35,7 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
           tmp_file
         },
         content = function(file) {
-          if (!file.exists(file)) {
+          if (!file.exists(temp_file())) {
             showNotification("Zip file not ready yet", duration = 3)
             return(NULL)
           } else {
@@ -57,8 +57,8 @@ sqliteDBZIPUI <- function(id) {
 
   ns <- NS(id)
   tagList(
-    actionButton(ns("generate"), "Generate"),
-    downloadButton(ns("download"), "DB .zip")
+    actionButton(ns("generate"), "Generate .zip file", icon = icon("archive")),
+    downloadButton(ns("download"), "Download generated DB .zip")
   )
 }
 
