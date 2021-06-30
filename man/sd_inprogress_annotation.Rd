@@ -5,10 +5,10 @@
 \title{Annotate a behavr with a SD treatment progress
 A new `sd_on` column stating the SD treatment status is added to the passed behavr}
 \usage{
-sd_inprogress_annotation(dt)
+sd_inprogress_annotation(data, time_window_length = 10, ...)
 }
 \arguments{
-\item{dt}{behavr table}
+\item{data}{behavr table}
 }
 \value{
 the same behavr table with a new column `sd_on`.

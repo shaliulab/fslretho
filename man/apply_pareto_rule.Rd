@@ -12,9 +12,9 @@ dt_binned <- apply_pareto_rule(dt, dt_binned)
 ggplot(dt_binned, aes(x=t, y=asleep)) + stat_pop_etho()#'
 }
 \arguments{
-\item{scored_dataset}{\code{behavr} timeseries data with at least columns x and t}
+\item{scored_dataset}{behavr timeseries data with at least columns x and t}
 
-\item{binned_dataset}{`behavr` timeseries produced by applying bin_apply_all with a function other than pareto_sd,
+\item{binned_dataset}{behavr timeseries produced by applying bin_apply_all with a function other than pareto_sd,
 typically the mean}
 
 \item{sd_only}{If TRUE, this refinement is only applicable during SD}
