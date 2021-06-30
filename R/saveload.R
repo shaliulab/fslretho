@@ -67,7 +67,7 @@ loadSessionUI <- function(id) {
   )
 }
 
-loadSessionServer <- function(id, input_rv) {
+loadSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
 
   moduleServer(
     id,
@@ -79,7 +79,7 @@ loadSessionServer <- function(id, input_rv) {
       )
 
       sessions <- reactive({
-        input$button
+        refresh()
         get_sessions()
       })
 
@@ -135,7 +135,7 @@ saveSessionUI <- function(id) {
   )
 }
 
-saveSessionServer <- function(id, input_rv) {
+saveSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
 
   moduleServer(
     id,
@@ -151,6 +151,7 @@ saveSessionServer <- function(id, input_rv) {
 
       observeEvent(input$button, {
         req(input$path)
+        refresh(refresh()+1)
 
         # TODO If time is 0 instead of NULL at initialization, I can save
         # all the null checking lines
@@ -190,8 +191,9 @@ saveLoadSessionServer <- function(id, input_rv)  {
   moduleServer(
     id,
     function(input, output, session) {
-      output_rv <- loadSessionServer("load", input_rv)
-      saveSessionServer("save", output_rv)
+      refresh <- reactiveVal(0)
+      output_rv <- loadSessionServer("load", input_rv, refresh)
+      saveSessionServer("save", output_rv, refresh)
       return(output_rv)
     }
   )
