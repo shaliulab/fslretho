@@ -52,6 +52,7 @@ read_metadata <- function(metadata_path) {
 #' @param metadata_path Absolute path to a metadata.csv file
 #' @param monitor Name of the monitor that generated the data the passed metadata is trying to load
 #' This information is used to select the right validation function
+#' @export
 load_metadata <- function(metadata_path, monitor) {
   # Load into R the metadata table
 
@@ -134,10 +135,11 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
           shiny::validate(shiny::need(FALSE, label = ""))
         } else {
           showNotification("Success")
+          metadata_linked()
         }
       })
 
-      return(metadata_linked)
+      return(metadata_link_validated)
     }
   )
 }

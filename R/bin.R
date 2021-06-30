@@ -20,12 +20,15 @@ binDataUI <- function(id, binning_variable="asleep") {
     sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
     selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean"),
-    checkboxInput(ns("pareto"), label = "Apply pareto principle", value = FALSE),
     # textInput(ns("y"), label = "Y axis", value=binning_variable),
     selectizeInput(inputId = ns("y"), label = "Y axis", choices = binning_variable,
                    multiple=TRUE,
                    selected = binning_variable
-                   )
+                   ),
+    tags$h2("Quality refinement"),
+    checkboxInput(ns("pareto"), label = "Apply pareto principle", value = FALSE),
+    checkboxInput(ns("pareto_sd"), label = "If pareto is applied, should it be during SD only?", value = TRUE)
+
     # uiOutput(ns("y_ui"))
   )
 }
@@ -118,6 +121,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           binned_dataset <- apply_pareto_rule(
             preproc_data(), binned_dataset,
             x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+            sd_only=input$pareto_sd
           )
 
           # pareto_dataset <- behavr::bin_all(
