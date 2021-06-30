@@ -135,10 +135,11 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
           shiny::validate(shiny::need(FALSE, label = ""))
         } else {
           showNotification("Success")
+          metadata_linked()
         }
       })
 
-      return(metadata_linked)
+      return(metadata_link_validated)
     }
   )
 }
