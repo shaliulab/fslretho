@@ -85,7 +85,7 @@ loadSessionServer <- function(id, input_rv) {
 
       output$path_ui <- renderUI({
         selectizeInput(
-          ns("path"), label = "", multiple = FALSE,
+          session$ns("path"), label = "", multiple = FALSE,
           selected = sessions()[[1]], choices = sessions()
         )
       })
