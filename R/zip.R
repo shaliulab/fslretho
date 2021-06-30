@@ -9,4 +9,5 @@ zip_database <- function(zip_file, files) {
   message(paste0(length(files), " unique dbfiles"))
   message("Creating zip file...")
   zip(zip_file, files)
+  message("Done")
 }
