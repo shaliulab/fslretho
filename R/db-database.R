@@ -12,7 +12,8 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
       n <- 0
 
       observeEvent(input$generate, {
-        active_notification <- showNotification("Generating .zip file", duration = NULL)
+        active_notification <- showNotification("Generating .zip file", duration = NULL,
+                                                type = "message")
         ids <<- c(ids, active_notification)
         n <<- n + 1
 
@@ -24,6 +25,11 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
         temp_file(tmp_file)
         message(paste0("This is the temporary .zip: ", tmp_file))
         zip_database(tmp_file, dbfiles)
+        if (length(ids) > 0) {
+          removeNotification(ids[n])
+          ids <<- ids[-n]
+          n <<- n - 1
+        }
       })
 
       output$download <- downloadHandler(
@@ -36,15 +42,11 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
         },
         content = function(file) {
           if (!file.exists(temp_file())) {
-            showNotification("Zip file not ready yet", duration = 3)
+            showNotification("Zip file not ready yet. Please wait", duration = 3)
             return(NULL)
           } else {
             file.copy(temp_file(), file)
-            if (length(ids) > 0) {
-              removeNotification(ids[n])
-              ids <<- ids[-n]
-              n <<- n - 1
-            }
+
           }
         }, contentType = "application/zip"
       )
