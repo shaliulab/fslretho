@@ -32,7 +32,10 @@ summaryStatisticUI <- function(id, var) {
 summary_wrapper <- function(data, col, func) {
 
   # statistic <- tryCatch({
-    statistic <- attr(func, "name")()
+  func_name <- statistic <- attr(func, "name")
+  if(is.null(func_name)) statistic <- "statistic"
+  else statistic <- func_name()
+
   # }, error = function(e) {browser()})
   data$target__ <- data[[col]]
   sum_data <- data[, .SD[, func(target__),], by=eval(data.table::key(data))]
