@@ -19,7 +19,9 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
           req(input_rv$data)
           dbfiles <- unique(behavr::meta(input_rv$data)$file_info)
           message(dbfiles)
-          zip_database(file, dbfiles)
+          tmp_file <- tempfile(fileext = ".zip")
+          zip_database(tmp_file, dbfiles)
+          file.copy(tmp_file, file)
         }
       )
     }
