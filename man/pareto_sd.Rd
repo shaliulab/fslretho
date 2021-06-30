@@ -2,18 +2,10 @@
 % Please edit documentation in R/qc.R
 \name{pareto_sd}
 \alias{pareto_sd}
-\alias{apply_pareto_rule}
 \title{Apply Pareto rule to wake behavior during SD}
 \usage{
-dt_raw <- load_ethoscope(linked_metadata)
+dt_raw <- load_ethoscope(linked_metadata, FUN=sleepr::sleep_annotation) # or whatever annotation function
 dt <- behavr::bin_apply_all(dt_raw, x="t", y="x", x_bin_length=behavr::mins(30), FUN=pareto_sd)
-
-velocity_correction_coef <- 0.0048 # change as needed
-dt_raw <- load_ethoscope(linked_metadata)
-dt <- sleepr::sleep_annotation(dt, velocity_correction_coef=velocity_correction_coef)
-dt_binned <- behavr::bin_apply_all(data = dt, y = "asleep", x = "t", x_bin_length = behavr::mins(30), FUN=mean)
-dt_binned <- apply_pareto_rule(dt, dt_binned)
-ggplot(dt_binned, aes(x=t, y=asleep)) + stat_pop_etho()#'
 }
 \arguments{
 \item{x}{Position of the animal along the main axis of variation, normalized from 0 to 1}
@@ -26,22 +18,10 @@ This is useful if the ROI is much wider than the tube (which would mean that som
 \item{space_fraction}{Minimum fraction of tube that a wake animal explores. If the animal explores less than this, it is not awake}
 
 \item{time_fraction}{Maximum fraction of time that a wake animal is allowed to stay in the p fraction of the tube}
-
-\item{scored_dataset}{behavr timeseries data with at least columns x and t}
-
-\item{binned_dataset}{behavr timeseries produced by applying bin_apply_all with a function other than pareto_sd,
-typically the mean}
 }
 \value{
 TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
 A result of TRUE indicates thus a problematic data
-Apply Pareto rule to wake behavior during SD
-
-TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
-A result of TRUE indicates thus a problematic data
-
-a new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
-awakeness for the given bin.
 }
 \description{
 Require significant tube exploration to label behavior as awake.
@@ -56,3 +36,8 @@ If the animal breaks this check (it spends too much time in too little space) th
 This make sense to do during SD because the tracking quality decreases due to
 background changes produced by the SD itself
 }
+\seealso{
+Other pareto_sd: 
+\code{\link{apply_pareto_rule}()}
+}
+\concept{pareto_sd}
