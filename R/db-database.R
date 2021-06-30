@@ -56,7 +56,9 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
 sqliteDBZIPUI <- function(id) {
 
   ns <- NS(id)
-  actionButton(ns("generate"))
-  downloadButton(ns("download"), "DB .zip")
+  tagList(
+    actionButton(ns("generate"), "Generate"),
+    downloadButton(ns("download"), "DB .zip")
+  )
 }
 
