@@ -19,7 +19,7 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
 
         req(monitor() == "ethoscope")
         req(input_rv$data)
-        dbfiles <- unique(behavr::meta(input_rv$data)$file_info)
+        dbfiles <- as.character(unlist(unique(behavr::meta(input_rv$data)$file_info)))
         message(dbfiles)
         tmp_file <- tempfile(fileext = ".zip")
         temp_file(tmp_file)
