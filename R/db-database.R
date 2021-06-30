@@ -10,7 +10,9 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
 
         filename = function() {
           req(input_rv$name)
-          tempfile(pattern = paste0(input_rv$name, "sqliteDB"), fileext = ".zip")
+          tmp_file <- tempfile(pattern = paste0(input_rv$name, "sqliteDB"), fileext = ".zip")
+          message(tmp_file)
+          tmp_file
         },
         content = function(file) {
           req(monitor() == "ethoscope")
