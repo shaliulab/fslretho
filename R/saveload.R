@@ -53,7 +53,7 @@ get_sessions <- function() {
 loadSessionUI <- function(id) {
 
   ns <- NS(id)
-  sessions <- get_sessions()
+
 
   shiny::tagList(
     shiny::tags$li(
@@ -61,10 +61,7 @@ loadSessionUI <- function(id) {
       class = "dropdown user user-menu"
     ),
     shiny::tags$li(
-      selectizeInput(
-        ns("path"), label = "", multiple = FALSE,
-        selected = sessions[[1]], choices = sessions
-      ),
+      uiOutput(ns("path_ui")),
       class = "dropdown user user-menu"
     )
   )
@@ -80,6 +77,18 @@ loadSessionServer <- function(id, input_rv) {
         ethoscope = reactiveValues(data = NULL, name = NULL, time = NULL),
         dam = reactiveValues(data = NULL, name = NULL, time = NULL)
       )
+
+      sessions <- reactive({
+        input$button
+        get_sessions()
+      })
+
+      output$path_ui <- renderUI({
+        selectizeInput(
+          ns("path"), label = "", multiple = FALSE,
+          selected = sessions()[[1]], choices = sessions()
+        )
+      })
 
       observeEvent(input_rv$ethoscope$time, {
         output_rv$ethoscope$data <- input_rv$ethoscope$data
