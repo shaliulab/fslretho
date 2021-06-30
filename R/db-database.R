@@ -21,8 +21,15 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
           message(dbfiles)
           tmp_file <- tempfile(fileext = ".zip")
           zip_database(tmp_file, dbfiles)
+          wait_max <- 60
+          have_waited <- 0
+          while (!file.exists(tmp_file) & have_waited < wait_max) {
+            # wait until the file is generated
+            Sys.sleep(1)
+            have_waited <- have_waited + 1
+          }
           file.copy(tmp_file, file)
-        }
+        }, contentType = "application/zip"
       )
     }
   )
