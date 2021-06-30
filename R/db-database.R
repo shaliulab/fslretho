@@ -6,7 +6,27 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
     id,
     function(input, output, session) {
 
-      output$button <- downloadHandler(
+
+      temp_file <- reactiveVal(NULL)
+      ids <- character(0)
+      n <- 0
+
+      observeEvent(input$generate, {
+        active_notification <- showNotification("Generating .zip file", duration = NULL)
+        ids <<- c(ids, active_notification)
+        n <<- n + 1
+
+        req(monitor() == "ethoscope")
+        req(input_rv$data)
+        dbfiles <- unique(behavr::meta(input_rv$data)$file_info)
+        message(dbfiles)
+        tmp_file <- tempfile(fileext = ".zip")
+        temp_file(tmp_file)
+        message(paste0("This is the temporary .zip: ", tmp_file))
+        zip_database(tmp_file, dbfiles)
+      })
+
+      output$download <- downloadHandler(
 
         filename = function() {
           req(input_rv$name)
@@ -15,22 +35,17 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
           tmp_file
         },
         content = function(file) {
-          req(monitor() == "ethoscope")
-          req(input_rv$data)
-          dbfiles <- unique(behavr::meta(input_rv$data)$file_info)
-          message(dbfiles)
-          tmp_file <- tempfile(fileext = ".zip")
-          message(paste0("This is the temporary .zip: ", tmp_file))
-          zip_database(tmp_file, dbfiles)
-          wait_max <- 60
-          have_waited <- 0
-          while (!file.exists(tmp_file) & have_waited < wait_max) {
-            # wait until the file is generated
-            Sys.sleep(1)
-            mesage("Wait!")
-            have_waited <- have_waited + 1
+          if (!file.exists(file)) {
+            showNotification("Zip file not ready yet", duration = 3)
+            return(NULL)
+          } else {
+            file.copy(temp_file(), file)
+            if (length(ids) > 0) {
+              removeNotification(ids[n])
+              ids <<- ids[-n]
+              n <<- n - 1
+            }
           }
-          file.copy(tmp_file, file)
         }, contentType = "application/zip"
       )
     }
@@ -41,6 +56,7 @@ sqliteDBZIPServer <- function(id, input_rv, monitor) {
 sqliteDBZIPUI <- function(id) {
 
   ns <- NS(id)
-  downloadButton(ns("button"), "DB .zip")
+  actionButton(ns("generate"))
+  downloadButton(ns("download"), "DB .zip")
 }
 
