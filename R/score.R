@@ -1,6 +1,7 @@
 FUNCTION_MAP <- list(
   `sleep annotation` = list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation),
-  `distance annotation` = list(ethoscope = sleepr::sum_movement_detector, dam = NULL)
+  `distance annotation` = list(ethoscope = sleepr::sum_movement_detector, dam = NULL),
+  `SD in-progress annotation` = list(ethoscope = sd_inprogress_annotation, dam = NULL)
 )
 
 conf <- FSLRethoConfiguration$new()
@@ -14,7 +15,12 @@ scoreDataUI <- function(id) {
     shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001),
     shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 100, max = 600, value = 300, step = 10),
     shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
-    shiny::selectizeInput(ns("FUN"), label = "", choices = c("sleep annotation", "distance annotation"), selected = "sleep annotation", multiple=TRUE)
+    shiny::selectizeInput(
+      ns("FUN"), label = "",
+      choices = c("sleep annotation", "distance annotation", "SD in-progress annotation"),
+      selected = c("sleep annotation", "SD in-progress annotation"),
+      multiple=TRUE
+    )
   )
   # shiny::uiOutput(ns("scoringInput"))
 }
