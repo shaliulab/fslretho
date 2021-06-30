@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     # for magick R package
     libmagick++-dev \
+    imagemagick \
+    ffmpeg \
     git \
     # for ethoscope imager
     python3
@@ -83,6 +85,10 @@ RUN R -e "devtools::install('/opt/damr')"
 RUN R -e "devtools::install('/opt/sleepr')"
 RUN R -e "devtools::install('/opt/ggetho')"
 RUN R -e "devtools::install('/opt/zeitgebr')"
+
+RUN rm -rf /opt/esquisse
+RUN git clone --recursive -b deployment https://github.com/shaliulab/esquisse /opt/esquisse
+
 RUN R -e "devtools::install('/opt/esquisse')"
 RUN R -e "devtools::install('/opt/fslretho', dependencies=TRUE)"
 

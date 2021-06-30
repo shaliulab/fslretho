@@ -1,6 +1,6 @@
 Package: fslretho
 Title: fslretho: a Shiny GUI to the Rethomics suite
-Version: 2.0
+Version: 2.1.0
 Authors@R: 
     person(given = "Antonio",
            family = "Ortega",
