@@ -1,3 +1,31 @@
+#' Annotate a behavr with a SD treatment progress
+#' A new `sd_on` column stating the SD treatment status is added to the passed behavr
+#' @param data behavr table
+#' @return the same behavr table with a new column `sd_on`.
+#' @export
+sd_inprogress_annotation <- function(data, time_window_length=10,...) {
+
+  d <- sleepr::prepare_data_for_motion_detector(data, c("id", "t"), time_window_length=time_window_length)
+  d_small <- d[!duplicated(t_round), ]
+  d_small$t <- NULL
+  data.table::setnames(d_small, "t_round", "t")
+  # d_small must have keys like the data in a behavr
+  data.table::setkey(d_small, id)
+  d_small <- parse_sd_daterange(d_small)
+  d_small[, sd_on := ((t > xmv(start_sd)) & (t < xmv(end_sd)))]
+  return(d_small)
+}
+attr(sd_inprogress_annotation, "needed_columns") <- function() {
+  c("t")
+}
+attr(sd_inprogress_annotation, "variables") <- function() {
+  c("sd_on")
+}
+attr(sd_inprogress_annotation, "parameters") <- function() {
+  c()
+}
+
+
 FUNCTION_MAP <- list(
   `sleep annotation` = list(ethoscope = sleepr::sleep_annotation, dam = sleepr::sleep_dam_annotation),
   `distance annotation` = list(ethoscope = sleepr::sum_movement_detector, dam = NULL),

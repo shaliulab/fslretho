@@ -237,8 +237,9 @@ get_progress_bar <- function(n, message, duration=2, ncores=1) {
 #' until onset and end of sleep deprivation treatment in the animal captured by the metadata
 read_sd_daterange <- function(meta_row) {
 
-  path <- meta_row$file_info
-  if (is.list(path))  path <- lapply(path, function(x) x$path) %>% unlist
+  # TODO Because fortify does not work well, file_info is still a list
+  # (even if each element just has length 1)
+  path <- unlist(meta_row$file_info)
 
   metadata <- get_metadata(path)
   date_range <- metadata$selected_options$interactor$kwargs$date_range
@@ -268,7 +269,7 @@ parse_sd_daterange <- function(dt) {
   meta <- behavr::meta(dt)
   # be careful! this c() is coercing the stuff in . to a character
   # . are numbers that are now becoming characters silently
-  timestamp_daterange <- 1:nrow(meta) %>% lapply(., function(i) read_sd_daterange(meta[i, ]) %>% c(meta[i, as.character(id)], .)) %>%
+  timestamp_daterange <- 1:nrow(meta) %>% lapply(., function(i) read_sd_daterange(meta[i, ,drop=F]) %>% c(meta[i, as.character(id)], .)) %>%
     do.call(rbind, .) %>%
     as.data.table
 
@@ -283,24 +284,3 @@ parse_sd_daterange <- function(dt) {
   dt
 }
 
-#' Annotate a behavr with a SD treatment progress
-#' A new `sd_on` column stating the SD treatment status is added to the passed behavr
-#' @param dt behavr table
-#' @return the same behavr table with a new column `sd_on`.
-#' @export
-sd_inprogress_annotation <- function(dt) {
-
-  dt <- parse_sd_daterange(dt)
-
-  dt[, sd_on := ((t > xmv(start_sd)) & (t < xmv(end_sd)))]
-  return(dt)
-}
-attr(sd_inprogress_annotation, "needed_columns") <- function() {
-  c("t")
-}
-attr(sd_inprogress_annotation, "variables") <- function() {
-  c("sd_on")
-}
-attr(sd_inprogress_annotation, "parameters") <- function() {
-  c()
-}

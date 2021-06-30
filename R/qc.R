@@ -15,7 +15,7 @@
 #' but sometimes this changes are noisy enough to again confuse the tracker.
 #' This, combined with the fact that a very sleepy fly can actually not react
 #' to a moving tube, drive the labeling algorithm to label a fly as awake when it really is asleep
-a <- function() {}
+aaaaaaaa <- function() {}
 
 
 #' Apply Pareto rule to wake behavior during SD
@@ -30,20 +30,18 @@ a <- function() {}
 #'
 #' This make sense to do during SD because the tracking quality decreases due to
 #' background changes produced by the SD itself
+#' @family pareto_sd
+
 #' @param x Position of the animal along the main axis of variation, normalized from 0 to 1
 #' @param n Number of splits in the ROI. default 10
 #' @param min_max_crop If TRUE, x is normalized so the minimum value is 0 and the maximum is 1
 #' This is useful if the ROI is much wider than the tube (which would mean that some sections of the tube actually cannot be explored by the fly)
 #' @param space_fraction Minimum fraction of tube that a wake animal explores. If the animal explores less than this, it is not awake
 #' @param time_fraction Maximum fraction of time that a wake animal is allowed to stay in the p fraction of the tube
-#'
-#' @return TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
-#' A result of TRUE indicates thus a problematic data
-#' Apply Pareto rule to wake behavior during SD
 #' @return TRUE if the tube exploration is < expected with Pareto and FALSE otherwise
 #' A result of TRUE indicates thus a problematic data
 #' @usage
-#' dt_raw <- load_ethoscope(linked_metadata)
+#' dt_raw <- load_ethoscope(linked_metadata, FUN=sleepr::sleep_annotation) # or whatever annotation function
 #' dt <- behavr::bin_apply_all(dt_raw, x="t", y="x", x_bin_length=behavr::mins(30), FUN=pareto_sd)
 #' @example
 #' \dontrun{
@@ -86,7 +84,8 @@ setattr(pareto_sd, "var_name", "pareto")
 #' @param scored_dataset behavr timeseries data with at least columns x and t
 #' @param binned_dataset behavr timeseries produced by applying bin_apply_all with a function other than pareto_sd,
 #' typically the mean
-#' @return a new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
+#' @param sd_only If TRUE, this refinement is only applicable during SD
+#' @return A new binned_dataset with an extra field 'pareto' stating whether the animal fulfills the pareto principle of
 #' awakeness for the given bin.
 #' @usage
 #' velocity_correction_coef <- 0.0048 # change as needed
@@ -95,10 +94,11 @@ setattr(pareto_sd, "var_name", "pareto")
 #' dt_binned <- behavr::bin_apply_all(data = dt, y = "asleep", x = "t", x_bin_length = behavr::mins(30), FUN=mean)
 #' dt_binned <- apply_pareto_rule(dt, dt_binned)
 #' ggplot(dt_binned, aes(x=t, y=asleep)) + stat_pop_etho()#'
-#' @rdname pareto_sd
+#' @family pareto_sd
 #' @export
 #'
-apply_pareto_rule <- function(scored_dataset, binned_dataset, ...) {
+apply_pareto_rule <- function(scored_dataset, binned_dataset, sd_only=TRUE, n_windows=30, ...) {
+
   pareto_dataset <- behavr::bin_apply_all(
     data = scored_dataset,
     y = "x",
@@ -107,9 +107,31 @@ apply_pareto_rule <- function(scored_dataset, binned_dataset, ...) {
     ...
   )
 
+  sd_dataset <- behavr::bin_apply_all(
+    data = scored_dataset,
+    y = "sd_on",
+    x = "t",
+    FUN = function(x) {
+      # consider the half an hour to have active SD
+      # if the first 5 minutes (30 blocks of 10 seconds) there was SD
+      all(x[1:n_windows])
+    }
+  )
+
+
   setkey(binned_dataset, id, t)
+  setkey(sd_dataset, id, t)
   setkey(pareto_dataset, id, t)
-  merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
+  merged_dataset <- merge_behavr_all(binned_dataset, sd_dataset)
+  setkey(merged_dataset, id, t)
+  merged_dataset <- merge_behavr_all(merged_dataset, pareto_dataset)
+
+  # Reduce(merge_behavr_all, list(binned_dataset, pareto_dataset, sd_dataset))
+
+  browser()
+  if (sd_only) {
+    merged_dataset[, pareto := pareto & sd_on]
+  }
   merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
   setkey(merged_dataset, id)
   return(merged_dataset)
