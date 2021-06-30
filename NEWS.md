@@ -2,10 +2,10 @@ fslretho2 2.1.0
 ---------------------------------------------------------------------
 
 * New automatically generated fields allow to filter time by hours.
-* Behavioral traces use now hours ans unit in the x axis.
-* New rhytym analysis implemented in the period analysis tab. Periodograms and spectrograms can now be generated with the application.
+* Behavioral traces use now hours as unit in the x axis.
+* New rhythm analysis implemented in the period analysis tab. Periodograms and spectrograms can now be generated with the application.
 * New snapshot viewer removes the need to download the dbfile to manually check frames. An "SD only" button makes it easy to look only at SD. Another button automates the generation of an .mp4 video for the selected frames.
-* Updated unified download center where all datasets produced by the application can be downloaded in .csv format.
+* Updated unified download center where all datasets produced by the application can be downloaded in .csv format, including the dbfiles (as a .zip file).
 * New annotation functions sd_inprogress_annotation and distance_annotation annotate on the datasets whether SD was active and how much fly the animal traverses in each time bin respectively. More annotation functions can be implemented. More than 1 annotation function can be used simultaneously.
 * Aesthetical mappings now get automatic default values, that persist to loading new datasets.
 * Downloaded plots now have a proper white background.
