@@ -128,7 +128,6 @@ apply_pareto_rule <- function(scored_dataset, binned_dataset, sd_only=TRUE, n_wi
 
   # Reduce(merge_behavr_all, list(binned_dataset, pareto_dataset, sd_dataset))
 
-  browser()
   if (sd_only) {
     merged_dataset[, pareto := pareto & sd_on]
   }

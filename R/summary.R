@@ -31,9 +31,9 @@ summaryStatisticUI <- function(id, var) {
 #' @param func Function to summarise the data with
 summary_wrapper <- function(data, col, func) {
 
-  statistic <- tryCatch({
-    attr(func, "name")()
-  }, error = function(e) {browser()})
+  # statistic <- tryCatch({
+    statistic <- attr(func, "name")()
+  # }, error = function(e) {browser()})
   data$target__ <- data[[col]]
   sum_data <- data[, .SD[, func(target__),], by=eval(data.table::key(data))]
   colnames(sum_data)[colnames(sum_data) == "V1"] <- paste0(statistic, "-", col)
