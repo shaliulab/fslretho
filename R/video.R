@@ -168,7 +168,7 @@ snapshotManager <- function(id, dbfile, metadata) {
       })
 
       observe({
-        if (available_ids() > 750) {
+        if (length(available_ids()) > 750) {
           LONG_MOVIE <<- TRUE
         } else {
           LONG_MOVIE <<- FALSE
