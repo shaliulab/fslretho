@@ -4,7 +4,7 @@ CACHE <- conf$content$scopr$folders$cache$path
 VERBOSE <- TRUE
 TESTING <- conf$content$testing
 DEBUG <- conf$content$debug
-MAX_POINTS <- 5000
+MAX_POINTS <- Inf
 
 
 #' @import ggplot2
@@ -43,10 +43,18 @@ rawPlotsServer <- function(id, sleep_data) {
         d <- load_ethoscope(metadata, cache = CACHE, reference_hour = NA)
         d
 
+
+        row_indices <- seq(1, nrow(d), by=input$downsample)
+        d <- d[row_indices,]
+
         if (nrow(d) > MAX_POINTS) {
           row_indices <- seq(from = 1, to = nrow(d), length.out = MAX_POINTS)
           d <- d[row_indices,]
           d
+        }
+
+        if (input$sd_only) {
+          d <- d[isTRUE(sd_on),]
         }
 
         output_rv$raw$data <- d
@@ -89,8 +97,12 @@ rawPlotsUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    actionButton(ns("button"), "Plot"),
-    uiOutput(ns("animal_id_ui")),
+    inputPanel(
+      actionButton(ns("button"), "Plot"),
+      checkboxInput(ns("sd_only"), "SD only", value = TRUE),
+      numericInput(ns("downsample"), label = "Downsample", value = 10, min = 1, max = 100, step = 1),
+      uiOutput(ns("animal_id_ui"))
+    ),
     plotOutput(ns("plot_raw")),
     plotOutput(ns("plot_sleep"))
   )
