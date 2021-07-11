@@ -97,6 +97,8 @@ periodogramAnalysisServer <- function(id, input_rv) {
           FUN=PERIODOGRAM_ALGORITHMS[[input$algorithm]]
         )
 
+        d[,signif_power := power - signif_threshold]
+
         d <- zeitgebr::find_peaks(d)
         d
       })
@@ -111,7 +113,7 @@ periodogramAnalysisServer <- function(id, input_rv) {
 
       output_rv <- esquisseModuleServer("esquisse", input_rv = esquisse_rv,
                                         hardcoded_dragula = list(
-                                            mapping = list(xvar = "period", yvar = "power"),
+                                            mapping = list(xvar = "period", yvar = "signif_power"),
                                             geom = "pop_etho"
                                         ),
                                         hardcoded_geom = "pop_etho",
