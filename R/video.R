@@ -1,4 +1,5 @@
 HEIGHT <- 960
+LONG_MOVIE <- FALSE
 
 imageModule <- function(id, image_reactive, deleteFile = TRUE, ...) {
   moduleServer(
@@ -154,15 +155,51 @@ snapshotManager <- function(id, dbfile, metadata) {
         sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
 
+
+
+
+
       available_ids <- reactive({
         filenames <- ethoscope_imager(path=dbfile())
-        ids <- as.integer(sapply(filenames, function(x) unlist(strsplit(basename(x), split = "_"))[1]))
+        filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
+        ids <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[1]))
+        #t <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2]))
         unique(c(1, ids))
       })
 
+      observe({
+        if (available_ids() > 750) {
+          LONG_MOVIE <<- TRUE
+        } else {
+          LONG_MOVIE <<- FALSE
+        }
+      })
+
+
+
+      block_structure <- reactiveVal()
+
+      shown_ids <- reactive({
+        if (!LONG_MOVIE) {
+          available_ids()
+        } else {
+          filenames <- ethoscope_imager(path=dbfile())
+          filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
+          t_ms <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2]))
+          t_s <- t_ms / 1000
+          t_s_o <- t_s %% 300 # 5 minutes
+          # only show the ids that signal a new 5 minute block
+          start_blocks <- c(1, which(diff(t_s_o) < 0))
+
+          block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]))
+          names(block_str) <- start_blocks[1:(length(start_blocks)-1)]
+          block_structure(block_str)
+          available_ids()[start_blocks]
+        }
+      })
 
       output$ids_ui <- renderUI({
-        selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = available_ids(), multiple=T)
+        selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = shown_ids(), multiple=T)
       })
 
 
@@ -199,7 +236,12 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       observeEvent(input$annotate, {
         message("Updating snapshot list")
-        output_rv$snapshots <- ethoscope_imager(path=dbfile(), id=input$ids)
+        if (LONG_MOVIE) {
+          sapply(input$ids, function(id) {block_structure()[[as.character(id)]]}) %>% unlist
+        } else {
+          ids <- input$ids
+        }
+        output_rv$snapshots <- ethoscope_imager(path=dbfile(), id=ids)
       })
 
       selected_shot <- reactiveVal(1)
