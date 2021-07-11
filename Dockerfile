@@ -78,23 +78,7 @@ RUN chown shiny:shiny /etc/scopr.conf
 RUN chown shiny:shiny /etc/fslretho.conf
 
 
-#ARG CACHE_DATE=not_a_date
-RUN R -e "devtools::install('/opt/behavr')"
-RUN R -e "devtools::install('/opt/scopr')"
-RUN R -e "devtools::install('/opt/damr')"
-RUN R -e "devtools::install('/opt/sleepr')"
-RUN R -e "devtools::install('/opt/ggetho')"
-RUN R -e "devtools::install('/opt/zeitgebr')"
-
-RUN rm -rf /opt/esquisse
-RUN git clone --recursive -b deployment https://github.com/shaliulab/esquisse /opt/esquisse
-
-RUN R -e "devtools::install('/opt/esquisse')"
-
 RUN sudo apt-get -y install sqlite3
-
-
-RUN R -e "devtools::install('/opt/fslretho', dependencies=TRUE)"
 
 # copy the app directory into the image
 COPY ./inst/shiny-app/* /srv/shiny-server
@@ -110,6 +94,19 @@ RUN sudo chown shiny:shiny /DAM_data
 RUN sudo chown shiny:shiny /ethoscope_data
 RUN sudo chown shiny:shiny /fslretho_data
 
+
+RUN R -e "devtools::install('/opt/behavr')"
+RUN R -e "devtools::install('/opt/scopr')"
+RUN R -e "devtools::install('/opt/damr')"
+RUN R -e "devtools::install('/opt/sleepr')"
+RUN R -e "devtools::install('/opt/ggetho')"
+RUN R -e "devtools::install('/opt/zeitgebr')"
+
+RUN cd /opt/esquisse && git pull
+RUN cd /opt/fslretho && git pull
+
+RUN R -e "devtools::install('/opt/esquisse')"
+RUN R -e "devtools::install('/opt/fslretho')"
 
 # run app
 CMD ["/usr/bin/shiny-server"]
