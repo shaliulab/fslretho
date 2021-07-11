@@ -90,6 +90,10 @@ RUN rm -rf /opt/esquisse
 RUN git clone --recursive -b deployment https://github.com/shaliulab/esquisse /opt/esquisse
 
 RUN R -e "devtools::install('/opt/esquisse')"
+
+RUN sudo apt-get -y install sqlite3
+
+
 RUN R -e "devtools::install('/opt/fslretho', dependencies=TRUE)"
 
 # copy the app directory into the image
