@@ -239,9 +239,8 @@ read_sd_daterange <- function(meta_row) {
 
   # TODO Because fortify does not work well, file_info is still a list
   # (even if each element just has length 1)
-  path <- unlist(meta_row$file_info)
 
-  metadata <- get_metadata(path)
+  metadata <- get_metadata(sapply(meta_row$file_info, function(x) x$path))
   date_range <- metadata$selected_options$interactor$kwargs$date_range
   if (is.null(date_range)) {
     timestamps <- c(Inf, Inf)
@@ -266,6 +265,7 @@ read_sd_daterange <- function(meta_row) {
 #' @return The same behavior table where the metadaata now features columns start_sd and end_sd
 #' which contain the number of ms since experiment start until SD start and end
 parse_sd_daterange <- function(dt) {
+
   meta <- behavr::meta(dt)
   # be careful! this c() is coercing the stuff in . to a character
   # . are numbers that are now becoming characters silently

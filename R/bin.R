@@ -82,7 +82,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
       })
 
       observeEvent(input_rv$time, {
-        message("Updataing bin-y")
+        # message("Updating bin-y")
         updateSelectizeInput(inputId = "y", choices = variables(), selected = variables()[1])
       }, ignoreInit = TRUE)
 

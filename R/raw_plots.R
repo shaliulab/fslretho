@@ -1,31 +1,30 @@
+conf <- FSLRethoConfiguration$new()
+NCORES <- conf$content$scopr$ncores
+CACHE <- conf$content$scopr$folders$cache$path
+VERBOSE <- TRUE
+TESTING <- conf$content$testing
+DEBUG <- conf$content$debug
 MAX_POINTS <- 5000
+
 
 #' @import ggplot2
 #' @importFrom ggetho scale_x_hours geom_ld_annotations
-rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
+rawPlotsServer <- function(id, sleep_data) {
 
   moduleServer(
     id,
     function(input, output, session) {
 
       output_rv <- reactiveValues(
-        raw = reactiveValues(data = NULL, name = NULL, time = NULL),
-        scored = reactiveValues(data = NULL, name = NULL, time = NULL)
+        data = NULL, name = NULL, time = NULL
       )
 
-
-      input_raw_rv <- reactive({
-        req(monitor())
-        raw_data[[monitor()]]
-      })
-
-
       output$animal_id_ui <- renderUI({
-        req(monitor())
-        req(raw_data[[monitor()]]$data)
+         # browser()
+        req(sleep_data$data)
         selectizeInput(
           session$ns("animal_id"), label = "Animal id",
-          choices = behavr::meta(raw_data[[monitor()]]$data)$id
+          choices = behavr::meta(sleep_data$data)$id
         )
       })
 
@@ -35,9 +34,14 @@ rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
       )
 
       raw_dataset <- eventReactive(input$button, {
-        req(input_raw_rv()$data)
         req(animal_id())
-        d <- input_raw_rv()$data[id == animal_id(),]
+
+        metadata <- behavr::meta(sleep_data$data)
+        metadata <- metadata[id == animal_id()]
+        # browser()
+        metadata$file_info <- lapply(metadata$file_info, function(x) list(path=x, filename=basename(x)))
+        d <- load_ethoscope(metadata, cache = CACHE, reference_hour = NA)
+        d
 
         if (nrow(d) > MAX_POINTS) {
           row_indices <- seq(from = 1, to = nrow(d), length.out = MAX_POINTS)
@@ -46,25 +50,8 @@ rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
         }
 
         output_rv$raw$data <- d
-        output_rv$raw$name <- input_raw_rv()$data$data$name
-        output_rv$raw$time <- input_raw_rv()$data$data$time
-        d
-      }, ignoreInit = TRUE)
-
-      scored_dataset <- eventReactive(input$button, {
-        req(scored_data[[monitor()]]$data)
-        req(animal_id())
-        d <- scored_data[[monitor()]]$data[id == animal_id(),]
-
-        if (nrow(d) > MAX_POINTS) {
-          row_indices <- seq(from = 1, to = nrow(d), length.out = MAX_POINTS)
-          d <- d[row_indices,]
-          d
-        }
-
-        output_rv$scored$data <- d
-        output_rv$scored$name <- scored_data[[monitor()]]$data$name
-        output_rv$scored$time <- scored_data[[monitor()]]$data$time
+        output_rv$raw$name <- sleep_data$name
+        output_rv$raw$time <- Sys.time()
         d
       }, ignoreInit = TRUE)
 
@@ -72,7 +59,6 @@ rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
       sleep_dataset <- eventReactive(input$button, {
         req(sleep_data$data)
         req(animal_id())
-
         d <- behavr::rejoin(sleep_data$data)[id == animal_id()]
         d
       })
@@ -83,9 +69,6 @@ rawPlotsServer <- function(id, raw_data, scored_data, sleep_data, monitor) {
           facet_wrap("id")
       })
 
-      output$plot_scored <- renderPlot({
-        # TODO
-      })
 
       output$plot_sleep <- renderPlot({
         ggplot(data = sleep_dataset(), aes(x = t, y = asleep)) +
@@ -109,7 +92,6 @@ rawPlotsUI <- function(id) {
     actionButton(ns("button"), "Plot"),
     uiOutput(ns("animal_id_ui")),
     plotOutput(ns("plot_raw")),
-    plotOutput(ns("plot_scored")),
     plotOutput(ns("plot_sleep"))
   )
 }

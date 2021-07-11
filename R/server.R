@@ -19,16 +19,16 @@ server <- function(input, output, session) {
   ## Load ----
   # Here the choice between dam or ethoscope happens
   # After this, the data has only one module
-  raw_data <- loadDataServer("loadData", reload)
+  scored_data <- loadDataServer("loadData", reload)
 
   # In case the user wants to use a builtin dataset
-  loaded_data <- saveLoadSessionServer("sessions", raw_data)
+  loaded_data <- saveLoadSessionServer("sessions", scored_data)
 
   snapshotViewerServer("snapshot_viewer", loaded_data)
 
   ## Score ----
-  scored_data <- scoreDataServer("scoreData", loaded_data)
-  selected_data <- monitorSelectorServer("selectData", scored_data)
+  # scored_data <- scoreDataServer("scoreData", loaded_data)
+  selected_data <- monitorSelectorServer("selectData", loaded_data)
   monitor <- reactive({
     selected_data$monitor
   })
@@ -49,7 +49,7 @@ server <- function(input, output, session) {
   )
 
   premadePlotsServer("premadePlots", sleep_data, interactions_data)
-  raw_datasets <- rawPlotsServer("rawPlots", loaded_data, scored_data, sleep_data, monitor)
+  raw_datasets <- rawPlotsServer("rawPlots", sleep_data)
 
   ## Bin bouts ----
   bout_data <- binDataServer("boutBin", selected_data,
@@ -107,8 +107,7 @@ server <- function(input, output, session) {
 
 
   downloadServer("binned-sleep", sleep_module, sleep_data$name)
-  downloadServer("sequence-sleep", scored_data, selected_data$name, monitor)
-  downloadServer("raw-data", loaded_data, selected_data$name, monitor)
+  downloadServer("sequence-sleep", loaded_data, selected_data$name, monitor)
   downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
   downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
   downloadServer("bouts-summary", sleep_bout_module_summary, sleep_bout_module_summary$name)
