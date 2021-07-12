@@ -182,7 +182,11 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       shown_ids <- reactive({
         if (!LONG_MOVIE()) {
-          available_ids()
+          ids <- available_ids()
+          block_str <- ids
+          names(block_str) <- paste0("B", ids)
+          block_structure(block_str)
+          ids
         } else {
           filenames <- ethoscope_imager(path=dbfile())
           filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
