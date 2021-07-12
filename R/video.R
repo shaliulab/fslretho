@@ -199,7 +199,7 @@ snapshotManager <- function(id, dbfile, metadata) {
       })
 
       output$ids_ui <- renderUI({
-        selectizeInput(session$ns("ids"), label = "ids", choices = names(block_str()) %>% gsub(pattern = "B", replacement = "", x = .), selected = shown_ids(), multiple=T)
+        selectizeInput(session$ns("ids"), label = "ids", choices = names(block_structure()) %>% gsub(pattern = "B", replacement = "", x = .), selected = shown_ids(), multiple=T)
       })
 
 
