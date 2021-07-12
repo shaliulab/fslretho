@@ -222,9 +222,9 @@ snapshotManager <- function(id, dbfile, metadata) {
           t_range <- round((date_range - metadata()$date_time) * 1000) # ms
 
           # this should return the number of shots during SD
-          sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+          sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
           if (sqlite(dbfile(), sql_statement)$count != 0) {
-            sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+            sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
             ids <- sqlite(dbfile(), sql_statement)$id
             updateSelectizeInput(inputId = "ids", selected = ids)
 
