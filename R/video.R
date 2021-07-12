@@ -169,7 +169,7 @@ snapshotManager <- function(id, dbfile, metadata) {
       })
 
       observe({
-        if (length(available_ids()) > MAX_IDS) {
+        if (length(ids()) > MAX_IDS) {
           LONG_MOVIE(TRUE)
         } else {
           LONG_MOVIE(FALSE)
@@ -182,23 +182,21 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       shown_ids <- reactive({
         if (!LONG_MOVIE()) {
-          ids <- available_ids()
-          block_str <- ids
-          names(block_str) <- paste0("B", ids)
+          ids_all <- ids()
+          block_str <- ids_all
+          names(block_str) <- paste0("B", ids_all)
           block_structure(block_str)
-          ids
+          available_ids()[available_ids() %in% ids_all]
         } else {
-          filenames <- ethoscope_imager(path=dbfile())
-          filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
-          t_ms <- sort(as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2])))
+          t_ms <- sort(sqlite(file = dbfile(), statement = "SELECT t FROM IMG_SNAPSHOTS;")$t)
+          #t_ms <- sort(as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2])))
           t_s <- t_ms / 1000
-
           start_blocks <- which(!duplicated(floor(t_s / BLOCK_SIZE)))
 
           block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
           names(block_str) <- paste0("B", start_blocks[1:(length(start_blocks)-1)])
           block_structure(block_str)
-          available_ids()[start_blocks]
+          available_ids()[available_ids() %in% ids()[start_blocks]]
         }
       })
 
