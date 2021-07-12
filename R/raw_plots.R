@@ -15,12 +15,13 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
     id,
     function(input, output, session) {
 
+      theme_set(theme_bw(base_size = 25))
       output_rv <- reactiveValues(
         data = NULL, name = NULL, time = NULL
       )
 
       output$animal_id_ui <- renderUI({
-         # browser()
+         #
         req(sleep_data$data)
         selectizeInput(
           session$ns("animal_id"), label = "Animal id",
@@ -29,7 +30,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
       })
 
 
-      animal_id <- reactive(
+      animal_id <- reactive(a
         input$animal_id
       )
 
@@ -38,7 +39,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
         metadata <- behavr::meta(sleep_data$data)
         metadata <- metadata[id == animal_id()]
-        # browser()
+        #
         metadata$file_info <- lapply(metadata$file_info, function(x) list(path=x, filename=basename(x)))
         d <- load_ethoscope(metadata, cache = CACHE, reference_hour = NA)
         d <- d[t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600,]
@@ -65,7 +66,6 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         }
 
         if (input$sd_only) {
-          # browser()
           before_filter <- nrow(d)
           d <- d[sd_on == TRUE,]
           if (before_filter > 0 & nrow(d) == 0) {
@@ -73,7 +73,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
           }
         }
 
-        # browser()
+        #
 
         output_rv$raw$data <- d
         output_rv$raw$name <- sleep_data$name
@@ -85,13 +85,16 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
       sleep_dataset <- eventReactive(input$button, {
         req(sleep_data$data)
         req(animal_id())
+        req(raw_dataset())
         d <- behavr::rejoin(sleep_data$data)[id == animal_id() & t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600]
         d
       })
 
       interactions_dataset <- eventReactive(input$button, {
-        req(sleep_data$data)
+
+        req(interactions_data$data)
         req(animal_id())
+        req(raw_dataset())
         d <- behavr::rejoin(interactions_data$data)[id == animal_id() & t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600]
         d
       })

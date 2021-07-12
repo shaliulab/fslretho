@@ -43,9 +43,38 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
   output_rv <- reactiveValues(data = NULL, name = NULL, time = NULL)
 
+
   moduleServer(
     id,
     function(input, output, session) {
+
+
+
+      y_r <- reactive({
+        if (is.null(y)) {
+          input$y
+        } else {
+          y
+        }
+      })
+
+      summary_time_window_r <- reactive({
+        if (is.null(summary_time_window)) {
+          input$summary_time_window
+        } else {
+          summary_time_window
+        }
+      })
+
+
+      summary_FUN_r <- reactive({
+        if (is.null(summary_FUN)) {
+        input$summary_FUN
+        } else {
+          summary_FUN
+        }
+      })
+
 
       preproc_data <- reactive({
 
@@ -76,51 +105,38 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
       #   input_rv$time
       # })
 
-      input_y <- reactive(input$y)
-      observe({
-        input_y()
-      })
-
       observeEvent(input_rv$time, {
         # message("Updating bin-y")
         updateSelectizeInput(inputId = "y", choices = variables(), selected = variables()[1])
       }, ignoreInit = TRUE)
 
-      observeEvent(c(input_rv$time, input$summary_FUN, input$summary_time_window, input$pareto, input$pareto_sd, input$y), {
+      observeEvent(c(input_rv$time, summary_FUN_r(), summary_time_window_r(), input$pareto, input$pareto_sd, y_r()), {
 
         req(input_rv$data)
-        req(input$y)
-        # if (length(input$y) > 1) browser()
-        if (DEBUG) message(paste0("Binning data using ", input$summary_FUN))
+        req(y_r())
+        # if (length(y_r(()) > 1) browser()
+        if (DEBUG) message(paste0("Binning data using ", summary_FUN_r()))
 
-        if (is.null(y))
-          y_passed <- input_y()
-        else
-          y_passed <- y
-
-        kept_y <- y_passed %in% colnames(preproc_data())
-        y_passed <- y_passed[kept_y]
+        kept_y <- y_r() %in% colnames(preproc_data())
         if (!all(kept_y) & sum(kept_y) > 0)
           warning("Some variables are not in the data")
 
         req(any(kept_y))
 
-        FUN <- functions[[ifelse(is.null(summary_FUN), input$summary_FUN, summary_FUN)]]
-
         binned_dataset <- behavr::bin_all(
           data = preproc_data(),
-          y = y_passed,
+          y = y_r()[kept_y],
           x = "t",
-          x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
-          FUN = FUN
+          x_bin_length = behavr::mins(summary_time_window_r()),
+          FUN = functions[[summary_FUN_r()]]
         )
 
 
-        if (allow_pareto & input$pareto) {
+        if (allow_pareto && input$pareto) {
 
           binned_dataset <- apply_pareto_rule(
             preproc_data(), binned_dataset,
-            x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+            x_bin_length = behavr::mins(summary_time_window_r()),
             sd_only=input$pareto_sd
           )
 
@@ -128,7 +144,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           #   data = preproc_data(),
           #   y = "x",
           #   x = "t",
-          #   x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), input$summary_time_window, summary_time_window)),
+          #   x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), summary_time_window_r(), summary_time_window)),
           #   FUN = pareto_sd
           # )
           #
@@ -143,7 +159,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         output_rv$data <- binned_dataset
         output_rv$name <- input_rv$name
         output_rv$time <- Sys.time()
-      }, ignoreInit = TRUE)
+      }, ignoreInit = FALSE)
 
       return(output_rv)
     }
