@@ -1,5 +1,10 @@
 HEIGHT <- 960
-LONG_MOVIE <- FALSE
+LONG_MOVIE <- reactiveVal(FALSE)
+MAX_IDS <- 750
+# MAX_IDS <- 10
+BLOCK_SIZE <- 300 #s
+# BLOCK_SIZE <- 600 #s
+
 
 imageModule <- function(id, image_reactive, deleteFile = TRUE, ...) {
   moduleServer(
@@ -160,7 +165,7 @@ snapshotManager <- function(id, dbfile, metadata) {
 
 
       available_ids <- reactive({
-        filenames <- ethoscope_imager(path=dbfile())
+        filenames <- sort(ethoscope_imager(path=dbfile()))
         filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
         ids <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[1]))
         #t <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2]))
@@ -168,10 +173,10 @@ snapshotManager <- function(id, dbfile, metadata) {
       })
 
       observe({
-        if (length(available_ids()) > 750) {
-          LONG_MOVIE <<- TRUE
+        if (length(available_ids()) > MAX_IDS) {
+          LONG_MOVIE(TRUE)
         } else {
-          LONG_MOVIE <<- FALSE
+          LONG_MOVIE(FALSE)
         }
       })
 
@@ -180,26 +185,25 @@ snapshotManager <- function(id, dbfile, metadata) {
       block_structure <- reactiveVal()
 
       shown_ids <- reactive({
-        if (!LONG_MOVIE) {
+        if (!LONG_MOVIE()) {
           available_ids()
         } else {
           filenames <- ethoscope_imager(path=dbfile())
           filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
-          t_ms <- as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2]))
+          t_ms <- sort(as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2])))
           t_s <- t_ms / 1000
-          t_s_o <- t_s %% 300 # 5 minutes
-          # only show the ids that signal a new 5 minute block
-          start_blocks <- c(1, which(diff(t_s_o) < 0))
 
-          block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]))
-          names(block_str) <- start_blocks[1:(length(start_blocks)-1)]
+          start_blocks <- which(!duplicated(floor(t_s / BLOCK_SIZE)))
+
+          block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
+          names(block_str) <- paste0("B", start_blocks[1:(length(start_blocks)-1)])
           block_structure(block_str)
           available_ids()[start_blocks]
         }
       })
 
       output$ids_ui <- renderUI({
-        selectizeInput(session$ns("ids"), label = "ids", choices = ids(), selected = shown_ids(), multiple=T)
+        selectizeInput(session$ns("ids"), label = "ids", choices = shown_ids(), selected = shown_ids(), multiple=T)
       })
 
 
@@ -236,8 +240,11 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       observeEvent(input$annotate, {
         message("Updating snapshot list")
-        if (LONG_MOVIE) {
-          sapply(input$ids, function(id) {block_structure()[[as.character(id)]]}) %>% unlist
+        if (LONG_MOVIE()) {
+          ids <- sapply(input$ids[1:(length(input$ids)-1)], function(id) {
+            #print(id);
+            block_structure()[[paste0("B", id)]]
+          }) %>% unlist %>% as.character
         } else {
           ids <- input$ids
         }
