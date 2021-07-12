@@ -1,9 +1,7 @@
 HEIGHT <- 960
 LONG_MOVIE <- reactiveVal(FALSE)
 MAX_IDS <- 750
-# MAX_IDS <- 10
-BLOCK_SIZE <- 300 #s
-# BLOCK_SIZE <- 600 #s
+BLOCK_SIZE <- 600 #s 10 mins
 
 
 imageModule <- function(id, image_reactive, deleteFile = TRUE, ...) {
