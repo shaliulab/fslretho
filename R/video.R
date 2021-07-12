@@ -1,6 +1,6 @@
 HEIGHT <- 960
-LONG_MOVIE <- reactiveVal(FALSE)
 MAX_IDS <- 750
+MAX_IDS <- 10
 BLOCK_SIZE <- 600 #s 10 mins
 
 
@@ -154,6 +154,10 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       output_rv <- reactiveValues(ids = NULL, outfile = NULL, snapshots = NULL)
 
+      # if this is TRUE, switch behavior of id selector to blocks
+      LONG_MOVIE <- reactiveVal(FALSE)
+
+
       ids <- reactive({
         sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
@@ -176,12 +180,16 @@ snapshotManager <- function(id, dbfile, metadata) {
 
 
 
+      # block_structure will contain the mapping from block start -> block components
+      # i.e. under key B1 we find all the ids that belong to the block that starts with id 1
+      # under B30, those of id 30
+      # and so on
       block_structure <- reactiveVal()
 
       shown_ids <- reactive({
         if (!LONG_MOVIE()) {
           ids_all <- ids()
-          block_str <- ids_all
+          block_str <- as.list(ids_all)
           names(block_str) <- paste0("B", ids_all)
           block_structure(block_str)
           available_ids()[available_ids() %in% ids_all]
@@ -191,7 +199,7 @@ snapshotManager <- function(id, dbfile, metadata) {
           t_s <- t_ms / 1000
           start_blocks <- which(!duplicated(floor(t_s / BLOCK_SIZE)))
 
-          block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
+          block_str <- lapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
           names(block_str) <- paste0("B", start_blocks[1:(length(start_blocks)-1)])
           block_structure(block_str)
           available_ids()[available_ids() %in% ids()[start_blocks]]
