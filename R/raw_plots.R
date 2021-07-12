@@ -30,7 +30,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
       })
 
 
-      animal_id <- reactive(a
+      animal_id <- reactive(
         input$animal_id
       )
 
