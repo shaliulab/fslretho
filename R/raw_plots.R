@@ -86,7 +86,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         req(sleep_data$data)
         req(animal_id())
         req(raw_dataset())
-        d <- behavr::rejoin(sleep_data$data)[id == animal_id() & t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600]
+        d <- behavr::rejoin(sleep_data$data)[id == animal_id() & t > min(raw_dataset()$t) & t < max(raw_dataset()$t)]
         d
       })
 
@@ -95,7 +95,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         req(interactions_data$data)
         req(animal_id())
         req(raw_dataset())
-        d <- behavr::rejoin(interactions_data$data)[id == animal_id() & t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600]
+        d <- behavr::rejoin(interactions_data$data)[id == animal_id() & t > min(raw_dataset()$t) & t < max(raw_dataset()$t)]
         d
       })
 
