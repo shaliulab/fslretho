@@ -160,10 +160,6 @@ snapshotManager <- function(id, dbfile, metadata) {
         sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
 
-
-
-
-
       available_ids <- reactive({
         filenames <- sort(ethoscope_imager(path=dbfile()))
         filenames_without_extension <- sapply(filenames, function(x) unlist(strsplit(basename(x), split = "\\."))[1])
@@ -203,7 +199,7 @@ snapshotManager <- function(id, dbfile, metadata) {
       })
 
       output$ids_ui <- renderUI({
-        selectizeInput(session$ns("ids"), label = "ids", choices = shown_ids(), selected = shown_ids(), multiple=T)
+        selectizeInput(session$ns("ids"), label = "ids", choices = names(block_str()) %>% gsub(pattern = "B", replacement = "", x = .), selected = shown_ids(), multiple=T)
       })
 
 
