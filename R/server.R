@@ -49,7 +49,7 @@ server <- function(input, output, session) {
   )
 
   premadePlotsServer("premadePlots", sleep_data, interactions_data)
-  raw_datasets <- rawPlotsServer("rawPlots", sleep_data)
+  raw_datasets <- rawPlotsServer("rawPlots", sleep_data, interactions_data)
 
   ## Bin bouts ----
   bout_data <- binDataServer("boutBin", selected_data,

@@ -9,7 +9,7 @@ MAX_POINTS <- Inf
 
 #' @import ggplot2
 #' @importFrom ggetho scale_x_hours geom_ld_annotations
-rawPlotsServer <- function(id, sleep_data) {
+rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
   moduleServer(
     id,
@@ -89,6 +89,13 @@ rawPlotsServer <- function(id, sleep_data) {
         d
       })
 
+      interactions_dataset <- eventReactive(input$button, {
+        req(sleep_data$data)
+        req(animal_id())
+        d <- behavr::rejoin(interactions_data$data)[id == animal_id() & t > input$time_range[1] * 3600 & t < input$time_range[2] * 3600]
+        d
+      })
+
       output$plot_raw <- renderPlot({
         validate(need(nrow(raw_dataset()) > 0, "No data available"))
         ggplot(data = raw_dataset(), aes(x = t, y = x)) + ggplot2::geom_point() +
@@ -105,6 +112,13 @@ rawPlotsServer <- function(id, sleep_data) {
           facet_wrap("id")
       })
 
+      output$plot_interactions <- renderPlot({
+        ggplot(data = interactions_dataset(), aes(x = t, y = interactions)) +
+          ggetho::geom_pop_etho() +
+          ggetho::scale_x_hours() +
+          ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
+          facet_wrap("id")
+      })
 
       return(output_rv)
     }
@@ -124,6 +138,7 @@ rawPlotsUI <- function(id) {
       sliderInput(ns("time_range"), label = "Time range", min = 0, max = behavr::days(7) / 3600, step = 6, value = c(0, behavr::days(7) / 3600), )
     ),
     plotOutput(ns("plot_raw")),
-    plotOutput(ns("plot_sleep"))
+    plotOutput(ns("plot_sleep")),
+    plotOutput(ns("plot_interactions"))
   )
 }
