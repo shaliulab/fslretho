@@ -230,9 +230,14 @@ snapshotManager <- function(id, dbfile, metadata) {
 
           } else {
             message("No snapshots detected during SD")
+            updateSelectizeInput(inputId = "ids", selected = c(""))
+            showNotification(ui = "No snapshots detected during SD", type = "warning")
+
           }
         } else {
           message("Interactor has no date_range")
+          updateSelectizeInput(inputId = "ids", selected = c(""))
+
         }
       }, ignoreInit = FALSE)
 
@@ -241,6 +246,10 @@ snapshotManager <- function(id, dbfile, metadata) {
         updateSelectizeInput(inputId = "ids", selected = c(""))
       })
 
+
+      observeEvent(input$all_ids, {
+        updateSelectizeInput(inputId = "ids", selected = ids())
+      })
 
       observeEvent(input$annotate, {
         message("Updating snapshot list")
@@ -285,6 +294,7 @@ snapshotManagerUI <- function(id) {
   tagList(
     uiOutput(ns("ids_ui")),
     actionButton(ns("annotate"), label = "Annotate"),
+    actionButton(ns("all_ids"), label = "All snapshots"),
     actionButton(ns("sd_ids"), label = "SD only"),
     actionButton(ns("clear"), label = "Clear"),
     uiOutput(ns("index_ui"))
