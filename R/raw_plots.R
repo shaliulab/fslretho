@@ -67,7 +67,7 @@ rawPlotsServer <- function(id, sleep_data) {
         if (input$sd_only) {
           # browser()
           before_filter <- nrow(d)
-          d <- d[isTRUE(sd_on),]
+          d <- d[sd_on == TRUE,]
           if (before_filter > 0 & nrow(d) == 0) {
             validate(need(FALSE, "No data under SD"))
           }
