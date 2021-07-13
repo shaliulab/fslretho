@@ -122,11 +122,9 @@ apply_pareto_rule <- function(scored_dataset, binned_dataset, sd_only=TRUE, n_wi
   setkey(binned_dataset, id, t)
   setkey(sd_dataset, id, t)
   setkey(pareto_dataset, id, t)
-  merged_dataset <- merge_behavr_all(binned_dataset, sd_dataset)
+  merged_dataset <- merge_behavr_all(binned_dataset, sd_dataset, merge_meta = F)
   setkey(merged_dataset, id, t)
-  merged_dataset <- merge_behavr_all(merged_dataset, pareto_dataset)
-
-  # Reduce(merge_behavr_all, list(binned_dataset, pareto_dataset, sd_dataset))
+  merged_dataset <- merge_behavr_all(merged_dataset, pareto_dataset, merge_meta = F)
 
   if (sd_only) {
     merged_dataset[, pareto := pareto & sd_on]

@@ -53,6 +53,8 @@ scoreDataUI <- function(id) {
   tagList(
     shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001),
     shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 60, max = 600, value = 300, step = 10),
+    actionButton(ns("time300"), label = "Min time immobile = 300"),
+    actionButton(ns("time60"), label = "Min time immobile = 60"),
     shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
     shiny::selectizeInput(
       ns("FUN"), label = "",
@@ -76,6 +78,13 @@ scoreDataServer <- function(id) {
         time_window_length=NULL,
         FUN=NULL
       )
+
+      observeEvent(input$time300, {
+        updateSliderInput(inputId = "min_time_immobile", value = 300)
+      })
+      observeEvent(input$time60, {
+        updateSliderInput(inputId = "min_time_immobile", value = 60)
+      })
 
       observe({
         output_rv$velocity_correction_coef <- req(input$velocity_correction_coef)

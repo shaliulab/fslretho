@@ -1,6 +1,6 @@
 HEIGHT <- 960
-LONG_MOVIE <- reactiveVal(FALSE)
 MAX_IDS <- 750
+MAX_IDS <- 10
 BLOCK_SIZE <- 600 #s 10 mins
 
 
@@ -154,6 +154,10 @@ snapshotManager <- function(id, dbfile, metadata) {
 
       output_rv <- reactiveValues(ids = NULL, outfile = NULL, snapshots = NULL)
 
+      # if this is TRUE, switch behavior of id selector to blocks
+      LONG_MOVIE <- reactiveVal(FALSE)
+
+
       ids <- reactive({
         sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
@@ -176,12 +180,16 @@ snapshotManager <- function(id, dbfile, metadata) {
 
 
 
+      # block_structure will contain the mapping from block start -> block components
+      # i.e. under key B1 we find all the ids that belong to the block that starts with id 1
+      # under B30, those of id 30
+      # and so on
       block_structure <- reactiveVal()
 
       shown_ids <- reactive({
         if (!LONG_MOVIE()) {
           ids_all <- ids()
-          block_str <- ids_all
+          block_str <- as.list(ids_all)
           names(block_str) <- paste0("B", ids_all)
           block_structure(block_str)
           available_ids()[available_ids() %in% ids_all]
@@ -191,7 +199,7 @@ snapshotManager <- function(id, dbfile, metadata) {
           t_s <- t_ms / 1000
           start_blocks <- which(!duplicated(floor(t_s / BLOCK_SIZE)))
 
-          block_str <- sapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
+          block_str <- lapply(1:(length(start_blocks)-1), function(i) seq(start_blocks[i], start_blocks[i+1]-1))
           names(block_str) <- paste0("B", start_blocks[1:(length(start_blocks)-1)])
           block_structure(block_str)
           available_ids()[available_ids() %in% ids()[start_blocks]]
@@ -214,17 +222,22 @@ snapshotManager <- function(id, dbfile, metadata) {
           t_range <- round((date_range - metadata()$date_time) * 1000) # ms
 
           # this should return the number of shots during SD
-          sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+          sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
           if (sqlite(dbfile(), sql_statement)$count != 0) {
-            sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1], " AND t < ", t_range[2], ";")
+            sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
             ids <- sqlite(dbfile(), sql_statement)$id
             updateSelectizeInput(inputId = "ids", selected = ids)
 
           } else {
             message("No snapshots detected during SD")
+            updateSelectizeInput(inputId = "ids", selected = c(""))
+            showNotification(ui = "No snapshots detected during SD", type = "warning")
+
           }
         } else {
           message("Interactor has no date_range")
+          updateSelectizeInput(inputId = "ids", selected = c(""))
+
         }
       }, ignoreInit = FALSE)
 
@@ -233,6 +246,10 @@ snapshotManager <- function(id, dbfile, metadata) {
         updateSelectizeInput(inputId = "ids", selected = c(""))
       })
 
+
+      observeEvent(input$all_ids, {
+        updateSelectizeInput(inputId = "ids", selected = ids())
+      })
 
       observeEvent(input$annotate, {
         message("Updating snapshot list")
@@ -277,6 +294,7 @@ snapshotManagerUI <- function(id) {
   tagList(
     uiOutput(ns("ids_ui")),
     actionButton(ns("annotate"), label = "Annotate"),
+    actionButton(ns("all_ids"), label = "All snapshots"),
     actionButton(ns("sd_ids"), label = "SD only"),
     actionButton(ns("clear"), label = "Clear"),
     uiOutput(ns("index_ui"))
