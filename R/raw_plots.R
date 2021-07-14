@@ -9,6 +9,7 @@ MAX_POINTS <- Inf
 
 #' @import ggplot2
 #' @importFrom ggetho scale_x_hours geom_ld_annotations
+#' @importFrom cowplot get_x_axis
 rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
   moduleServer(
