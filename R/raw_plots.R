@@ -114,7 +114,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         validate(need(nrow(raw_dataset()) > 0, "No data available"))
         x_limits <- c(
           floor(min(raw_dataset()$t) / 3600) * 3600,
-          ceiling(min(raw_dataset()$t) / 3600) * 3600,
+          ceiling(max(raw_dataset()$t) / 3600) * 3600
         )
         ggplot(data = raw_dataset(), aes(x = t, y = x)) + ggplot2::geom_point() +
           ggetho::scale_x_hours(limits = x_limits) + ggetho::geom_ld_annotations(color=NA, height=1, alpha=0.2) +
