@@ -17,7 +17,6 @@ LazyData: true
 Imports: 
     data.table,
     dplyr,
-    cowplot,
     ggplot2,
     lubridate,
     magrittr,

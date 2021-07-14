@@ -7,9 +7,16 @@ DEBUG <- conf$content$debug
 MAX_POINTS <- Inf
 
 
+get_x_axis <- function(gg) {
+
+  scales <- gg$scales$scales
+  index_x_axis <- lapply(scales, function(s) {"x" %in% s$aesthetics}) %>% unlist %>% which
+  x_axis <- scales[[index_x_axis]]
+  return(x_axis)
+}
+
 #' @import ggplot2
 #' @importFrom ggetho scale_x_hours geom_ld_annotations
-#' @importFrom cowplot get_x_axis
 rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
   moduleServer(
@@ -115,7 +122,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
       output$plot_y <- renderPlot({
 
-        x_axis <- cowplot::get_x_axis(plot_x())
+        x_axis <- get_x_axis(plot_x())
         validate(need(nrow(raw_dataset()) > 0, "No data available"))
         ggplot(data = raw_dataset(), aes(x = t, y = y)) + ggplot2::geom_point() +
           x_axis + ggetho::geom_ld_annotations(color=NA, height=1, alpha=0.2) +
@@ -124,7 +131,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
       output$plot_sleep <- renderPlot({
 
-        x_axis <- cowplot::get_x_axis(plot_x())
+        x_axis <- get_x_axis(plot_x())
         ggplot(data = sleep_dataset(), aes(x = t, y = asleep)) +
           ggetho::geom_pop_etho() +
           x_axis +
@@ -134,7 +141,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
       output$plot_interactions <- renderPlot({
 
-        x_axis <- cowplot::get_x_axis(plot_x())
+        x_axis <- get_x_axis(plot_x())
 
         ggplot(data = interactions_dataset(), aes(x = t, y = interactions)) +
           ggetho::geom_pop_etho() +
