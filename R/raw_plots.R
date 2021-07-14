@@ -17,6 +17,7 @@ get_x_axis <- function(gg) {
 
 #' @import ggplot2
 #' @importFrom ggetho scale_x_hours geom_ld_annotations
+#' @importFrom htmltools tagAppendAttributes
 rawPlotsServer <- function(id, sleep_data, interactions_data) {
 
   moduleServer(
@@ -165,7 +166,8 @@ rawPlotsUI <- function(id) {
       checkboxInput(ns("sd_only"), "SD only", value = TRUE),
       numericInput(ns("downsample"), label = "Downsample", value = 100, min = 1, max = 1000, step = 1),
       uiOutput(ns("animal_id_ui")),
-      sliderInput(ns("time_range"), label = "Time range", min = 0, max = behavr::days(7) / 3600, step = 6, value = c(0, behavr::days(7) / 3600), )
+      sliderInput(ns("time_range"), label = "Time range", min = 0, max = behavr::days(7) / 3600, step = 1, value = c(0, behavr::days(7) / 3600), ) %>%
+        htmltools::tagAppendAttributes(., style='width: 900px; max-width: 900px')
     ),
     plotOutput(ns("plot_x")),
     plotOutput(ns("plot_y")),

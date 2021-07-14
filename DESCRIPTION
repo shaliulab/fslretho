@@ -21,6 +21,7 @@ Imports:
     lubridate,
     magrittr,
     magick,
+    htmltools,
     shiny,
     shinydashboard,
     shinydashboardPlus,
