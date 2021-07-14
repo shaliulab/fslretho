@@ -49,9 +49,9 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
         # because the column file_info is a list
         dt <- fortify(dt, meta = TRUE)
 
-        qc <- load_ethoscope_qc(
-          metadata = metadata()
-        )
+        #qc <- load_ethoscope_qc(
+        #  metadata = metadata()
+        #)
 
         attr(dt, "monitor") <- "ethoscope"
         dt

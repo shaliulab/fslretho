@@ -243,7 +243,7 @@ read_sd_daterange <- function(meta_row) {
   metadata <- get_metadata(sapply(meta_row$file_info, function(x) x$path))
   date_range <- metadata$selected_options$interactor$kwargs$date_range
   if (is.null(date_range)) {
-    timestamps <- c(Inf, Inf)
+    timestamps <- c(-1, -1)
 
   } else {
     timestamps <- strsplit(date_range, split = "  ") %>% lapply(., function(x) {
