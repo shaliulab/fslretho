@@ -99,26 +99,45 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         d
       })
 
-      output$plot_raw <- renderPlot({
+
+      plot_x <- reactive({
+
         validate(need(nrow(raw_dataset()) > 0, "No data available"))
         ggplot(data = raw_dataset(), aes(x = t, y = x)) + ggplot2::geom_point() +
           ggetho::scale_x_hours() + ggetho::geom_ld_annotations(color=NA, height=1, alpha=0.2) +
           facet_wrap("id")
       })
 
+      output$plot_x <- renderPlot({
+        plot_x()
+      })
+
+      output$plot_y <- renderPlot({
+
+        x_axis <- cowplot::get_x_axis(plot_x())
+        validate(need(nrow(raw_dataset()) > 0, "No data available"))
+        ggplot(data = raw_dataset(), aes(x = t, y = y)) + ggplot2::geom_point() +
+          x_axis + ggetho::geom_ld_annotations(color=NA, height=1, alpha=0.2) +
+          facet_wrap("id")
+      })
 
       output$plot_sleep <- renderPlot({
+
+        x_axis <- cowplot::get_x_axis(plot_x())
         ggplot(data = sleep_dataset(), aes(x = t, y = asleep)) +
           ggetho::geom_pop_etho() +
-          ggetho::scale_x_hours() +
+          x_axis +
           ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
           facet_wrap("id")
       })
 
       output$plot_interactions <- renderPlot({
+
+        x_axis <- cowplot::get_x_axis(plot_x())
+
         ggplot(data = interactions_dataset(), aes(x = t, y = interactions)) +
           ggetho::geom_pop_etho() +
-          ggetho::scale_x_hours() +
+          x_axis +
           ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
           facet_wrap("id")
       })
@@ -140,7 +159,8 @@ rawPlotsUI <- function(id) {
       uiOutput(ns("animal_id_ui")),
       sliderInput(ns("time_range"), label = "Time range", min = 0, max = behavr::days(7) / 3600, step = 6, value = c(0, behavr::days(7) / 3600), )
     ),
-    plotOutput(ns("plot_raw")),
+    plotOutput(ns("plot_x")),
+    plotOutput(ns("plot_y")),
     plotOutput(ns("plot_sleep")),
     plotOutput(ns("plot_interactions"))
   )
