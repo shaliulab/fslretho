@@ -67,7 +67,7 @@ loadSessionUI <- function(id) {
   )
 }
 
-loadSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
+loadSessionServer <- function(id, refresh=reactiveVal(0)) {
 
   moduleServer(
     id,
@@ -75,7 +75,9 @@ loadSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
 
       output_rv <- reactiveValues(
         ethoscope = reactiveValues(data = NULL, name = NULL, time = NULL),
-        dam = reactiveValues(data = NULL, name = NULL, time = NULL)
+        dam = reactiveValues(data = NULL, name = NULL, time = NULL),
+        metadata = NULL,
+        metadata_datapath = NULL
       )
 
       sessions <- reactive({
@@ -90,17 +92,17 @@ loadSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
         )
       })
 
-      observeEvent(input_rv$ethoscope$time, {
-        output_rv$ethoscope$data <- input_rv$ethoscope$data
-        output_rv$ethoscope$name <- input_rv$ethoscope$name
-        output_rv$ethoscope$time <- input_rv$ethoscope$time
-      }, ignoreInit = TRUE)
-
-      observeEvent(input_rv$dam$time, {
-        output_rv$dam$data <- input_rv$dam$data
-        output_rv$dam$name <- input_rv$dam$name
-        output_rv$dam$time <- input_rv$dam$time
-      }, ignoreInit = TRUE)
+      # observeEvent(input_rv$ethoscope$time, {
+      #   output_rv$ethoscope$data <- input_rv$ethoscope$data
+      #   output_rv$ethoscope$name <- input_rv$ethoscope$name
+      #   output_rv$ethoscope$time <- input_rv$ethoscope$time
+      # }, ignoreInit = TRUE)
+      #
+      # observeEvent(input_rv$dam$time, {
+      #   output_rv$dam$data <- input_rv$dam$data
+      #   output_rv$dam$name <- input_rv$dam$name
+      #   output_rv$dam$time <- input_rv$dam$time
+      # }, ignoreInit = TRUE)
 
       observeEvent(input$button, {
         req(input$path)
@@ -108,6 +110,16 @@ loadSessionServer <- function(id, input_rv, refresh=reactiveVal(0)) {
         if (DEBUG) message("Loading cached session")
         read_rv <- read_reactiveValuesRDS(file.path(session_folder, paste0(input$path, ".rds")))
         monitor <- ifelse("machine_name" %in% colnames(read_rv$data[,meta=TRUE]) | "xy_dist_log10x1000" %in% colnames(read_rv$data), "ethoscope", "dam")
+
+        if (monitor == "ethoscope") {
+          metadata <- behavr::meta(read_rv$data)
+          metadata <- scopr::unlink_ethoscope_metadata(metadata)
+          temp_file <- tempfile(pattern = "cached_metadata", fileext = ".csv")
+          data.table::fwrite(x = metadata, file = temp_file)
+          output_rv$metadata <- metadata
+          output_rv$metadata_datapath <- temp_file
+        }
+
         output_rv[[monitor]]$data <- read_rv$data
         output_rv[[monitor]]$name <- read_rv$name
         output_rv[[monitor]]$time <- read_rv$time
@@ -187,12 +199,12 @@ saveLoadSessionUI <- function(id) {
 }
 
 
-saveLoadSessionServer <- function(id, input_rv)  {
+saveLoadSessionServer <- function(id)  {
   moduleServer(
     id,
     function(input, output, session) {
       refresh <- reactiveVal(0)
-      output_rv <- loadSessionServer("load", input_rv, refresh)
+      output_rv <- loadSessionServer("load", refresh)
       saveSessionServer("save", output_rv, refresh)
       return(output_rv)
     }

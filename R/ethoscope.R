@@ -22,9 +22,14 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
         annotation_conf$FUN
       })
 
+      observe({
+        metadata()
+        browser()
+      })
 
-      dt <- eventReactive(c(buttons(), reactiveValuesToList(annotation_conf)), {
+      dt <- eventReactive(c(buttons(), reactiveValuesToList(annotation_conf), metadata()), {
 
+        browser()
         req(name())
         progress_bar <- get_progress_bar(nrow(metadata()), "Loading data to memory (R)", ncores=NCORES)
         on.exit(progress_bar$progress$close())
@@ -57,6 +62,10 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
         dt
       }, ignoreInit = TRUE)
 
+      observeEvent(dt(), {
+        browser()
+      })
+
       dt_validated <- reactive({
         if (nrow(dt()) == 0) {
           showNotification("Failure: your metadata could be linked but the resulting table is empty", type = "error")
@@ -66,11 +75,12 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
 
 
       observeEvent(dt(), {
+        browser()
         req(dt())
         output_rv$data <- dt()
         output_rv$name <- name()
         output_rv$time <- as.numeric(Sys.time())
-      })
+      }, ignoreInit = TRUE)
 
       return(output_rv)
     })

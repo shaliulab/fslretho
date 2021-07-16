@@ -134,7 +134,7 @@ loadDataUI <- function(id, help_text = "") {
 }
 
 
-loadDataServer <- function(id, reload) {
+loadDataServer <- function(id, input_rv, reload) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -148,9 +148,16 @@ loadDataServer <- function(id, reload) {
         input$submit
       )
 
-      metadata_datapath <- reactive({
-        input$metadata$datapath
-      })
+      metadata_datapath <- reactiveVal(NULL)
+
+      observeEvent(input$metadata$datapath, {
+        metadata_datapath(input$metadata$datapath)
+      }, ignoreInit = TRUE)
+
+      observeEvent(input_rv$metadata_datapath, {
+        metadata_datapath(input_rv$metadata_datapath)
+      }, ignoreInit = TRUE)
+
 
 
       annotation_conf <- scoreDataServer("annotation")

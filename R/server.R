@@ -15,20 +15,20 @@ server <- function(input, output, session) {
   ## Preparation ----
   # Run a simple ethoscope backup manager
   backupManagerServer("manageBackup")
+  loaded_data <- saveLoadSessionServer("sessions")
 
   ## Load ----
   # Here the choice between dam or ethoscope happens
   # After this, the data has only one module
-  scored_data <- loadDataServer("loadData", reload)
+  scored_data <- loadDataServer("loadData", loaded_data, reload)
 
   # In case the user wants to use a builtin dataset
-  loaded_data <- saveLoadSessionServer("sessions", scored_data)
 
   snapshotViewerServer("snapshot_viewer", loaded_data)
 
   ## Score ----
   # scored_data <- scoreDataServer("scoreData", loaded_data)
-  selected_data <- monitorSelectorServer("selectData", loaded_data)
+  selected_data <- monitorSelectorServer("selectData", scored_data)
   monitor <- reactive({
     selected_data$monitor
   })

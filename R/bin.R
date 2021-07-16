@@ -91,6 +91,8 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
         req(preproc_data())
 
+        browser()
+
         x <- input_rv$variables
         if (!is.null(preproc_FUN)) {
           x <- c(attr(preproc_FUN, "variables")(), x)
@@ -122,6 +124,8 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           warning("Some variables are not in the data")
 
         req(any(kept_y))
+
+        browser()
 
         binned_dataset <- behavr::bin_all(
           data = preproc_data(),

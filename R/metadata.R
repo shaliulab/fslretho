@@ -112,6 +112,7 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
 
       datapath <- reactive({
         req(metadata_path())
+        print(metadata_path())
         metadata_path()[sapply(metadata_path(), get_monitor_name) == monitor]
       })
 
@@ -128,6 +129,9 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
 
       metadata_link_validated <- reactive({
 
+        browser()
+        req(metadata_linked())
+
         if (nrow(metadata_linked()) == 0) {
           shiny::showNotification("Failure: no matches were found in the local ethoscope database.
                            This could be due to typos in the machine_name, date, etc; or
@@ -135,6 +139,7 @@ loadMetadataServer <- function(id, metadata_path, monitor, result_dir) {
                            Check your metadata and/or the local database to find out which is the problem", type = "error")
           shiny::validate(shiny::need(FALSE, label = ""))
         } else {
+          message("Success")
           showNotification("Success")
           metadata_linked()
         }
