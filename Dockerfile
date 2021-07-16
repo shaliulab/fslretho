@@ -95,18 +95,33 @@ RUN sudo chown shiny:shiny /ethoscope_data
 RUN sudo chown shiny:shiny /fslretho_data
 
 
-RUN R -e "devtools::install('/opt/behavr')"
-RUN R -e "devtools::install('/opt/scopr')"
 RUN R -e "devtools::install('/opt/damr')"
 RUN R -e "devtools::install('/opt/sleepr')"
 RUN R -e "devtools::install('/opt/ggetho')"
 RUN R -e "devtools::install('/opt/zeitgebr')"
 
-RUN cd /opt/esquisse && git pull
-RUN cd /opt/fslretho && git pull
+RUN cd /opt/behavr && git pull
+RUN R -e "devtools::install('/opt/behavr')"
 
+RUN cd /opt/scopr && git pull
+RUN R -e "devtools::install('/opt/scopr')"
+
+RUN cd /opt/esquisse && git pull
 RUN R -e "devtools::install('/opt/esquisse')"
+
+
+RUN R -e "install.packages('waiter')"
+COPY inst/configuration/scopr.conf /etc/scopr.conf
+RUN cd /opt/fslretho && git pull
+RUN R -e "install.packages('isoband')"
+RUN cd /opt/fslretho && git pull
 RUN R -e "devtools::install('/opt/fslretho')"
+RUN chown shiny:shiny /etc/scopr.conf
+RUN cd /opt/fslretho && git pull
+RUN R -e "devtools::install('/opt/fslretho')"
+RUN cd /opt/fslretho && git pull
+RUN R -e "devtools::install('/opt/fslretho')"
+
 
 # run app
 CMD ["/usr/bin/shiny-server"]
