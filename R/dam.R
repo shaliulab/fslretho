@@ -63,8 +63,7 @@ loadDamServer <- function(id, metadata_datapath, submit, reload, input, session)
         }
 
         dt_raw <- fsldamr::load_dam(metadata_linked(), FUN = NULL, updateProgress = updateProgress) %>%
-          fortify(., meta = TRUE)
-
+          behavr::simplify_behavr(., meta = TRUE)
         attr(dt_raw, "monitor") <- "dam"
         dt_raw
       })

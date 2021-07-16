@@ -14,8 +14,9 @@ get_header <- function() {
   scoring_ui <- shinydashboardPlus::dropdownBlock(
     id = "scoringInput",
     title = "Scoring parameters",
-    scoreDataUI("loadData-annotation")
-  )
+    superScoreDataUI("loadData-annotation")
+  )# %>% htmltools::tagAppendAttributes(., style='width: 1200px; max-width: 1200px')
+
 
   sleep_binning_ui <- shinydashboardPlus::dropdownBlock(
     id = "sleep_binningInput",

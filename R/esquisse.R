@@ -27,6 +27,7 @@ esquisseModuleServer <- function(id, input_rv, ...) {
 
       output_rv <- esquisse::esquisse_server(
         "esquisse",
+        default_aes = c("fill", "color", "size", "group", "facet", "facet_row", "facet_col", "linetype"),
         data_rv = esquisse_rv,
         data_modal = FALSE,
         ...

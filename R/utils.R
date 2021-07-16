@@ -50,39 +50,6 @@ abort_bad_argument <- function(arg, must, not = NULL) {
 #   behavr::behavr(x = x, metadata = metadata)
 # }
 
-#' Make a writable behavr object
-#' @param data A rejoined behavr or any data.table object
-#' @param meta If TRUE, repeat also for the metadata
-#' @return A behavr table with no columns of type list
-#' TODO Possibly this should be part of a fwrite_behavr function in behavr
-#' @importFrom dplyr pull
-fortify <- function(data, meta = FALSE) {
-
-  if(meta) {
-    metadata <- data[, meta = T]
-    metadata <- fortify(metadata, FALSE)
-    behavr::setmeta(data, metadata)
-  }
-
-  types <- sapply(1:ncol(data), function(i) {
-    column_name <- colnames(data)[i]
-    res <- c(is.list(data[[i]]))
-    names(res) <- column_name
-    res
-  })
-
-  if (sum(types) != 0) {
-    for (column in which(types)) {
-
-      single_column <- dplyr::pull(data[, column, with = F])
-      single_column <- lapply(single_column, function(x) x[[1]])
-      cmd <- sprintf("%s := single_column", names(types)[column])
-      data[, eval(parse(text = cmd))]
-    }
-  }
-  return(data)
-}
-
 
 #' Prepend a filename (or any character) with a datetime signature
 #'
@@ -231,34 +198,6 @@ get_progress_bar <- function(n, message, duration=2, ncores=1) {
 }
 
 
-#' Query a database for interactor date range start / end
-#' @param meta_row A row of metadata
-#' @return Integer vector of length 2 stating the milliseconds since experiment start
-#' until onset and end of sleep deprivation treatment in the animal captured by the metadata
-read_sd_daterange <- function(meta_row) {
-
-  # TODO Because fortify does not work well, file_info is still a list
-  # (even if each element just has length 1)
-
-  metadata <- get_metadata(sapply(meta_row$file_info, function(x) x$path))
-  date_range <- metadata$selected_options$interactor$kwargs$date_range
-  if (is.null(date_range)) {
-    timestamps <- c(-1, -1)
-
-  } else {
-    timestamps <- strsplit(date_range, split = "  ") %>% lapply(., function(x) {
-      x %>% as.POSIXct(tz = "GMT") %>% as.numeric
-    }) %>% unlist
-  }
-
-  date_time <- metadata$date_time
-  experiment_info <- list(date_time = as.POSIXct(metadata$date_time, origin = "1970-01-01", tz = "GMT"))
-
-  ms_after_ref <- scopr::get_ms_after_ref(experiment_info, meta_row$reference_hour)
-
-  timestamps_from_t0 <- timestamps - date_time + (ms_after_ref / 1e3)
-  return(timestamps_from_t0)
-}
 
 #' Incorporate daterange information to a behavr table
 #' @param dt A behavr table
@@ -269,7 +208,7 @@ parse_sd_daterange <- function(dt) {
   meta <- behavr::meta(dt)
   # be careful! this c() is coercing the stuff in . to a character
   # . are numbers that are now becoming characters silently
-  timestamp_daterange <- 1:nrow(meta) %>% lapply(., function(i) read_sd_daterange(meta[i, ,drop=F]) %>% c(meta[i, as.character(id)], .)) %>%
+  timestamp_daterange <- 1:nrow(meta) %>% lapply(., function(i) scopr::load_sd_daterange(meta[i, ,drop=F]) %>% c(meta[i, as.character(id)], .)) %>%
     do.call(rbind, .) %>%
     as.data.table
 

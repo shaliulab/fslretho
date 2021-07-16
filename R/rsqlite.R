@@ -1,16 +1,26 @@
 #' @import RSQLite
-sqlite <- function(file, statement) {
+sqlite_statement <- function(file, statement, flags=RSQLite::SQLITE_RO, verbose=F) {
 
-  con <- RSQLite::dbConnect(RSQLite::SQLite(), file, flags = RSQLite::SQLITE_RO)
+  message("Opening connection")
+  con <- RSQLite::dbConnect(RSQLite::SQLite(), file, flags = flags)
 
+  # browser()
+  error <- FALSE
   dt <- tryCatch({
-      RSQLite::dbGetQuery(conn = con, statement = statement)
+    message("Executing statement")
+    if (verbose) {
+      print(statement)
+    }
+    RSQLite::dbBegin(con)
+    RSQLite::dbExecute(conn = con, statement = statement)
+    RSQLite::dbCommit(con)
   }, error = function(e) {
-    warning("Could not execute SQL query successfully")
-    message(e)
-  }, finally = function() {
-    RSQLite::dbDisconnect(con)
+    warning("Could not execute SQL statement successfully")
+    warning(e)
+    error <<- TRUE
   })
 
+  message("Closing connection")
+  RSQLite::dbDisconnect(con)
   return(dt)
 }

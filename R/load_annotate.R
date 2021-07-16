@@ -50,18 +50,21 @@ DEBUG <- conf$content$debug
 #' @importFrom shiny NS uiOutput
 scoreDataUI <- function(id) {
   ns <- shiny::NS(id)
-  tagList(
-    shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001),
-    shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 60, max = 600, value = 300, step = 10),
-    actionButton(ns("time300"), label = "Min time immobile = 300"),
-    actionButton(ns("time60"), label = "Min time immobile = 60"),
-    shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5),
-    shiny::selectizeInput(
-      ns("FUN"), label = "",
-      choices = c("sleep annotation", "distance annotation", "SD in-progress annotation"),
-      selected = c("sleep annotation", "SD in-progress annotation"),
-      multiple=TRUE
-    )
+  fluidPage(fluidRow(
+      column(3, shiny::sliderInput(ns("velocity_correction_coef"), label = "Threshold (velocity correction coef)", min = 0.001, max = 0.006, value = 0.0048, step = 0.0001)),
+      column(3, shiny::sliderInput(ns("min_time_immobile"), label = "Mimimum time immobile", min = 60, max = 600, value = 300, step = 10)),
+      column(3, tagList(actionButton(ns("time300"), label = "Min time immobile = 300"), actionButton(ns("time60"), label = "Min time immobile = 60")))
+    ),
+  fluidRow(
+      column(3, shiny::sliderInput(ns("time_window_length"), label = "Window duration", min = 5, max = 60, value = 10, step = 5)),
+      column(4, shiny::selectizeInput(
+          ns("FUN"), label = "",
+          choices = c("sleep annotation", "distance annotation", "SD in-progress annotation"),
+          selected = c("sleep annotation", "SD in-progress annotation"),
+          multiple=TRUE
+        )
+      )
+   )
   )
   # shiny::uiOutput(ns("scoringInput"))
 }
@@ -98,6 +101,58 @@ scoreDataServer <- function(id) {
     }
   )
 }
+
+
+superScoreDataServer <- function(id) {
+
+  moduleServer(
+    id,
+    function(input, output, session) {
+
+      default_conf <- scoreDataServer("default")
+      sd_conf <- scoreDataServer("sd")
+      output_rv = reactiveValues()
+
+      observeEvent(c(lapply(default_conf, invisible), lapply(sd_conf, invisible)), {
+        for (arg_name in names(default_conf)) {
+          output_rv[[arg_name]] <- default_conf[[arg_name]]
+        }
+        for (arg_name in names(sd_conf)) {
+          output_rv[[paste0(arg_name, "_sd")]] <- sd_conf[[arg_name]]
+        }
+      }, ignoreInit = FALSE)
+
+
+      observeEvent(input$differentiate_SD, {
+        if (! input$differentiate_SD) output_rv$intervals <- NULL
+        else output_rv$intervals <- list(interval_sd = "SD")
+      })
+
+      return(output_rv)
+  })
+}
+
+superScoreDataUI <- function(id) {
+
+  ns <- NS(id)
+
+  inputPanel(
+    div(
+      fluidRow(
+        tags$h2("Default annotation parameters"),
+        scoreDataUI(ns("default"))
+      ), style="width: 600px; max-width: 600px"
+    ) %>% htmltools::tagAppendAttributes(., style='width: 600px; max-width: 600px'),
+    div(
+      fluidRow(
+        tags$h2("SD annotation parameters"),
+        checkboxInput(ns("differentiate_SD"), label = "Differentiate SD", value = FALSE),
+        scoreDataUI(ns("sd"))
+      ), style="width: 600px; max-width: 600px"
+    )  %>% htmltools::tagAppendAttributes(., style='width: 600px; max-width: 600px')
+  ) #%>% htmltools::tagAppendAttributes(., style='width: 600px; max-width: 600px')
+}
+
 
 #' @importFrom tools toTitleCase
 loadDataUI <- function(id, help_text = "") {
@@ -153,7 +208,7 @@ loadDataServer <- function(id, reload) {
       })
 
 
-      annotation_conf <- scoreDataServer("annotation")
+      annotation_conf <- superScoreDataServer("annotation")
 
       ethoscope_result <- loadEthoscopeServer("ethoscope", metadata_datapath, submit, reload, input$result_dir_ethoscope,
                                               annotation_conf=annotation_conf)

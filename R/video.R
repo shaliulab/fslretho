@@ -76,7 +76,7 @@ dbfileSummaryModule <- function(id, dbfile, trigger) {
           data,
           data.table::data.table(
             path = dbfile(),
-            count = sqlite(dbfile(), "SELECT COUNT(id) as count FROM IMG_SNAPSHOTS;")$count
+            count = scopr::sqlite(dbfile(), "SELECT COUNT(id) as count FROM IMG_SNAPSHOTS;")$count
           )
         )
         data
@@ -159,7 +159,7 @@ snapshotManager <- function(id, dbfile, metadata) {
 
 
       ids <- reactive({
-        sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
+        scopr::sqlite(file = dbfile(), statement = "SELECT id FROM IMG_SNAPSHOTS;")$id
       })
 
       available_ids <- reactive({
@@ -194,7 +194,7 @@ snapshotManager <- function(id, dbfile, metadata) {
           block_structure(block_str)
           available_ids()[available_ids() %in% ids_all]
         } else {
-          t_ms <- sort(sqlite(file = dbfile(), statement = "SELECT t FROM IMG_SNAPSHOTS;")$t)
+          t_ms <- sort(scopr::sqlite(file = dbfile(), statement = "SELECT t FROM IMG_SNAPSHOTS;")$t)
           #t_ms <- sort(as.integer(sapply(filenames_without_extension, function(x) unlist(strsplit(basename(x), split = "_"))[2])))
           t_s <- t_ms / 1000
           start_blocks <- which(!duplicated(floor(t_s / BLOCK_SIZE)))
@@ -223,9 +223,9 @@ snapshotManager <- function(id, dbfile, metadata) {
 
           # this should return the number of shots during SD
           sql_statement <- paste0("SELECT COUNT(id) AS count FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
-          if (sqlite(dbfile(), sql_statement)$count != 0) {
+          if (scopr::sqlite(dbfile(), sql_statement)$count != 0) {
             sql_statement <- paste0("SELECT id FROM IMG_SNAPSHOTS WHERE t > ", t_range[1] - BLOCK_SIZE*1000, " AND t < ", t_range[2] + BLOCK_SIZE*1000, ";")
-            ids <- sqlite(dbfile(), sql_statement)$id
+            ids <- scopr::sqlite(dbfile(), sql_statement)$id
             updateSelectizeInput(inputId = "ids", selected = ids)
 
           } else {
@@ -310,7 +310,7 @@ roiManager <- function(id, image, dbfile) {
     function(input, output, session) {
       roi_map <- reactive({
 
-        roi_map <- as.data.table(sqlite(req(dbfile()), "SELECT roi_value,x,y,w,h FROM ROI_MAP"))
+        roi_map <- as.data.table(scopr::sqlite(req(dbfile()), "SELECT roi_value,x,y,w,h FROM ROI_MAP"))
         width <- magick::image_info(image())$width
 
         roi_map[, side := NA_character_]
@@ -393,7 +393,7 @@ snapshotViewerServer <- function(id, input_rv, dbfile_user = reactiveVal(NULL), 
       dbfile <- selectDBFileServer("dbfile_selector", input_rv, dbfile_user)
 
       metadata <- reactive({
-        get_metadata(dbfile())
+        scopr::get_metadata(dbfile())
       })
 
 

@@ -110,32 +110,4 @@ append_roi <- function(roi_list, ...) {
 }
 
 
-#' Parse the json data extracted from the METADATA - selected_options of a dbfile
-#' into an R list
-#' @param metadata list produced by reading into R the result of the SELECT * FROM METADATA statement
-#' and putting each row into an element of the list, where the field is the list element's name and the value is the list element's value
-get_selected_options <- function(metadata) {
-
-  selected_options <- metadata$selected_options %>%
-    gsub(x = ., pattern = "'", replacement = '"') %>%
-    gsub(x = ., pattern = "<class ", replacement = "") %>%
-    gsub(x=., pattern = ">", replacement = "") %>%
-    gsub(x=., pattern = "\\(\\)", replacement = '""') %>%
-    jsonlite::parse_json(json = .)
-  return(selected_options)
-}
-
-get_metadata <- function(FILE) {
-
-  metadata <- as.data.table(sqlite(FILE, "SELECT * FROM METADATA;"))
-  value <- as.list(metadata$value)
-  names(value) <- metadata$field
-  metadata <- value
-  metadata$selected_options <- get_selected_options(metadata)
-  metadata$date_time <- as.numeric(metadata$date_time)
-  metadata$frame_width <- as.numeric(metadata$frame_width)
-  metadata$frame_height <- as.numeric(metadata$frame_height)
-
-  return(metadata)
-}
 

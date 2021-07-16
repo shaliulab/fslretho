@@ -156,6 +156,11 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           # binned_dataset <- merged_dataset
         }
 
+        if ("interval" %in% colnames(preproc_data())) {
+          binned_dataset$interval <- behavr::bin_apply_all(data = preproc_data(), x_bin_length = behavr::mins(summary_time_window_r()), y = "interval", FUN = function(x) names(table(x))[1])$interval
+        }
+
+
         output_rv$data <- binned_dataset
         output_rv$name <- input_rv$name
         output_rv$time <- Sys.time()

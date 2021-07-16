@@ -29,7 +29,13 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
         progress_bar <- get_progress_bar(nrow(metadata()), "Loading data to memory (R)", ncores=NCORES)
         on.exit(progress_bar$progress$close())
 
+        annotation_params <- reactiveValuesToList(annotation_conf)
+        params <- annotation_params[setdiff(names(annotation_params), "intervals")]
+        intervals <- annotation_params$intervals
+
+
         if (DEBUG) message("Running ethoscope data load")
+
 
         dt <- do.call(
           scopr::load_ethoscope,
@@ -39,15 +45,17 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
             ncores = NCORES,
             cache = CACHE,
             verbose = VERBOSE,
-            callback = progress_bar$update
+            callback = progress_bar$update,
+            intervals = intervals
           ),
-          reactiveValuesToList(annotation_conf)
+          params
           )
         )
 
+
         # needed to be able to save the dt
         # because the column file_info is a list
-        dt <- fortify(dt, meta = TRUE)
+        dt <- behavr::simplify_behavr(dt, meta = TRUE)
 
         #qc <- load_ethoscope_qc(
         #  metadata = metadata()

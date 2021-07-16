@@ -140,8 +140,8 @@ load_ethoscope_qc <- function(metadata) {
   qc <- tryCatch({
     qcs <- lapply(metadata$file_info, function(x) {
       message(paste0("Loading QC from ", x$path))
-      qc <- data.table::as.data.table(sqlite(file = x$path, "SELECT * FROM QC;"))
-      roi_map <- data.table::as.data.table(sqlite(file = x$path, "SELECT * FROM ROI_MAP;"))
+      qc <- data.table::as.data.table(scopr::sqlite(file = x$path, "SELECT * FROM QC;"))
+      roi_map <- data.table::as.data.table(scopr::sqlite(file = x$path, "SELECT * FROM ROI_MAP;"))
       ids <- paste0(substr(basename(x$path), 1, 26), "|", stringr::str_pad(string = roi_map$roi_value, width = 2, pad = "0"))
 
       ids <- rep(ids, each=nrow(qc))
