@@ -170,16 +170,16 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
           dt
         })
 
-        dt <- do.call(rbind_behavr, dts_by_id)# %>% rejoin
+        dt <- Reduce(rbind_behavr, dts_by_id)# %>% rejoin
         # I need to do set meta again because rbin_behavr is replicating every metadata row
         # i.e. it is rbinding identical metadatas
         behavr::setmeta(dt, metadata())
-        tryCatch(
-          behavr::rejoin(dt),
-          error = function(e) {
-            browser()
-          }
-        )
+        # tryCatch(
+        #   behavr::rejoin(dt),
+        #   error = function(e) {
+        #     browser()
+        #   }
+        # )
         dt
       })
 
