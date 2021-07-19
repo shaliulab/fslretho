@@ -10,7 +10,7 @@ PARETO <- TRUE
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
 Y_VARS <- c(
-  "asleep", "moving", "interactions", "is_interpolated",
+  "asleep", "moving", "interactions", "is_interpolated", "x",
   "beam_crosses", "max_velocity", "interval", "sd_on", "duration"
 )
 
@@ -128,12 +128,15 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
         y_vars <- Y_VARS[Y_VARS %in% colnames(input_data)]
 
         dts <- lapply(y_vars, function(y_var) {
+
+
           if(y_var %in% c("interval", "sd_on")) {
             fun <- function(x) names(table(x))[1]
+          } else if (y_var %in% "x") {
+            fun <- pareto_sd
           } else {
             fun <- functions[[summary_FUN_r()]]
           }
-          print(y_var)
 
           dt2 <- lapply(interval_values, function(interv) {
             data  <- input_data[interval == interv, ]
@@ -148,11 +151,13 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
             setkey(dt, id, interval)
             dt
           })
+
           dt <- Reduce(rbind_behavr, dt2)
           setkey(dt, id)
           behavr::setmeta(dt, metadata())
           setkey(dt, id, interval)
         })
+
 
         dts_by_id <- lapply(dts[[1]][, as.character(unique(id))], function(id_val) {
 

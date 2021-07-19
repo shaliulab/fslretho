@@ -73,7 +73,7 @@ pareto_sd <- function(x, n = 10, min_max_crop=TRUE, space_fraction=0.2, time_fra
   top_p <- sort(split_fraction, decreasing = T)[1:n_splits]
 
   # did the animal spend more than time_fraction % of the time in these p regions?
-  more_than_time_fraction_time_in_top_p <- sum(top_p) > time_fraction
+  more_than_time_fraction_time_in_top_p <- as.numeric(sum(top_p) > time_fraction)
   return(more_than_time_fraction_time_in_top_p)
 }
 
