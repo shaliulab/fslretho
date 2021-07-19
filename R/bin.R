@@ -9,6 +9,11 @@ FUN_choices <- c("mean", "median", "max", "min", "P_doze", "P_wake")
 PARETO <- TRUE
 functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
+Y_VARS <- c(
+  "asleep", "moving", "interactions", "is_interpolated",
+  "beam_crosses", "max_velocity", "interval", "sd_on", "duration"
+)
+
 
 conf <- FSLRethoConfiguration$new()
 DEBUG <- TRUE
@@ -19,15 +24,15 @@ binDataUI <- function(id, binning_variable="asleep") {
   tagList(
     sliderInput(ns("summary_time_window"), label = "Summary time window",
                 value = 30, min = 5, max = 120, step = 5),
-    selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean"),
+    selectizeInput(ns("summary_FUN"), label = "Summary function", choices = FUN_choices, selected = "mean")
     # textInput(ns("y"), label = "Y axis", value=binning_variable),
-    selectizeInput(inputId = ns("y"), label = "Y axis", choices = binning_variable,
-                   multiple=TRUE,
-                   selected = binning_variable
-                   ),
-    tags$h2("Quality refinement"),
-    checkboxInput(ns("pareto"), label = "Apply pareto principle", value = FALSE),
-    checkboxInput(ns("pareto_sd"), label = "If pareto is applied, should it be during SD only?", value = TRUE)
+    # selectizeInput(inputId = ns("y"), label = "Y axis", choices = binning_variable,
+    # multiple=TRUE,
+    # selected = binning_variable
+    # ),
+    # tags$h2("Quality refinement"),
+    # checkboxInput(ns("pareto"), label = "Apply pareto principle", value = FALSE),
+    # checkboxInput(ns("pareto_sd"), label = "If pareto is applied, should it be during SD only?", value = TRUE)
 
     # uiOutput(ns("y_ui"))
   )
@@ -48,14 +53,8 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
     id,
     function(input, output, session) {
 
-
-
-      y_r <- reactive({
-        if (is.null(y)) {
-          input$y
-        } else {
-          y
-        }
+      metadata <- reactive({
+        behavr::meta(input_rv$data)
       })
 
       summary_time_window_r <- reactive({
@@ -69,7 +68,7 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
       summary_FUN_r <- reactive({
         if (is.null(summary_FUN)) {
-        input$summary_FUN
+          input$summary_FUN
         } else {
           summary_FUN
         }
@@ -78,12 +77,24 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
       preproc_data <- reactive({
 
+        if (!"interval" %in% colnames(input_rv$data)) {
+          input_rv$data$interval <- "default"
+        }
+
         if (is.null(preproc_FUN)) {
           # just use the data as is
           input_rv$data
         } else {
           # preprocess it
-          preproc_FUN(data=input_rv$data, ...)
+          lapply(unique(input_rv$data$interval), function(interv) {
+            dt <- preproc_FUN(data=input_rv$data, ...)
+            dt$interval <- interv
+            dt
+          }) %>% Reduce(function(x, y) {
+            dt <- rbind_behavr(x, y);
+            behavr::setmeta(dt, metadata())
+            dt
+          }, .)
         }
       })
 
@@ -100,68 +111,76 @@ binDataServer <- function(id, input_rv, y = NULL, summary_time_window = NULL, su
 
       })
 
-      # output$y_ui <- renderUI({
-      #   message("Rendeing UI")
-      #   input_rv$time
-      # })
-
-      observeEvent(input_rv$time, {
-        # message("Updating bin-y")
-        updateSelectizeInput(inputId = "y", choices = variables(), selected = variables()[1])
-      }, ignoreInit = TRUE)
-
-      observeEvent(c(input_rv$time, summary_FUN_r(), summary_time_window_r(), input$pareto, input$pareto_sd, y_r()), {
+      dt <- reactive({
 
         req(input_rv$data)
-        req(y_r())
-        # if (length(y_r(()) > 1) browser()
+        input_data <- preproc_data()
         if (DEBUG) message(paste0("Binning data using ", summary_FUN_r()))
 
-        kept_y <- y_r() %in% colnames(preproc_data())
-        if (!all(kept_y) & sum(kept_y) > 0)
-          warning("Some variables are not in the data")
+        # if ("interval" %in% colnames(input_data)) {
+        interval_values <- unique(input_data$interval)
+        # } else {
+        #   interval_values <- "default"
+        #   input_data$interval <- "default"
+        # }
 
-        req(any(kept_y))
 
-        binned_dataset <- behavr::bin_all(
-          data = preproc_data(),
-          y = y_r()[kept_y],
-          x = "t",
-          x_bin_length = behavr::mins(summary_time_window_r()),
-          FUN = functions[[summary_FUN_r()]]
+        y_vars <- Y_VARS[Y_VARS %in% colnames(input_data)]
+
+        dts <- lapply(y_vars, function(y_var) {
+          if(y_var %in% c("interval", "sd_on")) {
+            fun <- function(x) names(table(x))[1]
+          } else {
+            fun <- functions[[summary_FUN_r()]]
+          }
+          print(y_var)
+
+          dt2 <- lapply(interval_values, function(interv) {
+            data  <- input_data[interval == interv, ]
+            dt <- behavr::bin_all(
+              data = data,
+              y = y_var,
+              x = "t",
+              x_bin_length = behavr::mins(summary_time_window_r()),
+              FUN = fun
+            )
+            dt$interval <- interv
+            setkey(dt, id, interval)
+            dt
+          })
+          dt <- Reduce(rbind_behavr, dt2)
+          setkey(dt, id)
+          behavr::setmeta(dt, metadata())
+          setkey(dt, id, interval)
+        })
+
+        dts_by_id <- lapply(dts[[1]][, as.character(unique(id))], function(id_val) {
+
+          dt <- Reduce(function(x, y) {
+            print(colnames(x))
+            merge_behavr(x[id == id_val, ], y[id == id_val, ], merge_meta=F)
+          }, dts)
+          setkey(dt, id)
+          behavr::setmeta(dt, metadata())
+          dt
+        })
+
+        dt <- do.call(rbind_behavr, dts_by_id)# %>% rejoin
+        # I need to do set meta again because rbin_behavr is replicating every metadata row
+        # i.e. it is rbinding identical metadatas
+        behavr::setmeta(dt, metadata())
+        tryCatch(
+          behavr::rejoin(dt),
+          error = function(e) {
+            browser()
+          }
         )
+        dt
+      })
 
 
-        if (allow_pareto && input$pareto) {
-
-          binned_dataset <- apply_pareto_rule(
-            preproc_data(), binned_dataset,
-            x_bin_length = behavr::mins(summary_time_window_r()),
-            sd_only=input$pareto_sd
-          )
-
-          # pareto_dataset <- behavr::bin_all(
-          #   data = preproc_data(),
-          #   y = "x",
-          #   x = "t",
-          #   x_bin_length = behavr::mins(ifelse(is.null(summary_time_window), summary_time_window_r(), summary_time_window)),
-          #   FUN = pareto_sd
-          # )
-          #
-          # setkey(binned_dataset, id, t)
-          # setkey(pareto_dataset, id, t)
-          # merged_dataset <- merge_behavr_all(binned_dataset, pareto_dataset)
-          # merged_dataset[, asleep := sapply(as.numeric(pareto * 1) + asleep, function(a) min(1, a))]
-          # setkey(merged_dataset, id)
-          # binned_dataset <- merged_dataset
-        }
-
-        if ("interval" %in% colnames(preproc_data())) {
-          binned_dataset$interval <- behavr::bin_apply_all(data = preproc_data(), x_bin_length = behavr::mins(summary_time_window_r()), y = "interval", FUN = function(x) names(table(x))[1])$interval
-        }
-
-
-        output_rv$data <- binned_dataset
+      observeEvent(c(input_rv$time, summary_FUN_r(), summary_time_window_r()), {
+        output_rv$data <- dt()
         output_rv$name <- input_rv$name
         output_rv$time <- Sys.time()
       }, ignoreInit = FALSE)
