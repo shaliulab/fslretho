@@ -62,7 +62,8 @@ scoreDataUI <- function(id) {
           choices = c("sleep annotation", "distance annotation", "SD in-progress annotation"),
           selected = c("sleep annotation", "SD in-progress annotation"),
           multiple=TRUE
-        )
+        ),
+      column(2, shiny::checkboxInput(ns("curate"), label = "Curate?", value = TRUE))
       )
    )
   )
@@ -93,6 +94,7 @@ scoreDataServer <- function(id) {
         output_rv$velocity_correction_coef <- req(input$velocity_correction_coef)
         output_rv$min_time_immobile <- req(input$min_time_immobile)
         output_rv$time_window_length <- req(input$time_window_length)
+        output_rv$curate <- req(input$curate)
         output_rv$FUN <- lapply(req(input$FUN), function(f) FUNCTION_MAP[[f]]$ethoscope)
       })
 
