@@ -11,7 +11,9 @@ functions <- list(mean, median, max, min, sleepr::p_doze, sleepr::p_wake)
 names(functions) <- FUN_choices
 Y_VARS <- c(
   "asleep", "moving", "interactions", "is_interpolated", "x",
-  "beam_crosses", "max_velocity", "interval", "sd_on", "duration"
+  "microbehavior", "micromovement",
+  "beam_crosses", "max_velocity", "interval", "sd_on", "duration",
+  "body_movement"
 )
 
 

@@ -36,7 +36,6 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
 
         if (DEBUG) message("Running ethoscope data load")
 
-
         dt <- do.call(
           scopr::load_ethoscope,
           append(list(
@@ -46,12 +45,17 @@ loadDtServer <- function(id, metadata, name=NULL, buttons=reactive(c()), annotat
             cache = CACHE,
             verbose = VERBOSE,
             callback = progress_bar$update,
-            intervals = intervals
+            intervals = intervals,
+            columns_to_keep =  c(
+              "t", "x", "y", "max_velocity", "body_movement", "micromovement",  "microbehavior", "interactions",
+              "beam_crosses", "moving","asleep", "is_interpolated")
+
           ),
           params
           )
         )
 
+        dt <- integrate_annotations(dt)
 
         # needed to be able to save the dt
         # because the column file_info is a list
