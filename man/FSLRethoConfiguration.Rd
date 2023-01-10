@@ -25,15 +25,15 @@ Called by running `FSLRethoConfiguration$new()`}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{FSLRethoConfiguration$new()}}
-\item \href{#method-save}{\code{FSLRethoConfiguration$save()}}
-\item \href{#method-load}{\code{FSLRethoConfiguration$load()}}
-\item \href{#method-clone}{\code{FSLRethoConfiguration$clone()}}
+\item \href{#method-FSLREthoConfiguration-new}{\code{FSLRethoConfiguration$new()}}
+\item \href{#method-FSLREthoConfiguration-save}{\code{FSLRethoConfiguration$save()}}
+\item \href{#method-FSLREthoConfiguration-load}{\code{FSLRethoConfiguration$load()}}
+\item \href{#method-FSLREthoConfiguration-clone}{\code{FSLRethoConfiguration$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-FSLREthoConfiguration-new"></a>}}
+\if{latex}{\out{\hypertarget{method-FSLREthoConfiguration-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$new(config_file = "/etc/fslretho.conf")}\if{html}{\out{</div>}}
@@ -52,8 +52,8 @@ If the passed config_file is null, use the instance's default}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-save"></a>}}
-\if{latex}{\out{\hypertarget{method-save}{}}}
+\if{html}{\out{<a id="method-FSLREthoConfiguration-save"></a>}}
+\if{latex}{\out{\hypertarget{method-FSLREthoConfiguration-save}{}}}
 \subsection{Method \code{save()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$save(config_file)}\if{html}{\out{</div>}}
@@ -72,8 +72,8 @@ If it exists, load its contents and update the configuration}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-load"></a>}}
-\if{latex}{\out{\hypertarget{method-load}{}}}
+\if{html}{\out{<a id="method-FSLREthoConfiguration-load"></a>}}
+\if{latex}{\out{\hypertarget{method-FSLREthoConfiguration-load}{}}}
 \subsection{Method \code{load()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{FSLRethoConfiguration$load(config_file)}\if{html}{\out{</div>}}
@@ -88,8 +88,8 @@ If it exists, load its contents and update the configuration}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-FSLREthoConfiguration-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-FSLREthoConfiguration-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

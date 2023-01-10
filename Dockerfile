@@ -103,6 +103,7 @@ RUN R -e "devtools::install('/opt/zeitgebr')"
 RUN cd /opt/behavr && git pull
 RUN R -e "devtools::install('/opt/behavr')"
 
+RUN cd /opt/scopr
 RUN cd /opt/scopr && git pull
 RUN R -e "devtools::install('/opt/scopr')"
 

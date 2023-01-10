@@ -19,10 +19,10 @@ get_body <- function() {
   period_tab <- shinydashboard::tabItem(tabName = 'period', periodAnalysisUI("periodAnalysis"))
 
   metadata_tab <- shinydashboard::tabItem(tabName = 'metadata', viewMetadataUI("viewMetadata"))
-  backup_tab <- shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
+  # backup_tab <- shinydashboard::tabItem(tabName = 'backup', backupManagerUI("manageBackup"))
   reproducibility_tab <- shinydashboard::tabItem(tabName = 'reproducibility', reproducibilityModuleUI("reproducibility"))
 
-  snapshot_tab <- shinydashboard::tabItem(tabName = 'snapshot', snapshotViewerUI("snapshot_viewer"))
+  # snapshot_tab <- shinydashboard::tabItem(tabName = 'snapshot', snapshotViewerUI("snapshot_viewer"))
 
   # TODO Place somewhere the UI for scoreData
   shinydashboard::dashboardBody(
@@ -33,14 +33,14 @@ get_body <- function() {
     shinydashboard::tabItems(
       welcome_tab,
       load_tab,
-      snapshot_tab,
+      # snapshot_tab,
       raw_tab,
       premade_tab,
       sleep_tab,
       bout_tab,
       period_tab,
       metadata_tab,
-      backup_tab,
+      # backup_tab,
       reproducibility_tab
     )
   )

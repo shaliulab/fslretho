@@ -14,7 +14,7 @@ server <- function(input, output, session) {
 
   ## Preparation ----
   # Run a simple ethoscope backup manager
-  backupManagerServer("manageBackup")
+  # backupManagerServer("manageBackup")
 
   ## Load ----
   # Here the choice between dam or ethoscope happens
@@ -24,7 +24,7 @@ server <- function(input, output, session) {
   # In case the user wants to use a builtin dataset
   loaded_data <- saveLoadSessionServer("sessions", scored_data)
 
-  snapshotViewerServer("snapshot_viewer", loaded_data)
+  # snapshotViewerServer("snapshot_viewer", loaded_data)
 
   ## Score ----
   # scored_data <- scoreDataServer("scoreData", loaded_data)
