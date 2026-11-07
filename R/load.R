@@ -57,6 +57,26 @@ metadata_rows <- function(metadata, linked) {
   which(key(metadata) %in% key(linked))
 }
 
+#' Load and score DAM data of a linked metadata
+#' @param metadata linked metadata (damr::link_dam_metadata)
+#' @param params list of scoring parameters: only min_time_immobile applies to DAM data
+#' @return behavr table
+#' @noRd
+load_dam_data <- function(metadata, params) {
+  dt <- shiny::withProgress(message = "Loading DAM data", value = 0.5, {
+    damr::load_dam(metadata, FUN = sleepr::sleep_dam_annotation, min_time_immobile = params$min_time_immobile)
+  })
+  if (is.null(dt) || nrow(dt) == 0) stop("none of the flies in the metadata have data")
+  behavr::simplify_behavr(dt, meta = TRUE)
+}
+
+#' Is a dataset from DAM monitors (as opposed to ethoscopes)?
+#' @noRd
+is_dam_dataset <- function(data) {
+  files <- as.character(unlist(behavr::meta(data)$file_info))
+  length(files) > 0 && !any(grepl("\\.db$", files))
+}
+
 loadDataUI <- function(id) {
   ns <- NS(id)
   fluidRow(
@@ -69,6 +89,7 @@ loadDataUI <- function(id) {
           accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
         ),
         textInput(ns("result_dir"), label = "Ethoscope result folder", value = ""),
+        textInput(ns("result_dir_dam"), label = "DAM result folder", value = ""),
         actionButton(ns("submit"), label = "Submit", icon = icon("upload"), class = "btn-primary")
       )
     ),
@@ -77,9 +98,10 @@ loadDataUI <- function(id) {
       shinydashboard::box(
         width = NULL, title = "How to load data",
         tags$ol(
-          tags$li("Upload a metadata .csv with one row per fly and at least the columns",
+          tags$li("Upload a metadata .csv with one row per fly. For ethoscopes, it needs the columns",
                   tags$code("machine_name"), ",", tags$code("date"), ",", tags$code("region_id"), "and",
-                  tags$code("reference_hour"), "."),
+                  tags$code("reference_hour"), "; for DAM monitors,", tags$code("file"), ",",
+                  tags$code("start_datetime"), ",", tags$code("stop_datetime"), "and", tags$code("region_id"), "."),
           tags$li("Adjust the scoring parameters in the top bar if needed."),
           tags$li("Press Submit. The metadata is checked first: any problem is listed below, with how to fix it.")
         ),
@@ -103,6 +125,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
       problems <- reactiveVal(NULL)
 
       updateTextInput(session, "result_dir", value = fslretho_conf()$scopr$folders$results$path)
+      updateTextInput(session, "result_dir_dam", value = fslretho_conf()$damr$folders$results$path)
       observeEvent(input$go_help, shinydashboard::updateTabItems(parent_session, "tabs", "help"))
 
       # Data is (re)loaded on submit, on reload and when the scoring parameters change
@@ -112,10 +135,21 @@ loadDataServer <- function(id, reload, params, parent_session) {
 
         safely(context = "loading the data", {
           metadata <- read_metadata(input$metadata$datapath)
-          found <- check_metadata(metadata, input$result_dir)
+          monitor <- metadata_monitor(metadata)
+          result_dir <- if (identical(monitor, "dam")) input$result_dir_dam else input$result_dir
+          found <- check_metadata(metadata, result_dir, monitor)
           problems(found)
           if (any(found$level == "error")) {
             show_problems_modal(found, sprintf("The metadata has %d problem(s) to fix before loading", sum(found$level == "error")))
+            return()
+          }
+
+          if (monitor == "dam") {
+            linked <- damr::link_dam_metadata(coerce_metadata(metadata), result_dir = result_dir)
+            dt <- load_dam_data(linked, params())
+            if (nrow(found) > 0) show_problems_modal(found, "Data loaded, with warnings")
+            else showNotification(sprintf("Loaded %d flies", nrow(behavr::meta(dt))), type = "message")
+            set_dataset(output_rv, dt, input$metadata$name[1])
             return()
           }
 
@@ -162,7 +196,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
         shinydashboard::box(width = NULL, title = "Metadata check", status = "warning", solidHeader = TRUE, problems_table(p))
       })
 
-      list(dataset = output_rv, result_dir = reactive(input$result_dir))
+      list(dataset = output_rv, result_dir = reactive(input$result_dir), result_dir_dam = reactive(input$result_dir_dam))
     }
   )
 }

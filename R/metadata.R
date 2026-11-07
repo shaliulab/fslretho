@@ -1,6 +1,25 @@
-#' Columns every ethoscope metadata file needs
+#' Columns every metadata file needs, by monitor
 #' @noRd
-REQUIRED_COLUMNS <- c("machine_name", "date", "reference_hour")
+REQUIRED_COLUMNS <- list(
+  ethoscope = c("machine_name", "date", "reference_hour"),
+  dam = c("file", "start_datetime", "stop_datetime")
+)
+
+#' Columns that are kept as text when typing the metadata
+#' @noRd
+TEXT_COLUMNS <- c("machine_name", "date", "time", "file", "start_datetime", "stop_datetime")
+
+#' Which monitor (ethoscope or DAM) a metadata file describes, from its columns
+#' @return "ethoscope", "dam", or NA if it cannot be told
+#' @noRd
+metadata_monitor <- function(metadata) {
+  cols <- names(metadata)
+  ethoscope <- any(c("machine_name", "date") %in% cols)
+  dam <- any(c("file", "start_datetime", "stop_datetime") %in% cols)
+  if (ethoscope && !dam) return("ethoscope")
+  if (dam && !ethoscope) return("dam")
+  NA_character_
+}
 
 #' Read one or more metadata .csv files into R, without any type conversion
 #'
@@ -28,17 +47,17 @@ read_metadata <- function(metadata_path) {
 }
 
 #' Convert the columns of a metadata read with read_metadata to their natural type
-#' (e.g. region_id to integer). machine_name, date and time stay as text.
+#' (e.g. region_id to integer). Dates, times and names (TEXT_COLUMNS) stay as text.
 #' @noRd
 coerce_metadata <- function(metadata) {
   metadata <- data.table::copy(metadata)
-  for (col in setdiff(names(metadata), c("machine_name", "date", "time"))) {
+  for (col in setdiff(names(metadata), TEXT_COLUMNS)) {
     data.table::set(metadata, j = col, value = utils::type.convert(metadata[[col]], as.is = TRUE))
   }
   metadata
 }
 
-#' Read and type a metadata file, ready for scopr::link_ethoscope_metadata
+#' Read and type a metadata file, ready for scopr::link_ethoscope_metadata or damr::link_dam_metadata
 #' @param metadata_path Absolute path to one or more metadata.csv files
 #' @export
 load_metadata <- function(metadata_path) {
@@ -168,6 +187,58 @@ describe_date <- function(x) {
   )
 }
 
+is_iso_datetime <- function(x) {
+  grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$", x) &
+    !is.na(as.POSIXct(x, format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+}
+
+#' Explain why a date-time is not in YYYY-MM-DD HH:MM:SS format
+#' @param time_required if FALSE, a date alone (YYYY-MM-DD) is also fine
+#' @return NULL if the value is fine, list(problem, fix) otherwise
+#' @noRd
+describe_datetime <- function(x, time_required = TRUE) {
+  if (is_iso_datetime(x)) return(NULL)
+  if (!time_required && is_iso_date(x)) return(NULL)
+  fix <- paste(
+    "Write it as YYYY-MM-DD HH:MM:SS (e.g. 2017-07-01 08:00:00).",
+    "In Excel or LibreOffice, format the column as Text first, otherwise it is converted again when you save the .csv."
+  )
+
+  # 42917.3333: Excel serial number, days (and fraction of a day) since 1899-12-30
+  if (grepl("^[0-9]+([.,][0-9]+)?$", x)) {
+    n <- as.numeric(sub(",", ".", x))
+    guess <- as.POSIXct(round((n - 25569) * 86400), origin = "1970-01-01", tz = "UTC")
+    plausible <- guess >= as.POSIXct("2010-01-01", tz = "UTC") && guess <= Sys.time() + 365 * 86400
+    return(list(
+      problem = paste0(
+        sprintf("'%s' is a number, not a date and time. ", x),
+        "Spreadsheet programs store dates as a count of days (the decimals are the time of the day), ",
+        "and sometimes save that count in the .csv instead of the date",
+        if (plausible) sprintf(": it most likely means %s.", format(guess, "%Y-%m-%d %H:%M:%S")) else "."
+      ),
+      fix = fix
+    ))
+  }
+
+  parts <- strsplit(trimws(x), "[ T]+")[[1]]
+  date_problem <- describe_date(parts[1])
+  if (!is.null(date_problem)) return(list(problem = date_problem$problem, fix = fix))
+  if (length(parts) == 1) {
+    return(list(
+      problem = sprintf("'%s' has no time", x),
+      fix = sprintf("Add the time when the experiment (ZT0) starts, e.g. %s 08:00:00.", parts[1])
+    ))
+  }
+  time_problem <- describe_time(parts[2])
+  if (!is.null(time_problem)) return(list(problem = time_problem$problem, fix = fix))
+  if (grepl("^[0-9]:", parts[2]) || grepl("^[0-9]{1,2}:[0-9]{2}$", parts[2])) {
+    hms <- as.integer(strsplit(parts[2], ":")[[1]])
+    return(list(problem = sprintf("'%s' is not in YYYY-MM-DD HH:MM:SS format", x),
+                fix = sprintf("Write it as %s %02d:%02d:%02d.", parts[1], hms[1], hms[2], if (length(hms) > 2) hms[3] else 0L)))
+  }
+  list(problem = sprintf("'%s' is not a valid date and time", x), fix = fix)
+}
+
 describe_time <- function(x) {
   if (grepl("^[0-9]{1,2}:[0-9]{2}:[0-9]{2}$", x)) return(NULL)
   n <- suppressWarnings(as.numeric(x))
@@ -285,24 +356,140 @@ check_against_database <- function(metadata, result_dir) {
   data.table::rbindlist(issues)
 }
 
+#' First and last date-time recorded in a DAM monitor file
+#' @noRd
+dam_file_range <- function(path) {
+  first <- readLines(path, n = 1, warn = FALSE)
+  last <- utils::tail(readLines(path, warn = FALSE), 1)
+  parse <- function(line) {
+    fields <- strsplit(line, "\t")[[1]]
+    # e.g. "30 Jun 17" "14:32:00"; month names are in English
+    old <- Sys.getlocale("LC_TIME"); on.exit(Sys.setlocale("LC_TIME", old))
+    Sys.setlocale("LC_TIME", "C")
+    as.POSIXct(paste(fields[2], fields[3]), format = "%d %b %y %H:%M:%S", tz = "UTC")
+  }
+  c(parse(first), parse(last))
+}
+
+#' Compare a DAM metadata against the monitor files available in the DAM result folder
+#' @noRd
+check_against_dam_files <- function(metadata, result_dir) {
+  if (!dir.exists(result_dir)) {
+    return(new_problem(
+      "error", "", integer(0),
+      sprintf("The DAM result folder '%s' does not exist", result_dir),
+      "Check the DAM result folder in the Load tab. It should contain the monitor .txt files."
+    ))
+  }
+  ok <- !is.na(metadata$file)
+  issues <- lapply(unique(metadata$file[ok]), function(f) {
+    rows <- which(metadata$file == f)
+    path <- file.path(result_dir, f)
+    if (!file.exists(path)) {
+      available <- list.files(result_dir, pattern = "\\.txt$", recursive = TRUE)
+      similar <- agrep(basename(f), available, value = TRUE, max.distance = 2)
+      return(new_problem(
+        "error", "file", rows,
+        sprintf("There is no file '%s' in the DAM result folder", f),
+        if (length(similar) > 0) sprintf("Did you mean %s? The path is relative to the DAM result folder.", paste(head(similar, 3), collapse = " or "))
+        else "Write the name of the monitor file relative to the DAM result folder, e.g. Monitor22.txt."
+      ))
+    }
+    range <- tryCatch(dam_file_range(path), error = function(e) NULL)
+    if (is.null(range) || any(is.na(range))) {
+      return(new_problem("error", "file", rows, sprintf("'%s' does not look like a DAM monitor file", f),
+                         "Check that it is the .txt file written by the DAM system (one line per minute)."))
+    }
+    start <- suppressWarnings(as.POSIXct(metadata$start_datetime[rows], format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+    stop_dt <- suppressWarnings(as.POSIXct(substr(metadata$stop_datetime[rows], 1, 19), tz = "UTC",
+                                           tryFormats = c("%Y-%m-%d %H:%M:%S", "%Y-%m-%d")))
+    # swapped start/stop are reported separately
+    outside <- which(!is.na(start) & !is.na(stop_dt) & start < stop_dt & (stop_dt <= range[1] | start >= range[2]))
+    if (length(outside) > 0) {
+      return(new_problem(
+        "error", "start_datetime, stop_datetime", rows[outside],
+        sprintf("'%s' has no data between start_datetime and stop_datetime", f),
+        sprintf("The file has data from %s to %s.", format(range[1], "%Y-%m-%d %H:%M"), format(range[2], "%Y-%m-%d %H:%M"))
+      ))
+    }
+    NULL
+  })
+  data.table::rbindlist(issues)
+}
+
+#' Problems specific to DAM metadata
+#' @noRd
+check_dam_metadata <- function(metadata, result_dir) {
+  problems <- list()
+  cols <- names(metadata)
+  if ("start_datetime" %in% cols) problems[[length(problems) + 1]] <- problems_by_value(metadata$start_datetime, "start_datetime", describe_datetime)
+  if ("stop_datetime" %in% cols) problems[[length(problems) + 1]] <- problems_by_value(metadata$stop_datetime, "stop_datetime", function(x) describe_datetime(x, time_required = FALSE))
+  if ("region_id" %in% cols) {
+    problems[[length(problems) + 1]] <- problems_by_value(metadata$region_id, "region_id", function(x) {
+      n <- suppressWarnings(as.numeric(x))
+      if (!is.na(n) && n >= 1 && n <= 32 && n == round(n)) return(NULL)
+      list(problem = sprintf("region_id '%s' is not a channel between 1 and 32", x),
+           fix = "region_id is the channel (tube) of the DAM monitor, from 1 to 32.")
+    })
+  } else {
+    problems[[length(problems) + 1]] <- new_problem(
+      "warning", "region_id", integer(0),
+      "There is no region_id column: all 32 channels of each monitor will be loaded with the same metadata",
+      "Add a region_id column to describe each fly separately."
+    )
+  }
+  if (all(c("start_datetime", "stop_datetime") %in% cols)) {
+    start <- suppressWarnings(as.POSIXct(metadata$start_datetime, format = "%Y-%m-%d %H:%M:%S", tz = "UTC"))
+    stop_dt <- suppressWarnings(as.POSIXct(substr(metadata$stop_datetime, 1, 19), tz = "UTC", tryFormats = c("%Y-%m-%d %H:%M:%S", "%Y-%m-%d")))
+    reversed <- which(!is.na(start) & !is.na(stop_dt) & stop_dt <= start)
+    if (length(reversed) > 0) {
+      problems[[length(problems) + 1]] <- new_problem("error", "stop_datetime", reversed,
+        "stop_datetime is not after start_datetime", "Check that the two columns are not swapped.")
+    }
+  }
+  key <- intersect(c("file", "start_datetime", "region_id"), cols)
+  if (length(key) == 3) {
+    dup <- which(duplicated(metadata, by = key) | duplicated(metadata, by = key, fromLast = TRUE))
+    if (length(dup) > 0) {
+      problems[[length(problems) + 1]] <- new_problem("error", paste(key, collapse = ", "), dup,
+        "Several rows describe the same fly (same file, start_datetime and region_id)",
+        "Check for copy-paste errors in file or region_id.")
+    }
+  }
+  if (!is.null(result_dir) && nzchar(result_dir) && "file" %in% cols) {
+    problems[[length(problems) + 1]] <- check_against_dam_files(metadata, result_dir)
+  }
+  data.table::rbindlist(problems)
+}
+
 #' Check a metadata table and explain every problem found
 #'
 #' @param metadata data.table as returned by read_metadata (all columns as text)
-#' @param result_dir optional path to the ethoscope database. If given, the metadata is
-#' also checked against the recordings available there.
+#' @param result_dir optional path to the ethoscope database (or the DAM result folder, for DAM metadata).
+#' If given, the metadata is also checked against the recordings available there.
+#' @param monitor "ethoscope" or "dam". By default it is told from the columns of the metadata.
 #' @return data.table with one row per problem and columns level (error/warning), column,
 #' rows (as numbered in a spreadsheet), problem and fix. Empty if the metadata is fine.
 #' @export
-check_metadata <- function(metadata, result_dir = NULL) {
+check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monitor(metadata)) {
   if (nrow(metadata) == 0) {
     return(new_problem("error", "", integer(0), "The metadata has no rows", "Add one row per fly below the header."))
+  }
+  if (is.na(monitor)) {
+    return(new_problem(
+      "error", "", integer(0),
+      sprintf("Cannot tell whether this metadata is for ethoscopes or DAM monitors (columns: %s)", paste(names(metadata), collapse = ", ")),
+      paste("Ethoscope metadata needs the columns machine_name, date and reference_hour;",
+            "DAM metadata needs file, start_datetime and stop_datetime. Use one kind per file.")
+    ))
   }
 
   problems <- list()
   cols <- names(metadata)
+  required <- REQUIRED_COLUMNS[[monitor]]
 
   # Missing columns, suggesting near-misses (e.g. 'Machine name' for machine_name)
-  for (col in setdiff(REQUIRED_COLUMNS, cols)) {
+  for (col in setdiff(required, cols)) {
     normalise <- function(x) tolower(gsub("[^A-Za-z0-9]", "", x))
     similar <- cols[normalise(cols) == normalise(col)]
     if (length(similar) == 0) similar <- agrep(col, cols, value = TRUE, max.distance = 2, ignore.case = TRUE)
@@ -321,10 +508,17 @@ check_metadata <- function(metadata, result_dir = NULL) {
       problems[[length(problems) + 1]] <- new_problem(
         "error", col, empty,
         sprintf("Column '%s' has empty cells", col),
-        if (col %in% c(REQUIRED_COLUMNS, "region_id")) "Fill them in, or delete the rows of flies you don't want to load."
+        if (col %in% c(required, "region_id")) "Fill them in, or delete the rows of flies you don't want to load."
         else "Rows with empty cells are not loaded. Write a placeholder such as NONE, or delete the column."
       )
     }
+  }
+
+  if (monitor == "dam") {
+    problems[[length(problems) + 1]] <- check_dam_metadata(metadata, result_dir)
+    out <- data.table::rbindlist(problems)
+    if (nrow(out) == 0) return(data.table::data.table(level = character(), column = character(), rows = character(), problem = character(), fix = character()))
+    return(out[order(level != "error")])
   }
 
   checks <- list(date = describe_date, time = describe_time, reference_hour = describe_reference_hour, region_id = describe_region_id)

@@ -50,3 +50,20 @@ test_that("nothing is loaded when the metadata has errors", {
   expect_null(res$data)
   expect_match(res$problems$problem, "2016-01-25")
 })
+
+test_that("DAM data is loaded and scored with sleepr::sleep_dam_annotation", {
+  result <- NULL
+  testServer(loadDataServer, args = list(reload = reactive(0), params = reactive(list(min_time_immobile = 300)), parent_session = NULL), {
+    session$setInputs(
+      metadata = upload(c("file,start_datetime,stop_datetime,region_id,genotype",
+                          "M064.txt,2017-07-01 08:00:00,2017-07-03,1,A", "M064.txt,2017-07-01 08:00:00,2017-07-03,2,B")),
+      result_dir = example_results(), result_dir_dam = damr::damr_example_dir()
+    )
+    session$setInputs(submit = 1)
+    result <<- output_rv$data
+  })
+  expect_equal(nrow(behavr::meta(result)), 2)
+  expect_true(all(c("activity", "moving", "asleep") %in% names(result)))
+  expect_true(is_dam_dataset(result))
+  expect_equal(max(result$t), behavr::hours(40))
+})

@@ -42,7 +42,8 @@ scoringParamsUI <- function(id) {
         selected = c("sleep annotation", "SD in-progress annotation"),
         multiple = TRUE, width = "100%"
       ),
-      checkboxInput(ns("curate"), label = "Discard windows with too little tracking data (curate)", value = TRUE)
+      checkboxInput(ns("curate"), label = "Discard windows with too little tracking data (curate)", value = TRUE),
+      helpText("DAM data: only the minimum time immobile is used (a minute with any beam cross is a minute moving).")
     ),
     div(
       class = "fsl-scoring-col",

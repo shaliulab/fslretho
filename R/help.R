@@ -26,7 +26,13 @@ help_workflow <- function() {
 
 help_metadata <- function() {
   tagList(
-    tags$p("The metadata is a .csv file with one row per fly and one column per piece of information. Example:"),
+    tags$p(
+      "The metadata is a .csv file with one row per fly and one column per piece of information. ",
+      "The app supports ethoscopes and DAM monitors; it tells which one a file is for from its columns ",
+      "(one kind per file)."
+    ),
+    tags$h4("Ethoscopes"),
+    tags$p("Example:"),
     tags$pre("machine_name,date,region_id,reference_hour,genotype\nETHOSCOPE_008,2021-06-18,1,9,wild type\nETHOSCOPE_008,2021-06-18,2,9,mutant"),
     help_table(list(
       list("machine_name", "Name of the ethoscope, exactly as in the database, e.g. ETHOSCOPE_008."),
@@ -36,6 +42,16 @@ help_metadata <- function() {
       list("time (optional)", "Time the recording started, as HH:MM:SS. Only needed if the ethoscope was started more than once that day; otherwise the last recording of the day is used."),
       list("Any other column", "Genotype, sex, treatment... They can be used to colour, group and filter the plots. Cells must not be empty: write NONE instead.")
     )),
+    tags$h4("DAM monitors"),
+    tags$pre("file,start_datetime,stop_datetime,region_id,genotype\nMonitor22.txt,2019-06-17 08:00:00,2019-06-20,1,wild type\nMonitor22.txt,2019-06-17 08:00:00,2019-06-20,2,mutant"),
+    help_table(list(
+      list("file", "Name of the monitor file, relative to the DAM result folder (set in the Load tab), e.g. Monitor22.txt."),
+      list("start_datetime", "First day and time to load, as YYYY-MM-DD HH:MM:SS. It is also ZT0: use the time the lights turn on."),
+      list("stop_datetime", "Last day (YYYY-MM-DD) or day and time to load."),
+      list("region_id", "Channel of the monitor, 1 to 32. Without this column, all 32 channels are loaded with the same metadata."),
+      list("Any other column", "As for ethoscopes.")
+    )),
+    tags$p("The check also verifies that the monitor files exist and have data between start_datetime and stop_datetime."),
     tags$h4("Problems with Excel and other spreadsheet programs"),
     tags$p(
       "Spreadsheet programs often change dates when they open or save a .csv. The date can end up as a number ",
@@ -80,6 +96,13 @@ help_scoring <- function() {
     )),
     tags$p(
       "Movement in the 6 s after the sleep depriver moves the tube is ignored, so the SD itself does not count as the fly waking up."
+    ),
+    tags$h4("DAM monitors"),
+    tags$p(
+      "DAM monitors count how many times the fly crosses an infrared beam each minute (", tags$code("activity"), "). ",
+      "A minute with at least one beam cross is a minute moving, and the fly is asleep after the minimum time immobile without crossing. ",
+      "The other parameters (window length, movement threshold, annotations, curate, SD) only apply to ethoscopes, ",
+      "and so do the Raw tab and the snapshot viewer."
     ),
     tags$h4("Different parameters during sleep deprivation (SD)"),
     tags$p(

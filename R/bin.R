@@ -10,7 +10,7 @@ SUMMARY_FUNCTIONS <- list(
 Y_VARS <- c(
   "asleep", "moving", "interactions", "is_interpolated",
   "microbehavior", "micromovement", "beam_crosses", "max_velocity",
-  "duration", "body_movement"
+  "duration", "body_movement", "activity"
 )
 
 #' Bin a behavr table in time

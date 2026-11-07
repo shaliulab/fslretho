@@ -15,8 +15,12 @@ premadePlotsServer <- function(id, sleep_rv, interactions_rv) {
       output$plot_sleep <- renderPlot({
         raw_plot(behavr::rejoin(req(sleep_rv$data)), "asleep", NULL, ggetho::geom_pop_etho())
       })
+      # SD interactions for ethoscopes; beam crosses for DAM monitors
       output$plot_interactions <- renderPlot({
-        raw_plot(behavr::rejoin(req(interactions_rv$data)), "interactions", NULL, ggetho::geom_pop_etho())
+        data <- behavr::rejoin(req(interactions_rv$data))
+        y <- intersect(c("interactions", "activity"), names(data))
+        req(length(y) > 0)
+        raw_plot(data, y[1], NULL, ggetho::geom_pop_etho())
       })
     }
   )

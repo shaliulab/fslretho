@@ -136,6 +136,7 @@ snapshotViewerServer <- function(id, input_rv) {
 
       output$dbfile_ui <- renderUI({
         meta <- behavr::meta(req(input_rv$data))
+        validate(need(!is_dam_dataset(input_rv$data), "Snapshots are only taken by ethoscopes: the loaded data comes from DAM monitors."))
         meta <- unique(meta[, .(machine_name, datetime, path = as.character(unlist(file_info)))], by = "path")
         choices <- meta$path
         names(choices) <- paste(meta$machine_name, meta$datetime)

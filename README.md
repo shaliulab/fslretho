@@ -1,7 +1,7 @@
 # fslretho
 
 fslretho is a Shiny app to analyse the sleep and circadian rhythm of flies recorded with
-[ethoscopes](https://gilestrolab.github.io/ethoscope/), built on the
+[ethoscopes](https://gilestrolab.github.io/ethoscope/) or DAM monitors, built on the
 [rethomics](https://rethomics.github.io/) packages. The app has a Help tab that explains how it
 works and what every parameter means.
 
@@ -18,13 +18,16 @@ docker build -t fslretho-v3 .
 docker run -d --name fslretho-v3 --restart unless-stopped \
   -p 3839:3838 \
   -v /ethoscope_data:/ethoscope_data \
+  -v /DAM_data:/DAM_data \
   -v /fslretho_data_v3:/fslretho_data \
   fslretho-v3
 ```
 
 The app is then at `http://<server>:3839`.
 
-* `/ethoscope_data` must contain `results/` (the ethoscope database) and `cache/` (writable).
+* `/ethoscope_data` must contain `results/` (the ethoscope database) and `cache/` (writable; the
+  snapshot viewer also extracts pictures there).
+* `/DAM_data/results` holds the DAM monitor files (optional, for DAM data).
 * `/fslretho_data` holds the saved sessions and the usage logs (`sessions/` and `logs/`, writable).
   Use a different folder for each version so their sessions don't mix.
 * The container runs as user 1000 by default; build with `--build-arg USER_ID=... --build-arg GROUP_ID=...`

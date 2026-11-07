@@ -1,11 +1,12 @@
 #' Write an R script that reproduces the analysis done in the app
-#' @param params list with result_dir, the scoring parameters and the binning parameters
+#' @param params list with monitor (ethoscope or dam), result_dir, the scoring parameters and the binning parameters
 #' @return character, the script
 #' @noRd
 reproducibility_script <- function(dataset_name, params) {
   conf <- fslretho_conf()
   scoring <- params$scoring
   sd <- !is.null(scoring$intervals)
+  dam <- identical(params$monitor, "dam")
   fmt <- function(x) deparse(x)
 
   lines <- c(
@@ -26,6 +27,15 @@ reproducibility_script <- function(dataset_name, params) {
     sprintf("problems <- fslretho::check_metadata(metadata, result_dir = %s)", fmt(params$result_dir)),
     "print(problems)",
     "stopifnot(!any(problems$level == 'error'))",
+    if (dam) c(
+      sprintf(
+        "metadata <- damr::link_dam_metadata(fslretho::load_metadata(metadata_path), result_dir = %s)",
+        fmt(params$result_dir)
+      ),
+      "",
+      "## ---- Load and score the data (sleep annotation of DAM beam crosses)",
+      sprintf("dt <- damr::load_dam(metadata, FUN = sleepr::sleep_dam_annotation, min_time_immobile = %s)", fmt(scoring$min_time_immobile))
+    ) else c(
     sprintf(
       "metadata <- scopr::link_ethoscope_metadata(fslretho::load_metadata(metadata_path), result_dir = %s)",
       fmt(params$result_dir)
@@ -49,7 +59,8 @@ reproducibility_script <- function(dataset_name, params) {
       "  intervals = list(interval_sd = 'SD'),"
     ),
     sprintf("  curate = %s", fmt(scoring$curate)),
-    ")",
+    ")"
+    ),
     "",
     "## ---- Fraction of time asleep in each bin",
     "binned <- behavr::bin_apply_all(",

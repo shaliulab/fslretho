@@ -64,6 +64,10 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
       })
 
       observeEvent(input$button, {
+        if (is_dam_dataset(req(sleep_data$data))) {
+          showNotification("The Raw tab shows ethoscope tracking data. DAM monitors only record beam crosses: see their activity in the Sleep analysis tab.", type = "warning", duration = 10)
+          return()
+        }
         meta <- behavr::meta(req(sleep_data$data))
         meta <- meta[id == req(input$animal_id)]
         if (nrow(meta) == 0) {

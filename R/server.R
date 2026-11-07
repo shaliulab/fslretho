@@ -70,7 +70,8 @@ server <- function(input, output, session) {
   reproducibilityModuleServer(
     "reproducibility", loaded_data,
     params = reactive(list(
-      result_dir = load$result_dir(),
+      monitor = if (is_dam_dataset(req(loaded_data$data))) "dam" else "ethoscope",
+      result_dir = if (is_dam_dataset(loaded_data$data)) load$result_dir_dam() else load$result_dir(),
       scoring = scoring(),
       summary_time_window = input[["sleepBin-summary_time_window"]],
       summary_FUN = input[["sleepBin-summary_FUN"]]

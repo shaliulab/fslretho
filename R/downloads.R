@@ -15,7 +15,7 @@ downloadsUI <- function(id) {
   ns <- NS(id)
   div(
     class = "fsl-downloads",
-    downloadButton(ns("dbfiles"), "Ethoscope .db files (.zip)", class = "btn-block"),
+    downloadButton(ns("dbfiles"), "Raw data files: ethoscope .db / DAM .txt (.zip)", class = "btn-block"),
     lapply(names(DOWNLOADS), function(name) downloadButton(ns(name), DOWNLOADS[[name]], class = "btn-block"))
   )
 }
@@ -60,11 +60,11 @@ downloadsServer <- function(id, datasets, loaded) {
       })
 
       output$dbfiles <- downloadHandler(
-        filename = function() paste0(dataset_basename(loaded$name), "-dbfiles.zip"),
+        filename = function() paste0(dataset_basename(loaded$name), "-rawfiles.zip"),
         content = function(file) {
-          if (is.null(loaded$data)) nothing_to_download("Ethoscope .db files")
+          if (is.null(loaded$data)) nothing_to_download("Raw data files")
           dbfiles <- unique(as.character(unlist(behavr::meta(loaded$data)$file_info)))
-          id <- showNotification(sprintf("Compressing %d .db file(s), please wait...", length(dbfiles)), duration = NULL)
+          id <- showNotification(sprintf("Compressing %d file(s), please wait...", length(dbfiles)), duration = NULL)
           on.exit(removeNotification(id))
           # -j: store the files without their folders
           utils::zip(file, dbfiles, flags = "-j")

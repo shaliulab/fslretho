@@ -68,3 +68,34 @@ test_that("flies without tracking data are found before loading", {
   missing <- flies_without_data(linked)
   expect_equal(nrow(missing), 2)
 })
+
+dam_dir <- function() damr::damr_example_dir()
+
+test_that("the monitor is told from the columns", {
+  expect_equal(metadata_monitor(data.table::data.table(machine_name = "E", date = "2021-01-01")), "ethoscope")
+  expect_equal(metadata_monitor(data.table::data.table(file = "M064.txt", start_datetime = "x", stop_datetime = "y")), "dam")
+  expect_true(is.na(metadata_monitor(data.table::data.table(machine_name = "E", file = "x"))))
+})
+
+test_that("DAM metadata problems are explained", {
+  path <- write_metadata(c(
+    "file,start_datetime,stop_datetime,region_id",
+    "M064.txt,2017-07-01 08:00:00,2017-07-03,1",
+    "M064.txt,2017-07-01,2017-07-03,2",
+    "M064.txt,42917.3333333,2017-07-03,3",
+    "M64.txt,2017-07-01 08:00:00,2017-07-03,4",
+    "M014.txt,2017-07-01 08:00:00,2017-07-03,40",
+    "M014.txt,2018-01-01 08:00:00,2018-01-03,5"
+  ))
+  p <- check_metadata(read_metadata(path), dam_dir())
+  expect_match(p[rows == "3", fix], "08:00:00")
+  expect_match(p[rows == "4", problem], "2017-07-01 08:00:00")
+  expect_match(p[column == "file", fix], "M064.txt")
+  expect_match(p[column == "region_id", problem], "between 1 and 32")
+  expect_match(p[rows == "7", fix], "2017-06-30")
+})
+
+test_that("correct DAM metadata has no problems", {
+  path <- write_metadata(c("file,start_datetime,stop_datetime,region_id", "M064.txt,2017-07-01 08:00:00,2017-07-03,1"))
+  expect_equal(nrow(check_metadata(read_metadata(path), dam_dir())), 0)
+})
