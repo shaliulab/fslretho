@@ -17,11 +17,11 @@
 [submodule "inst/dependencies/scopr"]
 	path = inst/dependencies/scopr
 	url = git@github.com:shaliulab/scopr
-	branch = deployment
+	branch = fslretho-pin
 [submodule "inst/dependencies/sleepr"]
 	path = inst/dependencies/sleepr
 	url = git@github.com:shaliulab/sleepr
-	branch = deployment
+	branch = fslretho-pin
 [submodule "inst/dependencies/zeitgebr"]
 	path = inst/dependencies/zeitgebr
 	url = git@github.com:shaliulab/zeitgebr
