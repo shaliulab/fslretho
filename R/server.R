@@ -15,6 +15,7 @@ server <- function(input, output, session) {
 
   output$dataset_name <- renderText(if (is.null(loaded_data$name)) "No data loaded" else loaded_data$name)
   viewMetadataServer("viewMetadata", loaded_data)
+  snapshotViewerServer("snapshotViewer", loaded_data)
 
   ## Bin ----
   sleep_data <- binDataServer("sleepBin", loaded_data)

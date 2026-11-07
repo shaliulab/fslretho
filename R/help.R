@@ -17,6 +17,7 @@ help_workflow <- function() {
       tags$li(tags$b("Sleep analysis / Bout analysis"), ": plot the binned data (top) and one value per fly (bottom)."),
       tags$li(tags$b("Period analysis"), ": periodograms and spectrograms of the data shown in Sleep analysis, with its filters applied."),
       tags$li(tags$b("Raw"), ": look at the tracking of a single fly, to check that the scoring makes sense."),
+      tags$li(tags$b("Snapshot viewer"), ": the pictures the ethoscope took during the experiment, as images or as a video."),
       tags$li(tags$b("Download datasets"), " (top bar): export any table as .csv; ", tags$b("Reproducibility script"), ": the same analysis as an R script.")
     ),
     tags$p("Times are in hours since ZT0 (lights on) of the day the experiment started, as given by the reference_hour of each fly.")
@@ -134,6 +135,17 @@ help_plots <- function() {
       "and the summaries use the data of the plot above them."
     ),
     tags$p(tags$b("Premade"), " shows the sleep and SD interactions of every fly, without any configuration."),
+    tags$h4("Snapshot viewer"),
+    tags$p(
+      "During the experiment the ethoscope saves a picture of the arena every few minutes. The snapshot viewer shows ",
+      "them for each recording of the loaded flies, to check the tracking, the tubes or the sleep deprivation."
+    ),
+    help_table(list(
+      list("Recording", "One of the .db files of the loaded dataset. The table shows how many snapshots it has and when they were taken."),
+      list("Snapshots to extract", "Long recordings are grouped in 10 minute blocks. All snapshots selects everything; SD only selects the snapshots taken during the SD (with one block before and after)."),
+      list("Extract and show", "Extracts the selected snapshots with their date and time, and shows them. Use the slider (or its play button) to go through them. Snapshots already extracted are reused."),
+      list("Make .mp4 video", "Downloads a video of the selected snapshots at the chosen frames per second.")
+    )),
     tags$h4("Raw tab"),
     tags$p("Shows the position of one fly in the tube (x along the tube, y across), at full resolution, next to its sleep and the SD interactions. Use it to check whether the scoring makes sense."),
     help_table(list(

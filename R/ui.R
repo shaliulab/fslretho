@@ -27,6 +27,7 @@ get_sidebar <- function() {
       id = "tabs",
       shinydashboard::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
       shinydashboard::menuItem("Load", tabName = "load", icon = icon("upload")),
+      shinydashboard::menuItem("Snapshot viewer", tabName = "snapshot", icon = icon("file-video")),
       shinydashboard::menuItem("Raw", tabName = "raw", icon = icon("chart-line")),
       shinydashboard::menuItem("Premade", tabName = "premade", icon = icon("chart-bar")),
       shinydashboard::menuItem("Sleep analysis", tabName = "sleep", icon = icon("moon")),
@@ -50,6 +51,7 @@ get_body <- function() {
     shinydashboard::tabItems(
       tab("welcome", welcomePageUI("welcome")),
       tab("load", loadDataUI("loadData")),
+      tab("snapshot", snapshotViewerUI("snapshotViewer")),
       tab("raw", rawPlotsUI("rawPlots")),
       tab("premade", premadePlotsUI("premadePlots")),
       tab("sleep", esquisseModuleUI("sleepPlot"), esquisseModuleUI("sleepPlotSummary")),

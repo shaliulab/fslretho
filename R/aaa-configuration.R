@@ -42,6 +42,10 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
       "logs" = list(
         "path" = "/fslretho_data/logs",
         "description" = "A path to a folder containing log files tracking the application's usage"
+      ),
+      "snapshots" = list(
+        "path" = "/ethoscope_data/cache/snapshots",
+        "description" = "A path to a writable folder where the snapshot viewer extracts the IMG_SNAPSHOTS of the .db files and makes videos"
       )
     ))
 
