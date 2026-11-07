@@ -1,40 +1,20 @@
 #! /bin/bash
+# Install fslretho and its rethomics dependencies from the pinned git submodules.
+# Run from the repository root. To move a dependency to a newer commit, update
+# the submodule (and the matching Remotes entry in DESCRIPTION) and commit both.
 
-SUBMODULES=("fslbehavr" "fsldamr" "fslscopr" "fslsleepr" "fslggetho" "esquisse")
+set -e
 
-git submodule > downloaded_submods.txt
+# install order matters: later packages import earlier ones
+SUBMODULES=("behavr" "zeitgebr" "ggetho" "damr" "scopr" "sleepr" "esquisse")
 
-for SUBMOD in ${SUBMODULES[*]}
-do
-    printf "Finding $SUBMOD ..."
-    HIT=$(grep $SUBMOD downloaded_submods.txt | grep $SUBMOD | wc -l)
-    #echo "$SUBMOD: $HIT"
-    printf "$HIT\n"
-    if [ $HIT -eq 0 ]
-    then
-        echo "Downloading $SUBMOD"
-        git submodule add git@github.com:shaliulab/$SUBMOD inst/dependencies/$SUBMOD
-    fi
-done
-
-git submodule update --init --recursive
-git submodule foreach "(git checkout deployment; git pull)"
-
+git submodule update --init
 
 for SUBMOD in ${SUBMODULES[*]}
 do
-    if [ $HIT -eq 0 ]
-    then
-	    echo "One submodule is not installed!"
-	    exit 1
-    fi
-done
-
-
-for SUBMOD in ${SUBMODULES[*]}
-do
-    CMD="R -e \"devtools::install('inst/dependencies/${SUBMOD}')\""
+    CMD="R -e \"devtools::install('inst/dependencies/${SUBMOD}', dependencies = FALSE, upgrade = 'never')\""
     echo $CMD
     eval $CMD
 done
 
+R -e "devtools::install('.', upgrade = 'never')"

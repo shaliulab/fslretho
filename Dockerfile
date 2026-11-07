@@ -1,5 +1,11 @@
 FROM rocker/shiny:3.6.3
 
+# Build from a checkout with submodules populated:
+#   git submodule update --init
+#   docker build -t fslretho .
+# The rethomics packages are installed from inst/dependencies/, i.e. exactly
+# the commits pinned by the submodules (and mirrored in DESCRIPTION Remotes).
+
 RUN apt-get update && apt-get install -y \
     libcurl4-gnutls-dev \
     libssl-dev \
@@ -8,8 +14,10 @@ RUN apt-get update && apt-get install -y \
     imagemagick \
     ffmpeg \
     git \
+    sqlite3 \
     # for ethoscope imager
-    python3
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
 
 
 RUN R -e 'install.packages(c(\
@@ -29,31 +37,32 @@ RUN R -e 'install.packages(c(\
               "R6",                 \
               "rjson",              \
               "rlang",              \
-              "RSQLite"             \
+              "RSQLite",            \
+              "waiter",             \
+              "isoband"             \
           ), \
           repos = "https://packagemanager.rstudio.com/cran/__linux__/focal/2021-06-25")'
 
 # install ethoscope_imager
 RUN git clone https://github.com/shaliulab/ethoscope-imager /opt/ethoscope-imager
 
-ARG GIT_TOKEN=not_a_token
-RUN git config --global credential.helper \
-    '!f() { echo username=antortjim; echo "password=$GIT_TOKEN"; };f'
-
 COPY .Renviron .Renviron
 
-RUN git clone --recursive -b deployment https://github.com/shaliulab/behavr /opt/behavr
-RUN git clone --recursive -b deployment https://github.com/shaliulab/scopr /opt/scopr
-RUN git clone --recursive -b deployment https://github.com/shaliulab/damr /opt/damr
-RUN git clone --recursive -b deployment https://github.com/shaliulab/sleepr /opt/sleepr
-RUN git clone --recursive -b deployment https://github.com/shaliulab/ggetho /opt/ggetho
-RUN git clone --recursive -b deployment https://github.com/shaliulab/zeitgebr /opt/zeitgebr
-RUN git clone --recursive -b deployment https://github.com/shaliulab/esquisse /opt/esquisse
-RUN git clone https://github.com/shaliulab/fslretho /opt/fslretho
+# rethomics dependencies (git submodules), copied first so this layer is only
+# rebuilt when a submodule pin changes
+COPY inst/dependencies /opt/fslretho/inst/dependencies
+COPY inst/find_global_dependencies.sh inst/install_dependencies.R /tmp/deps/
+RUN /bin/bash /tmp/deps/find_global_dependencies.sh /opt/fslretho/inst/dependencies \
+    && Rscript /tmp/deps/install_dependencies.R /opt/fslretho/inst/dependencies
 
-COPY inst/find_global_dependencies.sh find_global_dependencies.sh 
-COPY inst/install_dependencies.R install_dependencies.R 
-RUN /bin/bash find_global_dependencies.sh && Rscript install_dependencies.R
+# install in dependency order, without letting the installer fetch other versions
+RUN for PKG in behavr zeitgebr ggetho damr scopr sleepr esquisse; do \
+        R -e "devtools::install('/opt/fslretho/inst/dependencies/${PKG}', dependencies = FALSE, upgrade = 'never')" || exit 1; \
+    done
+
+# the app itself
+COPY . /opt/fslretho
+RUN R -e "devtools::install('/opt/fslretho', dependencies = FALSE, upgrade = 'never')"
 
 # set up configuration files
 # TODO They should be created on the spot as needed
@@ -74,11 +83,7 @@ RUN userdel -f shiny &&\
         /home/shiny \
         /srv/shiny-server
 
-RUN chown shiny:shiny /etc/scopr.conf
-RUN chown shiny:shiny /etc/fslretho.conf
-
-
-RUN sudo apt-get -y install sqlite3
+RUN chown shiny:shiny /etc/scopr.conf /etc/fslretho.conf
 
 # copy the app directory into the image
 COPY ./inst/shiny-app/* /srv/shiny-server
@@ -86,44 +91,12 @@ COPY ./inst/shiny-app/* /srv/shiny-server
 # select port
 EXPOSE 3838
 # allow permission
-RUN sudo chown -R shiny:shiny /srv/shiny-server
+RUN chown -R shiny:shiny /srv/shiny-server
 
 # set up data folders
-RUN sudo mkdir -p /DAM_data /ethoscope_data /fslretho_data 
-RUN sudo chown shiny:shiny /DAM_data
-RUN sudo chown shiny:shiny /ethoscope_data
-RUN sudo chown shiny:shiny /fslretho_data
-
-
-RUN R -e "devtools::install('/opt/damr')"
-RUN R -e "devtools::install('/opt/sleepr')"
-RUN R -e "devtools::install('/opt/ggetho')"
-RUN R -e "devtools::install('/opt/zeitgebr')"
-
-RUN cd /opt/behavr && git pull
-RUN R -e "devtools::install('/opt/behavr')"
-
-RUN cd /opt/scopr
-RUN cd /opt/scopr && git pull
-RUN R -e "devtools::install('/opt/scopr')"
-
-RUN cd /opt/esquisse && git pull
-RUN R -e "devtools::install('/opt/esquisse')"
-
-
-RUN R -e "install.packages('waiter')"
-COPY inst/configuration/scopr.conf /etc/scopr.conf
-RUN cd /opt/fslretho && git pull
-RUN R -e "install.packages('isoband')"
-RUN cd /opt/fslretho && git pull
-RUN R -e "devtools::install('/opt/fslretho')"
-RUN chown shiny:shiny /etc/scopr.conf
-RUN cd /opt/fslretho && git pull
-RUN R -e "devtools::install('/opt/fslretho')"
-RUN cd /opt/fslretho && git pull
-RUN R -e "devtools::install('/opt/fslretho')"
+RUN mkdir -p /DAM_data /ethoscope_data /fslretho_data \
+    && chown shiny:shiny /DAM_data /ethoscope_data /fslretho_data
 
 
 # run app
 CMD ["/usr/bin/shiny-server"]
-

@@ -22,3 +22,7 @@
 	path = inst/dependencies/sleepr
 	url = git@github.com:shaliulab/sleepr
 	branch = deployment
+[submodule "inst/dependencies/zeitgebr"]
+	path = inst/dependencies/zeitgebr
+	url = git@github.com:shaliulab/zeitgebr
+	branch = deployment

@@ -1,4 +1,6 @@
-setwd("/opt")
+# Usage: Rscript install_dependencies.R [DEPENDENCIES_DIR]   (default: /opt)
+args <- commandArgs(trailingOnly = TRUE)
+setwd(if (length(args) > 0) args[1] else "/opt")
 deps <- as.character(read.table("unique_dependencies.txt")$V1)
-lapply(deps, install.packages)
-
+deps <- setdiff(deps, rownames(installed.packages()))
+if (length(deps) > 0) install.packages(deps)

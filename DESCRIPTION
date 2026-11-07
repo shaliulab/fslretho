@@ -30,7 +30,14 @@ Imports:
     R6,
     rjson,
     rlang,
-    RSQLite
+    RSQLite,
+    behavr (>= 0.3.3),
+    damr (>= 0.3.4),
+    esquisse (>= 1.0.1.9300),
+    ggetho (>= 0.3.5),
+    scopr (>= 0.3.3),
+    sleepr (>= 0.3.3),
+    zeitgebr (>= 0.3.5)
 Suggests: 
     knitr,
     reactlog,
@@ -38,10 +45,10 @@ Suggests:
     testthat (>= 2.1.0)
 RoxygenNote: 7.2.1
 Remotes:
-    shaliulab/esquisse@1.0.1.9400,
-    shaliulab/behavr@0.3.3,
-    shaliulab/damr,
-    shaliulab/scopr@0.3.3,
-    shaliulab/sleepr@0.3.3,
+    shaliulab/behavr@0272386cd83535278d7d15c735853c2f88dae7c0,
+    shaliulab/damr@1ee2c8fd8cdf17d1107fb77de68cf9440fab7cba,
+    shaliulab/esquisse@b6dbaad02181a4975c0a22ae223a100481fb48e1,
     shaliulab/ggetho@0.3.6,
-    shaliulab/zeitgebr@0.3.2
+    shaliulab/scopr@6b47b5e78f8195d3c881436de914e6c92eb65e5a,
+    shaliulab/sleepr@0.3.3,
+    shaliulab/zeitgebr@b931f7716abca33e51aaa62ceeced7713387c73b
