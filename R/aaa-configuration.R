@@ -29,6 +29,8 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     # TODO link damr conf
     # content$damr <- damr::damrConfiguration$new(testing=testing)$content
     content$damr <- list(folders = list(results = list(path = "/DAM_data/results")))
+    # ethoscope database on another computer, served over http(s)/ftp, with an index of its .db files
+    content$remote_results <- list(path = "", index_file = "index.txt")
     content <- append(content, list("debug" = FALSE, port = 3838, testing=FALSE))
     content$binaries <- list('python' = system("which python3", intern = TRUE))
     content$dependencies <- list("ethoscope_imager" = "/opt/ethoscope-imager/imager.py")

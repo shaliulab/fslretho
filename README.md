@@ -28,6 +28,9 @@ The app is then at `http://<server>:3839`.
 * `/ethoscope_data` must contain `results/` (the ethoscope database) and `cache/` (writable; the
   snapshot viewer also extracts pictures there).
 * `/DAM_data/results` holds the DAM monitor files (optional, for DAM data).
+* To load ethoscope data from another computer (remote option in the Load tab), mount `/ethoscope_data/results`
+  writable: the .db files that are needed are downloaded there. The remote database is set in `remote_results`
+  of `inst/configuration/fslretho.conf` (an http(s) or ftp address serving the result folder and its `index.txt`).
 * `/fslretho_data` holds the saved sessions and the usage logs (`sessions/` and `logs/`, writable).
   Use a different folder for each version so their sessions don't mix.
 * The container runs as user 1000 by default; build with `--build-arg USER_ID=... --build-arg GROUP_ID=...`

@@ -282,9 +282,9 @@ describe_region_id <- function(x) {
 
 #' Compare the metadata against the recordings available in the ethoscope database
 #' @noRd
-check_against_database <- function(metadata, result_dir) {
+check_against_database <- function(metadata, result_dir, index_file = NULL) {
   files <- tryCatch(
-    suppressWarnings(suppressMessages(scopr::list_result_files(result_dir))),
+    suppressWarnings(suppressMessages(scopr::list_result_files(result_dir, index_file))),
     error = function(e) conditionMessage(e)
   )
   if (is.character(files)) {
@@ -313,8 +313,11 @@ check_against_database <- function(metadata, result_dir) {
 
     if (nrow(machine_files) == 0) {
       known <- unique(files$machine_name)
+      number <- function(x) suppressWarnings(as.integer(sub(".*?([0-9]+)$", "\\1", x)))
       similar <- unique(c(
         known[toupper(gsub("[^A-Za-z0-9]", "", known)) == toupper(gsub("[^A-Za-z0-9]", "", q$machine_name))],
+        # same ethoscope number, written differently (e.g. ETHOSCOPE_8 for ETHOSCOPE_008)
+        if (!is.na(number(q$machine_name))) known[number(known) %in% number(q$machine_name)],
         agrep(q$machine_name, known, value = TRUE, max.distance = 2)
       ))
       return(new_problem(
@@ -468,10 +471,11 @@ check_dam_metadata <- function(metadata, result_dir) {
 #' @param result_dir optional path to the ethoscope database (or the DAM result folder, for DAM metadata).
 #' If given, the metadata is also checked against the recordings available there.
 #' @param monitor "ethoscope" or "dam". By default it is told from the columns of the metadata.
+#' @param index_file for a remote ethoscope database (result_dir is a URL), the name of its index of .db files
 #' @return data.table with one row per problem and columns level (error/warning), column,
 #' rows (as numbered in a spreadsheet), problem and fix. Empty if the metadata is fine.
 #' @export
-check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monitor(metadata)) {
+check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monitor(metadata), index_file = NULL) {
   if (nrow(metadata) == 0) {
     return(new_problem("error", "", integer(0), "The metadata has no rows", "Add one row per fly below the header."))
   }
@@ -545,7 +549,7 @@ check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monit
       )
     }
     if (!is.null(result_dir) && nzchar(result_dir)) {
-      problems[[length(problems) + 1]] <- check_against_database(metadata, result_dir)
+      problems[[length(problems) + 1]] <- check_against_database(metadata, result_dir, index_file)
     }
   }
 

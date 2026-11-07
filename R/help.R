@@ -42,6 +42,13 @@ help_metadata <- function() {
       list("time (optional)", "Time the recording started, as HH:MM:SS. Only needed if the ethoscope was started more than once that day; otherwise the last recording of the day is used."),
       list("Any other column", "Genotype, sex, treatment... They can be used to colour, group and filter the plots. Cells must not be empty: write NONE instead.")
     )),
+    tags$h4("Ethoscope data on another computer"),
+    tags$p(
+      "Choose ", tags$i("Remote (download what is needed)"), " in the Load tab to use the ethoscope database of another ",
+      "computer (by default the node, cv1). The metadata is checked against the list of recordings of that computer (its index.txt), ",
+      "and the .db files of your flies are downloaded into the local result folder, with the same folders. ",
+      "A file is only downloaded again if it changed (e.g. the recording was still running), so the next loads are fast."
+    ),
     tags$h4("DAM monitors"),
     tags$pre("file,start_datetime,stop_datetime,region_id,genotype\nMonitor22.txt,2019-06-17 08:00:00,2019-06-20,1,wild type\nMonitor22.txt,2019-06-17 08:00:00,2019-06-20,2,mutant"),
     help_table(list(

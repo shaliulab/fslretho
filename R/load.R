@@ -77,6 +77,55 @@ is_dam_dataset <- function(data) {
   length(files) > 0 && !any(grepl("\\.db$", files))
 }
 
+#' Size of a remote file, from the Content-Length of an HTTP HEAD request (NA if unknown)
+#' @noRd
+remote_file_size <- function(url) {
+  headers <- tryCatch(curlGetHeaders(url), error = function(e) character(0))
+  size <- sub("(?i)^content-length:\\s*", "", grep("(?i)^content-length:", headers, value = TRUE, perl = TRUE), perl = TRUE)
+  if (length(size) == 0) NA_real_ else as.numeric(trimws(size[length(size)]))
+}
+
+#' Link ethoscope metadata to a remote database, downloading the .db files that are needed
+#'
+#' The remote index (as for scopr::link_ethoscope_metadata_remote) is used to find the .db files.
+#' They are copied to result_dir with the same folder structure, and only downloaded when they are
+#' missing or their size differs from the remote file. The size is asked to the server rather than
+#' read from the index, which is out of date for recordings that are still running.
+#' @noRd
+link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir) {
+  if (file.access(result_dir, mode = 2) != 0) {
+    stop(sprintf("the local result folder '%s' is not writable, so the .db files cannot be downloaded into it", result_dir))
+  }
+  old <- options(timeout = 3600)
+  on.exit(options(old))
+
+  files <- suppressMessages(scopr:::build_query(result_dir = remote_dir, query = metadata, index_file = index_file))
+  relative <- unique(sub(paste0("^", remote_dir, "/?"), "", files$path))
+  downloaded <- 0
+  shiny::withProgress(message = "Checking the .db files on the remote database", value = 0, {
+    for (i in seq_along(relative)) {
+      url <- paste(remote_dir, relative[i], sep = "/")
+      local <- file.path(result_dir, relative[i])
+      remote_size <- remote_file_size(url)
+      local_size <- if (file.exists(local)) file.size(local) else NA
+      if (is.na(local_size) || is.na(remote_size) || local_size != remote_size) {
+        shiny::incProgress(0, detail = sprintf("downloading %s", basename(local)))
+        dir.create(dirname(local), recursive = TRUE, showWarnings = FALSE)
+        tmp <- paste0(local, ".part")
+        utils::download.file(url, tmp, mode = "wb", method = "libcurl", quiet = TRUE)
+        if (!file.rename(tmp, local)) stop("could not write ", local)
+        downloaded <- downloaded + 1
+      }
+      shiny::incProgress(1 / length(relative))
+    }
+  })
+  shiny::showNotification(
+    sprintf("%d .db file(s) needed: %d downloaded from %s, %d already up to date", length(relative), downloaded, remote_dir, length(relative) - downloaded),
+    type = "message", duration = 10
+  )
+  scopr::link_ethoscope_metadata(metadata, result_dir = result_dir)
+}
+
 loadDataUI <- function(id) {
   ns <- NS(id)
   fluidRow(
@@ -88,7 +137,13 @@ loadDataUI <- function(id) {
           ns("metadata"), label = "Metadata (.csv)", multiple = TRUE,
           accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
         ),
-        textInput(ns("result_dir"), label = "Ethoscope result folder", value = ""),
+        radioButtons(ns("source"), label = "Ethoscope data", inline = TRUE,
+                     choices = c("On this computer" = "local", "Remote (download what is needed)" = "remote")),
+        conditionalPanel(
+          condition = sprintf("input['%s'] == 'remote'", ns("source")),
+          textInput(ns("remote_dir"), label = "Remote ethoscope database (with an index.txt)", value = "")
+        ),
+        textInput(ns("result_dir"), label = "Ethoscope result folder (on this computer)", value = ""),
         textInput(ns("result_dir_dam"), label = "DAM result folder", value = ""),
         actionButton(ns("submit"), label = "Submit", icon = icon("upload"), class = "btn-primary")
       )
@@ -126,6 +181,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
 
       updateTextInput(session, "result_dir", value = fslretho_conf()$scopr$folders$results$path)
       updateTextInput(session, "result_dir_dam", value = fslretho_conf()$damr$folders$results$path)
+      updateTextInput(session, "remote_dir", value = fslretho_conf()$remote_results$path)
       observeEvent(input$go_help, shinydashboard::updateTabItems(parent_session, "tabs", "help"))
 
       # Data is (re)loaded on submit, on reload and when the scoring parameters change
@@ -136,8 +192,12 @@ loadDataServer <- function(id, reload, params, parent_session) {
         safely(context = "loading the data", {
           metadata <- read_metadata(input$metadata$datapath)
           monitor <- metadata_monitor(metadata)
+          remote <- identical(monitor, "ethoscope") && identical(input$source, "remote")
+          index_file <- fslretho_conf()$remote_results$index_file
           result_dir <- if (identical(monitor, "dam")) input$result_dir_dam else input$result_dir
-          found <- check_metadata(metadata, result_dir, monitor)
+          # a remote database is checked against its index
+          found <- if (remote) check_metadata(metadata, input$remote_dir, monitor, index_file)
+                   else check_metadata(metadata, result_dir, monitor)
           problems(found)
           if (any(found$level == "error")) {
             show_problems_modal(found, sprintf("The metadata has %d problem(s) to fix before loading", sum(found$level == "error")))
@@ -153,7 +213,11 @@ loadDataServer <- function(id, reload, params, parent_session) {
             return()
           }
 
-          linked <- suppressWarnings(scopr::link_ethoscope_metadata(coerce_metadata(metadata), result_dir = input$result_dir))
+          linked <- if (remote) {
+            suppressWarnings(link_remote_ethoscope(coerce_metadata(metadata), input$remote_dir, index_file, result_dir))
+          } else {
+            suppressWarnings(scopr::link_ethoscope_metadata(coerce_metadata(metadata), result_dir = result_dir))
+          }
 
           missing <- flies_without_data(linked)
           if (nrow(missing) > 0) {

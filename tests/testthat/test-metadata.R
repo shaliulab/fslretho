@@ -99,3 +99,8 @@ test_that("correct DAM metadata has no problems", {
   path <- write_metadata(c("file,start_datetime,stop_datetime,region_id", "M064.txt,2017-07-01 08:00:00,2017-07-03,1"))
   expect_equal(nrow(check_metadata(read_metadata(path), dam_dir())), 0)
 })
+
+test_that("a machine name written with another number of digits is suggested", {
+  m <- data.table::data.table(machine_name = "E_29", date = "2016-01-25", region_id = "1", reference_hour = "7")
+  expect_match(check_metadata(m, result_dir())[column == "machine_name", fix], "E_029")
+})
