@@ -9,7 +9,7 @@
 [submodule "inst/dependencies/esquisse"]
 	path = inst/dependencies/esquisse
 	url = git@github.com:shaliulab/esquisse
-	branch = deployment
+	branch = fslretho-v3
 [submodule "inst/dependencies/ggetho"]
 	path = inst/dependencies/ggetho
 	url = git@github.com:shaliulab/ggetho

@@ -123,10 +123,23 @@ help_binning <- function() {
     help_table(list(
       list("Bin length", "Length of each bin, in minutes."),
       list("mean", "Average over the bin. For asleep, this is the fraction of the time spent asleep (0 to 1)."),
-      list("median, max, min", "Median, maximum and minimum value in the bin."),
-      list("P_doze", "Probability that an awake fly falls asleep from one window to the next (P(doze | wake))."),
-      list("P_wake", "Probability that an asleep fly wakes up from one window to the next (P(wake | doze)).")
+      list("median, max, min", "Median, maximum and minimum value in the bin.")
     )),
+    tags$h4("P(Wake) and P(Doze)"),
+    tags$p(
+      "Every binned dataset also has the columns ", tags$code("p_wake"), " and ", tags$code("p_doze"), ", computed as in ",
+      external_link("Wiggin et al. 2020 (PNAS)", "https://www.pnas.org/doi/10.1073/pnas.1917573117"),
+      ": the recording is split in 1 minute bins, active if the fly moved in that minute (DAM: any beam cross). ",
+      tags$b("P(Wake)"), " is the fraction of inactive minutes followed by an active minute; ",
+      tags$b("P(Doze)"), " the fraction of active minutes followed by an inactive one. ",
+      "A high P(Wake) means a lighter sleep; a high P(Doze) a higher sleep pressure."
+    ),
+    tags$p(
+      "In a bin where a fly was inactive only for a minute or two, a single transition gives P(Wake) = 0.5 or 1, ",
+      "and these values make the population average jump. Such bins are left empty: set the minimum number of minutes ",
+      "in the binning menu (", tags$code("n_inactive"), " and ", tags$code("n_active"), " give the number of minutes used; ",
+      "0 keeps every value, as in the paper). Longer bins also give smoother traces: the paper used 90 minute intervals."
+    ),
     tags$p(
       "Sleep binning applies to the Sleep analysis tab, Bout binning to the Bout analysis tab. During SD, ",
       tags$code("sd_on"), " is TRUE only for bins where the SD was running the whole time, and ",

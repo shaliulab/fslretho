@@ -66,7 +66,7 @@ reproducibility_script <- function(dataset_name, params) {
     "binned <- behavr::bin_apply_all(",
     "  dt, y = 'asleep', x = 't',",
     sprintf("  x_bin_length = behavr::mins(%s),", fmt(params$summary_time_window)),
-    sprintf("  FUN = %s", c(mean = "mean", median = "median", max = "max", min = "min", P_doze = "sleepr::p_doze", P_wake = "sleepr::p_wake")[[params$summary_FUN]]),
+    sprintf("  FUN = %s", c(mean = "mean", median = "stats::median", max = "max", min = "min")[[params$summary_FUN]]),
     ")",
     "",
     "## ---- Plot",

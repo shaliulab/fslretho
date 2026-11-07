@@ -9,11 +9,11 @@ STATISTICS <- list(mean = mean, std = stats::sd, max = max, min = min, median = 
 #' @noRd
 summarise_flies <- function(data, meta) {
   data <- data.table::as.data.table(data)
-  vars <- intersect(Y_VARS, names(data))
+  vars <- intersect(c(Y_VARS, "p_wake", "p_doze"), names(data))
   by <- intersect(c("id", "interval"), names(data))
   out <- data[, {
     res <- list()
-    for (v in vars) for (s in names(STATISTICS)) res[[paste0(s, "-", v)]] <- STATISTICS[[s]](get(v))
+    for (v in vars) for (s in names(STATISTICS)) res[[paste0(s, "-", v)]] <- STATISTICS[[s]](stats::na.omit(get(v)))
     res
   }, by = by]
 

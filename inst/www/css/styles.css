@@ -109,3 +109,39 @@
   resize: vertical;
   overflow: auto;
 }
+
+/* ---- Plots ----------------------------------------------------------------
+   While a plot is recomputed Shiny fades it out, so changing the plot (e.g. adding
+   a facet) made it go white before the new one appeared. Keep the current plot
+   visible until it is replaced, with a discreet label if it takes a while. */
+.shiny-plot-output {
+  position: relative;
+}
+.shiny-plot-output.recalculating {
+  opacity: 1 !important;
+  transition: none !important;
+}
+.shiny-plot-output::after {
+  content: "Updating plot...";
+  position: absolute;
+  top: 8px;
+  right: 50px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #555;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+}
+.shiny-plot-output.recalculating::after {
+  opacity: 1;
+  transition: opacity 0.2s ease 0.4s;
+}
+
+/* ---- Notifications ---------------------------------------------------- */
+#fsl-close-notifications {
+  display: block;
+  margin: 0 0 5px auto;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}

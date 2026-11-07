@@ -10,6 +10,109 @@ SNAPSHOT_MAX_IDS <- 10
 # Length of a block of snapshots, in seconds
 SNAPSHOT_BLOCK_SIZE <- 600
 
+# ROIs whose animals the stimulators manipulate (_roi_to_channel in the ethoscope code,
+# github.com/shaliulab/ethoscope). Every sleep depriver / optogenetic / state stimulator of
+# the lab derives from SleepDepStimulator or RobustSleepDepriver and uses these ROIs;
+# DefaultStimulator does nothing.
+STIMULATED_ROIS <- c(1, 3, 5, 7, 9, 12, 14, 16, 18, 20)
+NO_STIMULATION <- c("DefaultStimulator")
+
+#' Stimulator of a recording and the ROIs it manipulates
+#' @return list with class (e.g. RobustSleepDepriver), rois (integer) and date_range (numeric
+#' start / end pairs in seconds since epoch, GMT; empty if there is no SD schedule)
+#' @noRd
+recording_stimulation <- function(dbfile) {
+  metadata <- scopr::get_metadata(dbfile)
+  interactor <- metadata$selected_options$interactor
+  class <- if (is.null(interactor$class)) "DefaultStimulator" else sub(".*\\.", "", as.character(interactor$class))
+  date_range <- scopr:::parse_date_range(interactor$kwargs$date_range)
+  list(
+    class = class,
+    rois = if (class %in% NO_STIMULATION) integer(0) else STIMULATED_ROIS,
+    date_range = if (all(date_range == -1)) numeric(0) else date_range,
+    start = as.numeric(metadata$date_time),
+    frame_height = as.numeric(metadata$frame_height),
+    frame_width = as.numeric(metadata$frame_width)
+  )
+}
+
+#' Is the SD running at a given time (seconds since epoch, GMT)?
+#' @noRd
+sd_active <- function(stimulation, time) {
+  r <- stimulation$date_range
+  if (length(r) < 2) return(FALSE)
+  any(time >= r[seq(1, length(r), 2)] & time <= r[seq(2, length(r), 2)])
+}
+
+#' The ROI rectangles of a recording
+#' @noRd
+read_roi_map <- function(dbfile) {
+  con <- RSQLite::dbConnect(RSQLite::SQLite(), dbfile, flags = RSQLite::SQLITE_RO)
+  on.exit(RSQLite::dbDisconnect(con))
+  data.table::as.data.table(RSQLite::dbGetQuery(con, "SELECT roi_value, x, y, w, h FROM ROI_MAP"))
+}
+
+#' A snapshot with the ROIs drawn on top: white, or blue for the manipulated ROIs while the SD runs
+#' @param file extracted snapshot, named <id>_<t in ms>.jpg; the date banner is above the frame
+#' @noRd
+snapshot_with_rois <- function(file, roi_map, stimulation) {
+  dims <- jpeg_size(file)
+  banner <- max(0, dims[2] - stimulation$frame_height)
+  t_ms <- as.numeric(strsplit(tools::file_path_sans_ext(basename(file)), "_")[[1]][2])
+  sd_on <- sd_active(stimulation, stimulation$start + t_ms / 1000)
+
+  rects <- lapply(seq_len(nrow(roi_map)), function(i) {
+    r <- roi_map[i]
+    blue <- sd_on && r$roi_value %in% stimulation$rois
+    tags$rect(
+      x = r$x, y = r$y + banner, width = r$w, height = r$h, fill = "none",
+      stroke = if (blue) "#1e90ff" else "white", `stroke-width` = if (blue) 4 else 2,
+      tags$title(sprintf("ROI %s", r$roi_value))
+    )
+  })
+  image <- paste0("data:image/jpeg;base64,", jsonlite::base64_enc(readBin(file, "raw", file.info(file)$size)))
+
+  tagList(
+    div(
+      style = "position: relative;",
+      tags$img(src = image, style = "width: 100%; display: block;"),
+      tags$svg(
+        xmlns = "http://www.w3.org/2000/svg", viewBox = sprintf("0 0 %d %d", dims[1], dims[2]),
+        style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%;",
+        rects
+      )
+    ),
+    tags$p(
+      tags$small(
+        sprintf("Stimulator: %s. ", stimulation$class),
+        if (length(stimulation$rois) > 0) sprintf("Manipulated ROIs: %s. ", paste(stimulation$rois, collapse = ", ")) else "No ROI is manipulated. ",
+        if (length(stimulation$date_range) == 0) "No SD schedule."
+        else if (sd_on) tags$b(style = "color: #1e90ff;", "SD active at this time.")
+        else "SD not active at this time."
+      )
+    )
+  )
+}
+
+#' Width and height of a jpeg file, read from its header
+#' @noRd
+jpeg_size <- function(file) {
+  bytes <- readBin(file, "raw", min(file.info(file)$size, 65536))
+  i <- 3
+  while (i < length(bytes) - 8) {
+    if (bytes[i] != as.raw(0xFF)) { i <- i + 1; next }
+    marker <- as.integer(bytes[i + 1])
+    len <- as.integer(bytes[i + 2]) * 256 + as.integer(bytes[i + 3])
+    if (marker %in% c(0xC0:0xC3, 0xC5:0xC7, 0xC9:0xCB, 0xCD:0xCF)) {
+      h <- as.integer(bytes[i + 5]) * 256 + as.integer(bytes[i + 6])
+      w <- as.integer(bytes[i + 7]) * 256 + as.integer(bytes[i + 8])
+      return(c(w, h))
+    }
+    i <- i + 2 + len
+  }
+  stop("cannot read the size of ", basename(file))
+}
+
 #' Folder where the snapshots of a .db file are extracted
 #' @noRd
 snapshot_workspace <- function(dbfile) {
@@ -118,7 +221,8 @@ snapshotViewerUI <- function(id) {
         shinydashboard::box(
           width = NULL,
           uiOutput(ns("index_ui")),
-          imageOutput(ns("snapshot"), height = "auto")
+          uiOutput(ns("snapshot")),
+          helpText("ROIs are drawn in white; the ROIs manipulated by the stimulator turn blue while the SD schedule is active.")
         )
       )
     )
@@ -155,14 +259,21 @@ snapshotViewerServer <- function(id, input_rv) {
         updateSelectizeInput(session, "blocks", choices = snapshot_choices(blocks()), selected = character(0))
       })
 
+      stimulation <- reactive(recording_stimulation(req(input$dbfile)))
+      roi_map <- reactive(read_roi_map(req(input$dbfile)))
+
       output$summary <- renderTable({
         b <- blocks()
+        s <- stimulation()
+        r <- s$date_range
         data.frame(
-          Snapshots = nrow(b),
-          From = format(min(b$datetime), "%Y-%m-%d %H:%M"),
-          To = format(max(b$datetime), "%Y-%m-%d %H:%M")
+          Item = c("Snapshots", "From", "To", "Stimulator", "SD schedule"),
+          Value = c(
+            nrow(b), format(min(b$datetime), "%Y-%m-%d %H:%M"), format(max(b$datetime), "%Y-%m-%d %H:%M"), s$class,
+            if (length(r) < 2) "none" else paste(format(as.POSIXct(r, origin = "1970-01-01", tz = "GMT"), "%Y-%m-%d %H:%M"), collapse = " > ")
+          )
         )
-      })
+      }, colnames = FALSE)
 
       observeEvent(input$all, updateSelectizeInput(session, "blocks", selected = unique(as.character(blocks()$block))))
       observeEvent(input$clear, updateSelectizeInput(session, "blocks", selected = character(0)))
@@ -201,10 +312,10 @@ snapshotViewerServer <- function(id, input_rv) {
                     width = "100%", animate = animationOptions(interval = 1000))
       })
 
-      output$snapshot <- renderImage({
+      output$snapshot <- renderUI({
         files <- req(extracted())
-        list(src = files[min(req(input$index), length(files))], contentType = "image/jpeg", width = "100%")
-      }, deleteFile = FALSE)
+        snapshot_with_rois(files[min(req(input$index), length(files))], roi_map(), stimulation())
+      })
 
       output$video <- downloadHandler(
         filename = function() paste0(tools::file_path_sans_ext(basename(input$dbfile)), ".mp4"),

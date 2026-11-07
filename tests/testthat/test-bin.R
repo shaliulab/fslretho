@@ -7,7 +7,7 @@ scored <- function() {
 
 test_that("bin_dataset gives the same result as behavr::bin_apply_all", {
   dt <- scored()
-  for (fun in c("mean", "max", "P_doze")) {
+  for (fun in c("mean", "max", "median")) {
     new <- bin_dataset(dt, 30, SUMMARY_FUNCTIONS[[fun]])
     ref <- behavr::bin_apply_all(dt, y = "asleep", x = "t", x_bin_length = behavr::mins(30), FUN = SUMMARY_FUNCTIONS[[fun]])
     expect_true(behavr::is.behavr(new))
@@ -32,4 +32,32 @@ test_that("bouts are computed separately in each interval", {
   expect_setequal(unique(bouts$interval), c("default", "sd"))
   expect_true(all(bouts[interval == "sd", t] > behavr::hours(10) & bouts[interval == "sd", t] < behavr::hours(14)))
   expect_true(behavr::is.behavr(bouts))
+})
+
+test_that("P(Wake) and P(Doze) follow Wiggin et al. 2020", {
+  # minutes: inactive, inactive, active, inactive, active, active
+  active <- c(FALSE, FALSE, TRUE, FALSE, TRUE, TRUE)
+  # inactive minutes except the last minute: 3, of which 2 are followed by an active minute
+  expect_equal(leave_probability(active, FALSE), list(p = 2 / 3, n = 3L))
+  # active minutes except the last minute: 2, of which 1 is followed by an inactive minute
+  expect_equal(leave_probability(active, TRUE), list(p = 1 / 2, n = 2L))
+  # no inactive minute: undefined
+  expect_true(is.na(leave_probability(c(TRUE, TRUE), FALSE)$p))
+})
+
+test_that("P(Wake) is computed on 1 minute activity and left empty with too few minutes", {
+  # 10 s windows: moving only in the first window of minutes 3 and 6
+  d <- data.table::data.table(id = "a", interval = "default", t = seq(0, 3590, by = 10))
+  d[, moving := t %in% c(120, 300)]
+  p <- transition_probabilities(d, bin_length = 3600, min_minutes = 0)
+  # 60 minutes, active at minutes 2 and 5: inactive minutes before the last = 57, 2 followed by activity
+  expect_equal(p$n_inactive, 57L)
+  expect_equal(p$p_wake, 2 / 57)
+  expect_true(is.na(transition_probabilities(d, 3600, min_minutes = 5)$p_doze)) # only 2 active minutes
+})
+
+test_that("binned data has p_wake and p_doze", {
+  binned <- bin_dataset(scored(), 30, mean)
+  expect_true(all(c("p_wake", "p_doze", "n_inactive", "n_active") %in% names(binned)))
+  expect_true(all(binned$p_wake >= 0 & binned$p_wake <= 1, na.rm = TRUE))
 })
