@@ -158,11 +158,12 @@ help_binning <- function() {
       tags$code("duration"), " (seconds) and start time, and bins them by start time: ",
       tags$code("duration"), " is then the average length of the bouts that started in the bin."
     ),
-    tags$h4("Summaries"),
+    tags$h4("One value per fly"),
     tags$p(
-      "The plot at the bottom of the Sleep and Bout tabs shows one value per fly: the mean, standard deviation (std), ",
-      "minimum, maximum and median of each variable over all the bins shown in the plot above, after its filters. ",
-      "For example, mean-asleep is the average fraction of time asleep."
+      "The bar plot at the bottom of the Sleep and Bout tabs shows one bar per fly, computed on the data of the plot above ",
+      "(with its filters). Flies are sorted by date, machine and ROI; hover a bar to see which fly it is. For sleep, the value ",
+      "is minutes of sleep: over the whole period shown, per day, or in the light (ZT 0-12) or dark (ZT 12-24) phase per day. ",
+      "For bouts it is the mean bout duration, and for other variables (P(Wake), activity...) their average over the period."
     )
   )
 }

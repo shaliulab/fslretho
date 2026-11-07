@@ -35,16 +35,10 @@ server <- function(input, output, session) {
     hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "duration"), geom = "pop_etho")
   )
 
-  sleep_summary <- summaryStatisticServer("sleepSummary", sleep_plot, loaded_data)
-  bout_summary <- summaryStatisticServer("boutSummary", bout_plot, loaded_data)
-  sleep_summary_plot <- esquisseModuleServer(
-    "sleepPlotSummary", sleep_summary,
-    hardcoded_dragula = list(mapping = list(xvar = "id", yvar = "mean-asleep"), geom = "bar")
-  )
-  bout_summary_plot <- esquisseModuleServer(
-    "boutPlotSummary", bout_summary,
-    hardcoded_dragula = list(mapping = list(xvar = "id", yvar = "mean-duration"), geom = "bar")
-  )
+  # one value per fly, from the data shown in the plots above
+  sleep_summary <- flySummaryServer("sleepSummary", sleep_plot, loaded_data,
+                                    vars = c("asleep", "p_wake", "p_doze", "activity", "moving", "interactions", "max_velocity"))
+  bout_summary <- flySummaryServer("boutSummary", bout_plot, loaded_data, vars = "duration")
 
   ## Period ----
   # the period analysis uses the sleep data with the filters of the sleep plot
