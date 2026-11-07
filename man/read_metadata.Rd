@@ -2,13 +2,18 @@
 % Please edit documentation in R/metadata.R
 \name{read_metadata}
 \alias{read_metadata}
-\title{Load an ethoscope metadata .csv into R and perform basic validation}
+\title{Read one or more metadata .csv files into R, without any type conversion}
 \usage{
 read_metadata(metadata_path)
 }
 \arguments{
-\item{metadata_path}{Path to a metadata file}
+\item{metadata_path}{character, paths to metadata .csv files}
+}
+\value{
+data.table with character columns
 }
 \description{
-Load an ethoscope metadata .csv into R and perform basic validation
+All columns are read as text so that problems (e.g. a date that Excel turned
+into a number) can be reported exactly as the user wrote them.
+Lines starting with # are ignored. The separator (, or ;) is detected automatically.
 }

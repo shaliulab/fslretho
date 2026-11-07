@@ -2,17 +2,17 @@
 % Please edit documentation in R/bin.R
 \name{bout_analysis}
 \alias{bout_analysis}
-\title{A version of sleepr::bout_analysis that allows programmatic input}
+\title{Compute sleep bouts}
 \usage{
-bout_analysis(data, ...)
+bout_analysis(data, var = "asleep")
 }
 \arguments{
-\item{data}{\link{data.table} containing behavioural variable from or one multiple animals.
-When it has a key, unique values, are assumed to represent unique individuals (e.g. in a \link{behavr} table).
-Otherwise, it analysis the data as coming from a single animal. \code{data} must have a column \code{t} representing time.}
+\item{data}{behavr table with a column called like `var`}
+
+\item{var}{name of the binary variable whose bouts are computed}
 }
 \description{
-A version of sleepr::bout_analysis that allows programmatic input
+Compute sleep bouts
 }
 \seealso{
 sleepr::bout_analysis

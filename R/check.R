@@ -1,45 +1,25 @@
-#' Verify the fslretho installation
+#' Verify the fslretho installation: configuration readable, folders writable, dependencies present
+#' @noRd
 check_installation <- function() {
-
-  scopr_conf <- tryCatch({
-    conf <- scopr::scoprConfiguration$new()
-  }, error = function(e) {
-    stop("scopr configuration cannot be loaded.
-         Do I have read/write access to /etc/scopr.conf?")
+  conf <- tryCatch(fslretho_conf(), error = function(e) {
+    stop("The configuration cannot be loaded. Do I have read/write access to /etc/scopr.conf and /etc/fslretho.conf? ",
+         conditionMessage(e))
   })
 
-  conf <- tryCatch({
-    conf <- FSLRethoConfiguration$new()
-  }, error = function(e) {
-    stop("Configuration cannot be loaded.
-         Do I have read/write access to /etc/scopr.conf and /etc/fslretho.conf?")
-  })
-
-  ethoscope_cache <-  scopr_conf$content$folders$cache$path
-  status <- file.access(ethoscope_cache, mode = 2)
-  if (status != 0) stop(paste0("Cache directory ", ethoscope_cache, " is not writable.
-                               Please make sure it exists and is writable"))
-
-  sessions_folder <- conf$content$folders$sessions$path
-  status <- file.access(sessions_folder, mode = 2)
-  if (status != 0) stop(paste0("Cache directory ", sessions_folder, " is not writable.
-                               Please make sure it exists and is writable"))
-
-  logs_folder  <- conf$content$folders$logs$path
-  status <- file.access(sessions_folder, mode = 2)
-  if (status != 0) stop(paste0("Logs directory ", logs_folder, " is not writable.
-                               Please make sure it exists and is writable"))
-
-
-  conf <- FSLRethoConfiguration$new()
-  binary <- conf$content$binaries$python
-  script <- conf$content$dependencies$ethoscope_imager
-
-  if (!file.exists(binary)) {
-    stop(paste0("Cannot find python binary under ", binary))
+  folders <- c(
+    cache = conf$scopr$folders$cache$path,
+    sessions = conf$folders$sessions$path,
+    logs = conf$folders$logs$path
+  )
+  for (name in names(folders)) {
+    if (file.access(folders[[name]], mode = 2) != 0) {
+      stop(sprintf("The %s folder %s is not writable. Please make sure it exists and is writable", name, folders[[name]]))
+    }
   }
 
-  if (!file.exists(binary)) {
-    stop(paste0("Cannot find ethoscope_imager library under ", script))
+  if (!file.exists(conf$binaries$python)) stop("Cannot find the python binary under ", conf$binaries$python)
+  if (!file.exists(conf$dependencies$ethoscope_imager)) {
+    warning("Cannot find ethoscope_imager under ", conf$dependencies$ethoscope_imager)
   }
+  invisible(TRUE)
 }

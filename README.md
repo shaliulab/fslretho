@@ -1,57 +1,56 @@
+# fslretho
 
-# fslretho 
+fslretho is a Shiny app to analyse the sleep and circadian rhythm of flies recorded with
+[ethoscopes](https://gilestrolab.github.io/ethoscope/), built on the
+[rethomics](https://rethomics.github.io/) packages. The app has a Help tab that explains how it
+works and what every parameter means.
 
-<!-- badges: start -->
-<!-- badges: end -->
+The rethomics packages it uses (with changes made at the Sha Liu lab) are git submodules under
+`inst/dependencies/`, pinned to the exact versions the app is tested with.
 
-fslretho provides a user-friendly GUI to analyse behavioral datasets and focus the attention of users in the biological questions at hand, freeing them from programming technicalities.
+## Run with Docker
 
-It is shipped as an R Shiny application. Shiny is an R package that makes it easy to build interactive web apps straight from R. Find more about it [here](https://shiny.rstudio.com/).
+```bash
+git clone --recursive -b v3 https://github.com/shaliulab/fslretho
+cd fslretho
+docker build -t fslretho-v3 .
 
-## Installation
-
-You can install the released version of fslretho  from [CRAN](https://CRAN.R-project.org) with:
-
-``` r
-install.packages("fslretho ")
+docker run -d --name fslretho-v3 --restart unless-stopped \
+  -p 3839:3838 \
+  -v /ethoscope_data:/ethoscope_data \
+  -v /fslretho_data_v3:/fslretho_data \
+  fslretho-v3
 ```
 
-## Launch
+The app is then at `http://<server>:3839`.
 
-You can launch the GUI by running
+* `/ethoscope_data` must contain `results/` (the ethoscope database) and `cache/` (writable).
+* `/fslretho_data` holds the saved sessions and the usage logs (`sessions/` and `logs/`, writable).
+  Use a different folder for each version so their sessions don't mix.
+* The container runs as user 1000 by default; build with `--build-arg USER_ID=... --build-arg GROUP_ID=...`
+  to match the owner of the data folders.
 
-``` r
+### Running v3 next to the previous version
+
+Each version is a separate image and container, so they don't interfere: keep the old one
+(e.g. container `fslretho`, port 3838) running and start v3 with its own name and port (3839 above).
+Both can read the same ethoscope database and cache. When everyone has switched, stop the old
+container and, if you like, map v3 to port 3838.
+
+## Run without Docker
+
+```r
+# from a clone with submodules (git submodule update --init)
+for (pkg in c("behavr", "zeitgebr", "ggetho", "damr", "scopr", "sleepr", "esquisse")) {
+  install.packages(file.path("inst/dependencies", pkg), repos = NULL, type = "source")
+}
+install.packages(".", repos = NULL, type = "source")
 fslretho::main()
 ```
 
-## TODO
+The folders are configured in `/etc/fslretho.conf` and `/etc/scopr.conf` (see `inst/configuration/`).
 
+## Updating a dependency
 
-Priority
-=========
-- [ ] Metadata -> must have region_id, machine_name, date, reference_hour
-- [x] ZT lines 0 12
-- [ ] deploy
-- [ ] documentation, examples and videos
-
-Later
-======
-Bouts
-interactions
-Support more specialized analyses
-Write tests
-Provide custom code functionality get it to work
-
-
-
-DAM
-====
-Integrate DAM into the data backup system
-
-Data Storage
-================
-Transfer data to L
-
-
-
-
+Move the submodule to the new commit, update the matching `Remotes:` entry in `DESCRIPTION`,
+and commit both.

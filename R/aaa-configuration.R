@@ -87,3 +87,18 @@ FSLRethoConfiguration <- R6::R6Class(classname = "FSLREthoConfiguration", public
     return(self$content)
   }
 ))
+
+
+#' Read the FSLRetho configuration once per R session
+#'
+#' Configuration files are read when the app runs (not when the package is built),
+#' and only once, instead of every time a module needs a setting.
+#' @return list with the configuration content
+#' @noRd
+fslretho_conf <- local({
+  content <- NULL
+  function() {
+    if (is.null(content)) content <<- FSLRethoConfiguration$new()$content
+    content
+  }
+})

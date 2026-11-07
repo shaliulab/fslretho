@@ -4,12 +4,10 @@
 \alias{main}
 \title{Start an FSLRetho instance}
 \usage{
-main(display_mode = FALSE, port = NULL)
+main(port = NULL)
 }
 \arguments{
-\item{display_mode}{Whether to show the code alongside the application or not}
-
-\item{port}{Port on which fslretho2 should run}
+\item{port}{Port on which fslretho should run. Defaults to the port in /etc/fslretho.conf}
 }
 \description{
 Start an FSLRetho instance

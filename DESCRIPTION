@@ -1,6 +1,6 @@
 Package: fslretho
 Title: fslretho: a Shiny GUI to the Rethomics suite
-Version: 2.1.0
+Version: 3.0.0
 Authors@R: 
     person(given = "Antonio",
            family = "Ortega",
@@ -18,19 +18,17 @@ Imports:
     data.table,
     dplyr,
     ggplot2,
-    lubridate,
     magrittr,
-    htmltools,
     shiny,
     shinydashboard,
     shinydashboardPlus,
-    shinyWidgets,
     shinybusy,
-    stringr,
     R6,
     rjson,
-    rlang,
     RSQLite,
+    stats,
+    tools,
+    utils,
     behavr (>= 0.3.3),
     damr (>= 0.3.4),
     esquisse (>= 1.0.1.9300),
@@ -49,6 +47,6 @@ Remotes:
     shaliulab/damr@73b0b966590809702a0b1ad9175b3411b39fd4c6,
     shaliulab/esquisse@24f226f3588fb6879cd653c47fbec12e84963e29,
     shaliulab/ggetho@c593ba2a316e3a48624ea0e8a08b87eb2ec63610,
-    shaliulab/scopr@4e9934a5537429dc3bbcebfa64e7243c344d3837,
+    shaliulab/scopr@4341924faa7aadeb105541d7742aa46fcbb9b542,
     shaliulab/sleepr@ff75dea9b817ea3ed5128219b2a5eb13a24a5a8f,
     shaliulab/zeitgebr@0f9f9d92f2f9f531a6240b0d1d59ef8923f92926

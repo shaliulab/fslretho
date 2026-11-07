@@ -1,24 +1,13 @@
-var refresh_plot = function() {
-  new_height = parseInt(document.querySelector("div#analyseSleep_00").style.height.replace("px",""));
-  setTimeout(1000);
-  document.querySelector("div#analyseSleep_00 > img").height = new_height;
-  console.log(new_height);
-  setTimeout(1000);
-  Shiny.onInputChange("refresh_analyseSleep_00", new_height);
+// Keep the dropdown menus of the top bar (scoring parameters, binning, downloads)
+// inside the window: if a menu would overflow on the right, shift it to the left.
+$(document).on('shown.bs.dropdown', '.navbar .dropdown', function () {
+  var menu = $(this).children('.dropdown-menu');
+  menu.css('left', '0px');
+  var overflow = menu[0].getBoundingClientRect().right - (window.innerWidth - 10);
+  if (overflow > 0) menu.css('left', (-overflow) + 'px');
+});
 
-  setTimeout(5000);
-  document.querySelector("div#analyseSleep_00 > img").height = new_height;
-
-};
-
-// Check every 100ms if R is busy or not
-// and set the visibility of the div.busy accordingly
-// this div displays a stop sign that should be visible only when shiny is busy
-setInterval(function(){
-  if ($('html').attr('class')=='shiny-busy') {
-    $('div.busy').show();
-  } else {
-    $('div.busy').hide();
-  }
-},100);
-
+// Clicking inside a dropdown block (sliders, buttons) must not close it
+$(document).on('click', '.navbar .dropdown-menu .fsl-dropdown', function (e) {
+  e.stopPropagation();
+});

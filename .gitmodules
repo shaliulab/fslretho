@@ -17,7 +17,7 @@
 [submodule "inst/dependencies/scopr"]
 	path = inst/dependencies/scopr
 	url = git@github.com:shaliulab/scopr
-	branch = fslretho-pin
+	branch = fslretho-v3
 [submodule "inst/dependencies/sleepr"]
 	path = inst/dependencies/sleepr
 	url = git@github.com:shaliulab/sleepr

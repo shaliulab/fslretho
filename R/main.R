@@ -1,40 +1,19 @@
 #' Start an FSLRetho instance
 #'
-#' @param display_mode Whether to show the code alongside the application or not
-#' @param port Port on which fslretho2 should run
+#' @param port Port on which fslretho should run. Defaults to the port in /etc/fslretho.conf
 #' @import shiny
 #' @export
-main <- function(display_mode=FALSE, port=NULL) {
-  # launch the app in a separate browser window
-  options(shiny.launch.browser = FALSE)
-
+main <- function(port = NULL) {
   check_installation()
 
-  # always on the same port: 3838
-  if (is.null(port)) {
-      options(shiny.port = FSLRethoConfiguration$new()$content[["port"]])
-  } else {
-      options(shiny.port = port)
-  }
-
-  # use the 0.0.0.0 host so the app can be accessed remotely
-  options(shiny.host = "0.0.0.0")
-  # options("retry_locked" = tempfile(pattern = "retry_locked"))
-  # message(sprintf("retry_locked -> %s", getOption("retry_locked")))
-
-  # get an interactive prompt that displays the traceback
-  # gives you the ability to interactively debug inside any of the frames
-  # options(error = recover)
-
-  options(display.mode = display_mode)
-
-  # Provide a browsable tree of reactive expressions, inputs, and outputs (reactlog)
-  if (requireNamespace("reactlog", quietly = TRUE)) reactlog::reactlog_enable()
-
-  options(shiny.fullstacktrace = TRUE)
+  options(
+    shiny.launch.browser = FALSE,
+    shiny.port = if (is.null(port)) fslretho_conf()$port else port,
+    # listen on all interfaces so the app can be accessed remotely
+    shiny.host = "0.0.0.0",
+    shiny.fullstacktrace = TRUE
+  )
 
   shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
-
-  # launch the app
   shiny::shinyApp(server = server, ui = ui())
 }

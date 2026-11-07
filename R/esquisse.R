@@ -1,28 +1,32 @@
+#' Treat identifiers as categories in the plots
+#' @noRd
 coerce_columns <- function(data) {
-
-  data$region_id <- as.factor(data$region_id)
-  data$datetime <- as.factor(data$region_id)
-  data$fly_count <- as.factor(data$fly_count)
+  for (col in intersect(c("region_id", "datetime", "fly_count"), names(data))) {
+    data.table::set(data, j = col, value = as.factor(data[[col]]))
+  }
+  # esquisse's filters cannot handle Inf (e.g. max_velocity when two frames share a timestamp)
+  for (col in names(data)[sapply(data, is.double)]) {
+    bad <- which(is.infinite(data[[col]]))
+    if (length(bad) > 0) data.table::set(data, i = bad, j = col, value = NA_real_)
+  }
   data
 }
 
-#' @importFrom esquisse esquisse_server
+#' Plot a dataset with esquisse
+#' @param ... passed to esquisse::esquisse_server (e.g. the default plot)
+#' @return dataset with the data as filtered in esquisse
+#' @noRd
 esquisseModuleServer <- function(id, input_rv, ...) {
   moduleServer(
     id,
     function(input, output, session) {
 
-      esquisse_rv <- reactiveValues(
-        data = NULL, name = NULL, time = NULL
-      )
+      esquisse_rv <- dataset_rv()
 
-      observeEvent(c(input_rv$time, input_rv$data), {
-
+      observeEvent(input_rv$time, {
         data <- req(input_rv$data)
-        if ("behavr" %in% class(data)) data <- behavr::rejoin(data)
-        esquisse_rv$data <- coerce_columns(data)
-        esquisse_rv$name <- input_rv$name
-        esquisse_rv$time <- Sys.time()
+        if (inherits(data, "behavr")) data <- behavr::rejoin(data)
+        set_dataset(esquisse_rv, coerce_columns(data.table::as.data.table(data)), input_rv$name)
       })
 
       output_rv <- esquisse::esquisse_server(
@@ -33,55 +37,40 @@ esquisseModuleServer <- function(id, input_rv, ...) {
         ...
       )
 
-
       observeEvent(output_rv$time, {
-        output_rv$data
         output_rv$name <- input_rv$name
       }, ignoreInit = TRUE)
 
-      return(output_rv)
+      output_rv
     }
   )
 }
 
-#' @importFrom esquisse esquisse_ui esquisseContainer
-#'
-esquisseModuleUI <- function(id, ...) {
-
+esquisseModuleUI <- function(id) {
   ns <- NS(id)
-
   esquisse::esquisse_ui(
     ns("esquisse"),
     header = FALSE,
     container = esquisse::esquisseContainer(fixed = FALSE, height = "700px"),
     controls = c("labs", "parameters", "appearance", "filters", "code"),
-    insert_code = FALSE,
-    ...
+    insert_code = FALSE
   )
 }
 
-
-#' @import dplyr
+#' Apply the filters made in esquisse to the original (behavr) dataset
+#' @noRd
 esquisseReplayServer <- function(id, data_rv, esquisse_rv) {
-
   moduleServer(
     id,
     function(input, output, session) {
-
-      output_rv <- reactiveValues(data =  NULL, name = NULL , time = NULL)
-
+      output_rv <- dataset_rv()
       observeEvent(c(data_rv$time, esquisse_rv$time), {
-        req(data_rv$data)
-        req(esquisse_rv$data)
-        # data  <- list(req(data_rv$data))
-        # names(data) <- data_rv$name
-        # filtered_data <- rlang::eval_tidy(expr = req(esquisse_rv$code_filters), data = data)
-        output_rv$data <- behavr::unjoin(data_rv$data, esquisse_rv$data)
-        output_rv$name <- data_rv$name
-        output_rv$time <- Sys.time()
+        req(data_rv$data, esquisse_rv$data)
+        safely(context = "applying the plot filters", {
+          set_dataset(output_rv, behavr::unjoin(data_rv$data, esquisse_rv$data), data_rv$name)
+        })
       }, ignoreInit = TRUE)
-
-      return(output_rv)
+      output_rv
     }
   )
 }

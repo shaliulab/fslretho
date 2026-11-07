@@ -1,116 +1,78 @@
 #' Server function of FSLRetho
 #'
-#' @import shiny
-#' @importFrom rlang current_env
+#' Datasets flow between modules as reactiveValues with slots data, name and time (see dataset_rv).
 #' @noRd
 server <- function(input, output, session) {
 
-  welcomePageServer("welcome")
   track_usage()
-
-  # Define a trigger shared across modules
-  reload <- reloadModuleServer("reload")
-  debugModuleServer("debug", envir = rlang::current_env())
-
-  ## Preparation ----
-  # Run a simple ethoscope backup manager
-  # backupManagerServer("manageBackup")
+  welcomePageServer("welcome", session)
 
   ## Load ----
-  # Here the choice between dam or ethoscope happens
-  # After this, the data has only one module
-  scored_data <- loadDataServer("loadData", reload)
+  scoring <- scoringParamsServer("scoring")
+  load <- loadDataServer("loadData", reload = reactive(input$reload), params = scoring, parent_session = session)
+  # the last dataset loaded, either from the database or from a saved session
+  loaded_data <- sessionsServer("sessions", load$dataset)
 
-  # In case the user wants to use a builtin dataset
-  loaded_data <- saveLoadSessionServer("sessions", scored_data)
+  output$dataset_name <- renderText(if (is.null(loaded_data$name)) "No data loaded" else loaded_data$name)
+  viewMetadataServer("viewMetadata", loaded_data)
 
-  # snapshotViewerServer("snapshot_viewer", loaded_data)
-
-  ## Score ----
-  # scored_data <- scoreDataServer("scoreData", loaded_data)
-  selected_data <- monitorSelectorServer("selectData", loaded_data)
-  monitor <- reactive({
-    selected_data$monitor
-  })
-
-  sqliteDBZIPServer("sqliteDB", selected_data, monitor)
-
-  reproducibilityModuleServer("reproducibility", envir = rlang::current_env())
-
-  ## Metadata viz ----
-  # View loaded metadata
-  viewMetadataServer("viewMetadata", selected_data)
-
-  ## Bin sleep ----
-  sleep_data <- binDataServer("sleepBin", selected_data, allow_pareto=TRUE)
-  interactions_data <- binDataServer(
-    "interactionsBin", selected_data,
-    y="interactions", summary_time_window = 30, summary_FUN = "mean"
-  )
-
-  premadePlotsServer("premadePlots", sleep_data, interactions_data)
-  raw_datasets <- rawPlotsServer("rawPlots", sleep_data, interactions_data)
-
-  ## Bin bouts ----
-  bout_data <- binDataServer("boutBin", selected_data,
-                             # compute bouts
-                             preproc_FUN = bout_analysis,
-                             # of the var asleep
-                             var = "asleep")
+  ## Bin ----
+  sleep_data <- binDataServer("sleepBin", loaded_data)
+  interactions_data <- binDataServer("interactionsBin", loaded_data, summary_time_window = 30, summary_FUN = "mean")
+  bout_data <- binDataServer("boutBin", loaded_data, preproc_FUN = bout_analysis)
 
   ## Plot ----
-  # Plot sleep result
+  premadePlotsServer("premadePlots", sleep_data, interactions_data)
+  raw_data <- rawPlotsServer("rawPlots", sleep_data, interactions_data)
 
-  sleep_module <- esquisseModuleServer(
-    "sleepPlot", sleep_data,
-    # pass this from the conf
-    x_unit = c(t = "hours"),
-    hardcoded_dragula = list(
-      mapping = list(xvar="t", yvar="asleep"),
-      geom = "pop_etho"
-    )
+  sleep_plot <- esquisseModuleServer(
+    "sleepPlot", sleep_data, x_unit = c(t = "hours"),
+    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "asleep"), geom = "pop_etho")
   )
-  sleep_bout_module <- esquisseModuleServer(
-    "boutPlot", bout_data,
-    hardcoded_dragula = list(
-      mapping = list(xvar="t", yvar="duration"),
-      geom = "pop_etho"
-    ),
-    # pass this from the conf
-    x_unit = c(t = "hours")
+  bout_plot <- esquisseModuleServer(
+    "boutPlot", bout_data, x_unit = c(t = "hours"),
+    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "duration"), geom = "pop_etho")
   )
 
-
-  # TODO summaryStatisticServer module can probably be replaced with binDataServer using
-  # x_bin_length=Inf (make a single bin for all the data)
-  sleep_summary <- summaryStatisticServer("sleepSummary", sleep_module)
-  bout_summary <- summaryStatisticServer("boutSummary", sleep_bout_module)
-
-  sleep_module_summary <- esquisseModuleServer(
+  sleep_summary <- summaryStatisticServer("sleepSummary", sleep_plot, loaded_data)
+  bout_summary <- summaryStatisticServer("boutSummary", bout_plot, loaded_data)
+  sleep_summary_plot <- esquisseModuleServer(
     "sleepPlotSummary", sleep_summary,
-    hardcoded_dragula = list(
-      mapping = list(xvar="id", yvar="mean-asleep"),
-      geom = "bar"
-    )
+    hardcoded_dragula = list(mapping = list(xvar = "id", yvar = "mean-asleep"), geom = "bar")
   )
-  sleep_bout_module_summary <- esquisseModuleServer(
+  bout_summary_plot <- esquisseModuleServer(
     "boutPlotSummary", bout_summary,
-      hardcoded_dragula = list(
-        mapping = list(xvar="id", yvar="mean-duration"),
-        geom = "bar"
-      )
+    hardcoded_dragula = list(mapping = list(xvar = "id", yvar = "mean-duration"), geom = "bar")
   )
 
-  # apply the filters from esquisse to the original data
-  sleep_replay <- esquisseReplayServer("replay", sleep_data, sleep_module)
-  circadian_data <- periodAnalysisServer("periodAnalysis", sleep_replay)
+  ## Period ----
+  # the period analysis uses the sleep data with the filters of the sleep plot
+  sleep_filtered <- esquisseReplayServer("replay", sleep_data, sleep_plot)
+  rhythm <- periodAnalysisServer("periodAnalysis", sleep_filtered)
 
+  ## Export ----
+  downloadsServer(
+    "downloads",
+    datasets = list(
+      `sleep-binned` = sleep_plot,
+      `sleep-scored` = loaded_data,
+      `raw-data` = raw_data,
+      `bouts` = bout_plot,
+      `sleep-summary` = sleep_summary,
+      `bouts-summary` = bout_summary,
+      `periodogram` = rhythm$periodogram,
+      `spectrogram` = rhythm$spectrogram
+    ),
+    loaded = loaded_data
+  )
 
-  downloadServer("binned-sleep", sleep_module, sleep_data$name)
-  downloadServer("sequence-sleep", loaded_data, selected_data$name, monitor)
-  downloadServer("bouts-sleep", sleep_bout_module, selected_data$name)
-  downloadServer("sleep-summary", sleep_summary, sleep_module_summary$name)
-  downloadServer("bouts-summary", sleep_bout_module_summary, sleep_bout_module_summary$name)
-  downloadServer("periodogram_dataset", circadian_data$periodogram, circadian_data$periodogram$name)
-  downloadServer("spectrogram_dataset", circadian_data$spectrogram, circadian_data$spectrogram$name)
+  reproducibilityModuleServer(
+    "reproducibility", loaded_data,
+    params = reactive(list(
+      result_dir = load$result_dir(),
+      scoring = scoring(),
+      summary_time_window = input[["sleepBin-summary_time_window"]],
+      summary_FUN = input[["sleepBin-summary_FUN"]]
+    ))
+  )
 }

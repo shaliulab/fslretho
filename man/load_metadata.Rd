@@ -2,24 +2,13 @@
 % Please edit documentation in R/metadata.R
 \name{load_metadata}
 \alias{load_metadata}
-\title{Read and validate provided metadata}
+\title{Read and type a metadata file, ready for scopr::link_ethoscope_metadata}
 \usage{
-load_metadata(metadata_path, monitor)
+load_metadata(metadata_path)
 }
 \arguments{
-\item{metadata_path}{Absolute path to a metadata.csv file}
-
-\item{monitor}{Name of the monitor that generated the data the passed metadata is trying to load
-This information is used to select the right validation function}
+\item{metadata_path}{Absolute path to one or more metadata.csv files}
 }
 \description{
-Read and validate provided metadata
-}
-\note{
-`load_metadata` will NOT link the metadata to a local database
-}
-\seealso{
-https://github.com/rethomics/scopr/blob/master/R/link-ethoscope-metadata.R
-
-https://github.com/rethomics/damr/blob/master/R/link-dam-metadata.R
+Read and type a metadata file, ready for scopr::link_ethoscope_metadata
 }

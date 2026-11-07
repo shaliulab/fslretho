@@ -1,9 +1,7 @@
+#' Log the user's activity in the logs folder, if shinylogs is installed
+#' @noRd
 track_usage <- function() {
-
-  # Log relevant events made by the user
   if (requireNamespace("shinylogs", quietly = TRUE)) {
-    conf <- FSLRethoConfiguration$new()
-    logs_folder <- conf$content$folders$logs$path
-    shinylogs::track_usage(storage_mode = shinylogs::store_json(path = logs_folder))
+    shinylogs::track_usage(storage_mode = shinylogs::store_json(path = fslretho_conf()$folders$logs$path))
   }
 }

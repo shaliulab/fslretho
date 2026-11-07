@@ -1,50 +1,72 @@
-########################################################
-# Not needed, only for readability/maintenance purposes
-########################################################
-#include "R/body.R"
-#include "R/header.R"
-########################################################
+APP_TITLE <- "FSLRetho v3"
 
-#' @importFrom shinydashboard menuItem sidebarMenu dashboardSidebar
-#' @importFrom shiny icon
+#' A dropdown menu in the top bar
+#' @noRd
+header_dropdown <- function(id, title, ...) {
+  shinydashboardPlus::dropdownBlock(id = id, title = title, div(class = "fsl-dropdown", ...))
+}
+
+get_header <- function() {
+  shinydashboardPlus::dashboardHeader(
+    title = APP_TITLE,
+    leftUi = tagList(
+      header_dropdown("scoringInput", "Scoring parameters", scoringParamsUI("scoring")),
+      header_dropdown("sleepBinningInput", "Sleep binning", binDataUI("sleepBin")),
+      header_dropdown("boutBinningInput", "Bout binning", binDataUI("boutBin")),
+      header_dropdown("downloadCenter", "Download datasets", downloadsUI("downloads")),
+      header_dropdown("sessionsMenu", "Sessions", sessionsUI("sessions"))
+    ),
+    tags$li(class = "dropdown fsl-header-item", actionButton("reload", "", icon = icon("redo"), title = "Load the metadata again")),
+    tags$li(class = "dropdown fsl-header-item", div(class = "fsl-dataset-name", textOutput("dataset_name", inline = TRUE)))
+  )
+}
+
 get_sidebar <- function() {
-  sidebar <- shinydashboard::dashboardSidebar(
+  shinydashboard::dashboardSidebar(
     shinydashboard::sidebarMenu(
-      shinydashboard::menuItem("Welcome", tabName = 'welcome', icon = icon('info')),
-      shinydashboard::menuItem("Load", tabName = 'load', icon = icon('upload')),
-      shinydashboard::menuItem("Snapshot viewer", tabName = 'snapshot', icon = icon('file-video')),
-      shinydashboard::menuItem("Raw", tabName = 'raw'),
-      shinydashboard::menuItem("Premade", tabName = 'premade'),
-      shinydashboard::menuItem("Sleep analysis", tabName = 'sleep', icon = icon('moon')),
-      shinydashboard::menuItem("Bout analysis", tabName = 'bout', icon = icon('moon')),
-      shinydashboard::menuItem("Period analysis", tabName = 'period', icon = icon('clock')),
-      shinydashboard::menuItem("Revise metadata", tabName = 'metadata', icon = icon('table')),
-      shinydashboard::menuItem("Etho backup manager", tabName = 'backup', icon = icon('save')),
-      shinydashboard::menuItem("Reproducibility script", tabName = 'reproducibility', icon = icon('info'))
+      id = "tabs",
+      shinydashboard::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
+      shinydashboard::menuItem("Load", tabName = "load", icon = icon("upload")),
+      shinydashboard::menuItem("Raw", tabName = "raw", icon = icon("chart-line")),
+      shinydashboard::menuItem("Premade", tabName = "premade", icon = icon("chart-bar")),
+      shinydashboard::menuItem("Sleep analysis", tabName = "sleep", icon = icon("moon")),
+      shinydashboard::menuItem("Bout analysis", tabName = "bout", icon = icon("moon")),
+      shinydashboard::menuItem("Period analysis", tabName = "period", icon = icon("clock")),
+      shinydashboard::menuItem("Revise metadata", tabName = "metadata", icon = icon("table")),
+      shinydashboard::menuItem("Reproducibility script", tabName = "reproducibility", icon = icon("code")),
+      shinydashboard::menuItem("Help", tabName = "help", icon = icon("question-circle"))
     )
   )
 }
-#' A UI for fslretho
-#'
-#' @importFrom shinydashboardPlus dashboardPage dashboardHeader
-#' @importFrom shinydashboard menuItem tabItems tabItem dashboardBody
-#' @importFrom shiny icon actionButton
-#' @importFrom esquisse esquisserUI
-#' @importFrom magrittr `%>%`
-#' @importFrom shinybusy add_busy_bar
-shinydashboard_ui <- function() {
 
-  header <- get_header()
-  sidebar <- get_sidebar()
-  body <- get_body()
-
-  ui <- shinydashboardPlus::dashboardPage(skin = "black"
-                                          , header
-                                          , sidebar
-                                          , body
-                                          )
-  return(ui)
-
+get_body <- function() {
+  tab <- shinydashboard::tabItem
+  shinydashboard::dashboardBody(
+    shinybusy::add_busy_bar(color = "#FF0000"),
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "fslretho/css/styles.css"),
+      tags$script(src = "fslretho/js/my_javascript.js")
+    ),
+    shinydashboard::tabItems(
+      tab("welcome", welcomePageUI("welcome")),
+      tab("load", loadDataUI("loadData")),
+      tab("raw", rawPlotsUI("rawPlots")),
+      tab("premade", premadePlotsUI("premadePlots")),
+      tab("sleep", esquisseModuleUI("sleepPlot"), esquisseModuleUI("sleepPlotSummary")),
+      tab("bout", esquisseModuleUI("boutPlot"), esquisseModuleUI("boutPlotSummary")),
+      tab("period", periodAnalysisUI("periodAnalysis")),
+      tab("metadata", viewMetadataUI("viewMetadata")),
+      tab("reproducibility", reproducibilityModuleUI("reproducibility")),
+      tab("help", helpPageUI("help"))
+    )
+  )
 }
 
-ui <- shinydashboard_ui
+#' The UI of fslretho
+#' @noRd
+ui <- function() {
+  shinydashboardPlus::dashboardPage(
+    skin = "black", title = APP_TITLE,
+    header = get_header(), sidebar = get_sidebar(), body = get_body()
+  )
+}

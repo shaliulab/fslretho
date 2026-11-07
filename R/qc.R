@@ -1,23 +1,3 @@
-#' Quality control module
-#' Functionality to ensure data issues are exposed
-#' # Check the light intensity is stable through the experiment
-#'  An unstable IR strip can cause the data to be corrupted because the ethoscope
-#'  tracker is designed to track pixel intensity changes.
-#'  In normal conditions, they follow the animal behavior,
-#'  however an unstable IR strip can produce intensity changes independent of the animal
-#'  which confuses the tracker and bogs the results
-#'
-#' ## Check the flies move through out the tube during SD,
-#' as opposed to stay in only a tiny fraction of the tube
-#' SD is another component contributing to background instability for obvious reasons:
-#' if the tube moves, there will be several pixels in the ROI that will change,
-#' independent of the animal. The tracker is robust,
-#' but sometimes this changes are noisy enough to again confuse the tracker.
-#' This, combined with the fact that a very sleepy fly can actually not react
-#' to a moving tube, drive the labeling algorithm to label a fly as awake when it really is asleep
-aaaaaaaa <- function() {}
-
-
 #' Apply Pareto rule to wake behavior during SD
 #'
 #' Require significant tube exploration to label behavior as awake.
@@ -122,9 +102,9 @@ apply_pareto_rule <- function(scored_dataset, binned_dataset, sd_only=TRUE, n_wi
   setkey(binned_dataset, id, t)
   setkey(sd_dataset, id, t)
   setkey(pareto_dataset, id, t)
-  merged_dataset <- merge_behavr_all(binned_dataset, sd_dataset, merge_meta = F)
+  merged_dataset <- behavr::merge_behavr_all(binned_dataset, sd_dataset, merge_meta = F)
   setkey(merged_dataset, id, t)
-  merged_dataset <- merge_behavr_all(merged_dataset, pareto_dataset, merge_meta = F)
+  merged_dataset <- behavr::merge_behavr_all(merged_dataset, pareto_dataset, merge_meta = F)
 
   if (sd_only) {
     merged_dataset[, pareto := pareto & sd_on]
@@ -133,44 +113,3 @@ apply_pareto_rule <- function(scored_dataset, binned_dataset, sd_only=TRUE, n_wi
   setkey(merged_dataset, id)
   return(merged_dataset)
 }
-
-
-load_ethoscope_qc <- function(metadata) {
-
-  qc <- tryCatch({
-    qcs <- lapply(metadata$file_info, function(x) {
-      message(paste0("Loading QC from ", x$path))
-      qc <- data.table::as.data.table(scopr::sqlite(file = x$path, "SELECT * FROM QC;"))
-      roi_map <- data.table::as.data.table(scopr::sqlite(file = x$path, "SELECT * FROM ROI_MAP;"))
-      ids <- paste0(substr(basename(x$path), 1, 26), "|", stringr::str_pad(string = roi_map$roi_value, width = 2, pad = "0"))
-
-      ids <- rep(ids, each=nrow(qc))
-      qc <- qc[rep(1:nrow(qc), times=nrow(roi_map))]
-      qc$id <- as.factor(ids)
-      setkey(qc, id, t)
-      qc
-    })
-
-    qcs <- lapply(qcs, function(x) {
-      x[, .(id, t, mean, min, max)]
-    })
-
-
-    qc <- do.call(rbind, qcs)
-    setkey(qc, id)
-    meta <- data.table(id = unique(qc$id))
-    setkey(meta, id)
-    behavr::setmeta(qc, meta)
-    qc
-  }, error = function(e) {
-    warning(e)
-    message("Cant load QCs")
-    NULL
-  })
-  return(qc)
-}
-
-# metadata <- data.table(id = "")
-# metadata[, file_info := NA]
-# metadata[, file_info := list(list(path = "/ethoscope_data/results/008aad42625f433eb4bd2b44f811738e/ETHOSCOPE_008/2021-06-18_16-52-43/2021-06-18_16-52-43_008aad42625f433eb4bd2b44f811738e.db", file = ""))]
-# get_qc_table(metadata)
