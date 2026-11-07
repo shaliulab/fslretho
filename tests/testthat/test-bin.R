@@ -61,3 +61,11 @@ test_that("binned data has p_wake and p_doze", {
   expect_true(all(c("p_wake", "p_doze", "n_inactive", "n_active") %in% names(binned)))
   expect_true(all(binned$p_wake >= 0 & binned$p_wake <= 1, na.rm = TRUE))
 })
+
+test_that("binned data has the day and phase of each bin", {
+  binned <- data.table::as.data.table(bin_dataset(scored(), 30, mean))
+  expect_equal(binned[t == behavr::hours(0), unique(day)], 1L)
+  expect_equal(binned[t == behavr::hours(23.5), c(unique(day), unique(phase))], c("1", "D"))
+  expect_equal(binned[t == behavr::hours(24), c(unique(day), unique(phase))], c("2", "L"))
+  expect_equal(binned[t == behavr::hours(36), unique(phase)], "D")
+})

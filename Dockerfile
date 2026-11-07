@@ -75,6 +75,10 @@ RUN for PKG in behavr zeitgebr ggetho damr scopr sleepr esquisse; do \
         R CMD INSTALL /opt/fslretho/inst/dependencies/${PKG} || exit 1; \
     done
 
+# background R processes for long tasks, so several users can work at the same time
+RUN R -e 'install.packages("future", repos = Sys.getenv("CRAN_SNAPSHOT"))' \
+    && R -e 'stopifnot(requireNamespace("future"))'
+
 # the app itself
 COPY . /opt/fslretho
 RUN R CMD INSTALL /opt/fslretho

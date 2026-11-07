@@ -74,14 +74,22 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
           showNotification("This fly is not in the loaded dataset anymore. Pick another one.", type = "warning")
           return()
         }
-        safely(context = "loading the raw data", {
-          d <- load_raw_fly(meta, input$time_range, max(1, input$downsample))
-          if (input$sd_only) {
-            d <- d[sd_on == TRUE]
-            if (nrow(d) == 0) stop("this fly has no data during SD. Untick 'SD only' to see all the data")
+        sd_only <- input$sd_only
+        name <- sleep_data$name
+        in_background(
+          "load_raw_fly", list(meta = meta, time_range = input$time_range, downsample = max(1, input$downsample)),
+          context = "loading the raw data",
+          on_done = function(d) {
+            if (sd_only) {
+              d <- d[sd_on == TRUE]
+              if (nrow(d) == 0) {
+                showNotification("This fly has no data during SD. Untick 'SD only' to see all the data.", type = "warning")
+                return()
+              }
+            }
+            set_dataset(output_rv, d, name)
           }
-          set_dataset(output_rv, d, sleep_data$name)
-        })
+        )
       })
 
       x_limits <- reactive({

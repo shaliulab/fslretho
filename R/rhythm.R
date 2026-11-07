@@ -66,17 +66,21 @@ rhythmAnalysisServer <- function(id, input_rv, type) {
 
       output$y_ui <- renderUI({
         data <- req(input_rv$data)
-        numeric <- names(data)[sapply(data, is.numeric) & names(data) != "t"]
+        numeric <- setdiff(names(data)[sapply(data, is.numeric)], c("t", "day", "n_inactive", "n_active"))
         selectInput(session$ns("y"), label = "Signal", choices = numeric, selected = if ("asleep" %in% numeric) "asleep")
       })
 
       observeEvent(input$button, {
         data <- req(input_rv$data)
         req(input$y)
-        safely(context = paste("computing the", tolower(type)), {
-          d <- compute_rhythm(type, data, input$y, input$algorithm, input$period_range, input$alpha)
-          set_dataset(result, d, input_rv$name)
-        })
+        name <- input_rv$name
+        in_background(
+          "compute_rhythm",
+          list(type = type, data = data, var = input$y, algorithm = input$algorithm,
+               period_range = input$period_range, alpha = input$alpha),
+          context = paste("computing the", tolower(type)),
+          on_done = function(d) set_dataset(result, d, name)
+        )
       })
 
       do.call(esquisseModuleServer, c(list(id = "esquisse", input_rv = result), RHYTHM_PLOTS[[type]]))

@@ -29,6 +29,8 @@ Imports:
     stats,
     tools,
     utils,
+    future,
+    promises,
     behavr (>= 0.3.3),
     damr (>= 0.3.4),
     esquisse (>= 1.0.1.9300),

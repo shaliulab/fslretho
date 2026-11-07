@@ -178,6 +178,11 @@ help_plots <- function() {
       "Filters matter: the Period analysis uses the data of the Sleep analysis tab ", tags$i("after"), " its filters, ",
       "and the summaries use the data of the plot above them."
     ),
+    tags$p(
+      "To look at some days or at one phase only, filter by ", tags$code("day"), " (1 for ZT 0-24, 2 for ZT 24-48, and so on) ",
+      "and ", tags$code("phase"), " (L for the light phases, ZT 0-12, 24-36...; D for the dark phases, ZT 12-24, 36-48...) ",
+      "in the Data panel below the plot."
+    ),
     tags$p(tags$b("Premade"), " shows the sleep and SD interactions of every fly, without any configuration."),
     tags$h4("Snapshot viewer"),
     tags$p(

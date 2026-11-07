@@ -132,7 +132,16 @@ snapshot_workspace <- function(dbfile) {
 #' @noRd
 ethoscope_imager <- function(dbfile, ids, video = FALSE, fps = 10) {
   conf <- fslretho_conf()
-  args <- c(conf$dependencies$ethoscope_imager, "--path", snapshot_workspace(dbfile), "--id", ids)
+  link <- snapshot_workspace(dbfile)
+  if (video) {
+    # the video is named after the link: a link with a unique name keeps the videos of
+    # different users (made at the same time from the same recording) apart
+    unique_link <- file.path(dirname(link), paste0(basename(tempfile("video")), "_", basename(link)))
+    file.symlink(dbfile, unique_link)
+    on.exit(unlink(unique_link), add = TRUE)
+    link <- unique_link
+  }
+  args <- c(conf$dependencies$ethoscope_imager, "--path", link, "--id", ids)
   if (video) args <- c(args, "--video", "--fps", fps)
   out <- suppressWarnings(system2(conf$binaries$python, shQuote(args), stdout = TRUE, stderr = FALSE))
   status <- attr(out, "status")
@@ -301,9 +310,11 @@ snapshotViewerServer <- function(id, input_rv) {
 
       observeEvent(input$extract, {
         ids <- selected_ids()
-        notification <- showNotification(sprintf("Extracting %d snapshot(s)...", length(ids)), duration = NULL)
-        on.exit(removeNotification(notification))
-        extracted(safely(context = "extracting the snapshots", ethoscope_imager(input$dbfile, ids)))
+        in_background(
+          "ethoscope_imager", list(dbfile = input$dbfile, ids = ids),
+          context = sprintf("extracting %d snapshot(s)", length(ids)),
+          on_done = extracted
+        )
       })
 
       output$index_ui <- renderUI({
@@ -325,7 +336,9 @@ snapshotViewerServer <- function(id, input_rv) {
           on.exit(removeNotification(notification))
           # the video is made from extracted snapshots: extract them first (already extracted ones are reused)
           ethoscope_imager(input$dbfile, ids)
-          file.copy(ethoscope_imager(input$dbfile, ids, video = TRUE, fps = input$fps), file)
+          video <- ethoscope_imager(input$dbfile, ids, video = TRUE, fps = input$fps)
+          on.exit(unlink(video), add = TRUE)
+          file.copy(video, file)
         },
         contentType = "video/mp4"
       )

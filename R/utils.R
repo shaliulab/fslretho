@@ -46,27 +46,44 @@ safely <- function(expr, context, warnings = FALSE) {
   )
 }
 
-#' Produce a Shiny progress bar
-#' @param n Number of steps in the progress bar
-#' @return list with the progress object and an update function to call after each step
-#' @noRd
-get_progress_bar <- function(n, message, ncores = 1) {
-  progress <- shiny::Progress$new()
-  progress$set(message = message, value = 0)
-
-  update <- function(detail = NULL) {
-    if (ncores == 1) {
-      progress$inc(amount = 1 / n, detail = detail)
-    } else {
-      shiny::showNotification(detail, type = "message", duration = 2)
-    }
-  }
-  list(progress = progress, update = update)
-}
-
 #' Strip the extension from a dataset name so it can be used in a file name
 #' @noRd
 dataset_basename <- function(name) {
   if (is.null(name) || length(name) == 0 || name == "") return("fslretho")
   tools::file_path_sans_ext(basename(name))
+}
+
+#' Run a function of fslretho in a background R process
+#'
+#' A Shiny app runs in a single R process: while it loads one user's data, every other
+#' user has to wait. Long tasks are therefore run in background workers (future package),
+#' and only the user who asked for them waits.
+#' @param fun_name name of a function of fslretho; it must not use Shiny (no notifications, progress...)
+#' @param args list of arguments
+#' @param on_done function called with the result, in the user's session
+#' @param context description of the task, for error messages
+#' @return a promise (to be returned by the observer), or NULL when run synchronously
+#' (option fslretho.async = FALSE, or the future package is not installed)
+#' @noRd
+in_background <- function(fun_name, args, on_done, context) {
+  note <- shiny::showNotification(sprintf("Busy %s... Other users of the app are not affected.", context), duration = NULL, type = "message")
+  done <- function() shiny::removeNotification(note)
+  fail <- function(e) {
+    message(sprintf("Error while %s: %s", context, conditionMessage(e)))
+    shiny::showNotification(sprintf("Error while %s: %s", context, conditionMessage(e)), type = "error", duration = NULL)
+  }
+
+  if (!isTRUE(getOption("fslretho.async", TRUE)) || !requireNamespace("future", quietly = TRUE)) {
+    on.exit(done())
+    result <- tryCatch(do.call(get(fun_name, envir = asNamespace("fslretho")), args), error = function(e) { fail(e); NULL })
+    if (!is.null(result)) on_done(result)
+    return(invisible(NULL))
+  }
+
+  task <- future::future(
+    do.call(get(fun_name, envir = asNamespace("fslretho")), args),
+    globals = list(fun_name = fun_name, args = args), packages = "fslretho", seed = TRUE
+  )
+  p <- promises::then(task, onFulfilled = on_done, onRejected = fail)
+  promises::finally(p, done)
 }

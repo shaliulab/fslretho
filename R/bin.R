@@ -59,6 +59,8 @@ Y_VARS <- c(
 #' * sd_on becomes TRUE if the SD was running during the whole bin
 #' * x (position in the tube) becomes pareto, see pareto_sd
 #' * p_wake and p_doze are added, see transition_probabilities
+#' * day (1 for ZT 0-24, 2 for ZT 24-48...) and phase (L for ZT 0-12, 24-36...; D for ZT 12-24, 36-48...)
+#'   are added to filter the plots
 #' @param data behavr table
 #' @param minutes bin length in minutes
 #' @param FUN summary function
@@ -86,9 +88,19 @@ bin_dataset <- function(data, minutes, FUN, min_transition_minutes = 5) {
   if ("moving" %in% names(d)) {
     out <- transition_probabilities(d, bin_length, min_transition_minutes)[out, on = c("id", "interval", "t")]
   }
+  add_day_phase(out)
   data.table::setkeyv(out, "id")
   behavr::setmeta(out, behavr::meta(data))
   out
+}
+
+#' Add the day (1 for ZT 0-24, 2 for ZT 24-48...) and the phase (L for ZT 0-12, 24-36...;
+#' D for ZT 12-24, 36-48...) of each row, from t (seconds since ZT0)
+#' @noRd
+add_day_phase <- function(d) {
+  d[, day := as.integer(floor(t / 86400) + 1)]
+  d[, phase := ifelse((t %% 86400) < 43200, "L", "D")]
+  d
 }
 
 #' Apply a function to each interval (default / SD) of a behavr table separately

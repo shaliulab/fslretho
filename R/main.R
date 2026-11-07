@@ -14,6 +14,13 @@ main <- function(port = NULL) {
     shiny.fullstacktrace = TRUE
   )
 
+  # Background R processes for the long tasks (loading data, raw data, snapshots), so that
+  # several users can work at the same time without waiting for each other
+  if (requireNamespace("future", quietly = TRUE)) {
+    workers <- fslretho_conf()$async_workers
+    future::plan(future::multisession, workers = if (is.null(workers)) 4 else workers)
+  }
+
   shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
   shiny::shinyApp(server = server, ui = ui())
 }
