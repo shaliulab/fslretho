@@ -1,15 +1,24 @@
-[submodule "inst/dependencies/scopr"]
-	path = inst/dependencies/scopr
-	url = git@github.com:shaliulab/scopr
-[submodule "inst/dependencies/sleepr"]
-	path = inst/dependencies/sleepr
-	url = git@github.com:shaliulab/sleepr
 [submodule "inst/dependencies/behavr"]
 	path = inst/dependencies/behavr
 	url = git@github.com:shaliulab/behavr
-[submodule "inst/inst/dependencies/damr"]
+	branch = deployment
+[submodule "inst/dependencies/damr"]
 	path = inst/dependencies/damr
 	url = git@github.com:shaliulab/damr
-[submodule "inst/inst/dependencies/ggetho"]
+	branch = deployment
+[submodule "inst/dependencies/esquisse"]
+	path = inst/dependencies/esquisse
+	url = git@github.com:shaliulab/esquisse
+	branch = deployment
+[submodule "inst/dependencies/ggetho"]
 	path = inst/dependencies/ggetho
 	url = git@github.com:shaliulab/ggetho
+	branch = deployment
+[submodule "inst/dependencies/scopr"]
+	path = inst/dependencies/scopr
+	url = git@github.com:shaliulab/scopr
+	branch = deployment
+[submodule "inst/dependencies/sleepr"]
+	path = inst/dependencies/sleepr
+	url = git@github.com:shaliulab/sleepr
+	branch = deployment
