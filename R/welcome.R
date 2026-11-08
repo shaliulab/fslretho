@@ -29,7 +29,7 @@ welcomePageUI <- function(id) {
       width = 5,
       shinydashboard::box(
         width = NULL, title = "Tour of the application",
-        tags$video(src = "fslretho/static/fslretho2.mp4", type = "video/mp4", controls = "controls", width = "100%")
+        tags$video(src = "fslretho/static/fslretho3-tour.mp4", type = "video/mp4", controls = "controls", width = "100%")
       )
     )
   )
