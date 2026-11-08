@@ -14,7 +14,8 @@ The rethomics packages it uses (with changes made at the Sha Liu lab) are git su
 git clone --recursive -b v3 https://github.com/shaliulab/fslretho
 cd fslretho
 # the version shown in the app (the commit, -dirty if there are uncommitted changes)
-VERSION="$(git rev-parse --short HEAD)$( [ -n "$(git status --porcelain --ignore-submodules=all --untracked-files=no)" ] && echo -dirty )"
+VERSION=$(git rev-parse --short HEAD)
+if [ -n "$(git status --porcelain --ignore-submodules=all --untracked-files=no)" ]; then VERSION=$VERSION-dirty; fi
 docker build --build-arg GIT_COMMIT=$VERSION -t fslretho-v3 .
 
 docker run -d --name fslretho-v3 --restart unless-stopped \
