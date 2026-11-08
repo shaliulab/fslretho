@@ -236,7 +236,7 @@ help_other <- function() {
       list("Raw data", "The raw data of the fly last plotted in the Raw tab."),
       list("Periodogram / Spectrogram", "The results of the Period analysis tab.")
     )),
-    tags$p("Every file includes the metadata columns, so it can be analysed on its own."),
+    tags$p("Each file has the fly (id), the time (t, in seconds since ZT0) for time series, and the value, with a name saying what it is, e.g. fraction_of_time_asleep or sleep_per_day_min. The metadata of the flies is in the Revise metadata tab."),
     tags$h4("Sessions"),
     tags$p(
       "The Sessions menu (top bar) saves the loaded dataset on the server under the name you type, and opens ",

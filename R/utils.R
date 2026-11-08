@@ -1,3 +1,5 @@
+`%||%` <- function(a, b) if (is.null(a)) b else a
+
 #' Empty container used to pass datasets between modules
 #'
 #' Every module receives and returns a reactiveValues with three slots:
@@ -53,27 +55,66 @@ dataset_basename <- function(name) {
   tools::file_path_sans_ext(basename(name))
 }
 
+#' Report the progress of a background task (see in_background)
+#'
+#' The task runs in another R process, so it writes its progress to a file that the app reads.
+#' @param file progress file given by in_background (NULL: nothing is reported)
+#' @noRd
+report_progress <- function(file, message, detail = NULL, value = NULL) {
+  if (is.null(file)) return(invisible(NULL))
+  tmp <- paste0(file, ".tmp")
+  saveRDS(list(message = message, detail = detail, value = value), tmp)
+  file.rename(tmp, file)
+  invisible(NULL)
+}
+
 #' Run a function of fslretho in a background R process
 #'
 #' A Shiny app runs in a single R process: while it loads one user's data, every other
-#' user has to wait. Long tasks are therefore run in background workers (future package),
+#' user would have to wait. Long tasks are therefore run in background workers (future package),
 #' and only the user who asked for them waits.
 #' @param fun_name name of a function of fslretho; it must not use Shiny (no notifications, progress...)
 #' @param args list of arguments
 #' @param on_done function called with the result, in the user's session
-#' @param context description of the task, for error messages
-#' @return a promise (to be returned by the observer), or NULL when run synchronously
-#' (option fslretho.async = FALSE, or the future package is not installed)
+#' @param context description of the task, e.g. "loading the data", shown while it runs and in error messages
+#' @param on_failed function called (without arguments) if the task fails
+#' @param progress if TRUE, show a progress bar, updated by the task: it gets a progress_file argument
+#' to pass to report_progress
+#' @return NULL, invisibly. The promise is not returned on purpose: an observer returning a promise
+#' makes Shiny hold every message to the user (progress included) until it is resolved.
 #' @noRd
-in_background <- function(fun_name, args, on_done, context) {
-  note <- shiny::showNotification(sprintf("Busy %s... Other users of the app are not affected.", context), duration = NULL, type = "message")
-  done <- function() shiny::removeNotification(note)
+in_background <- function(fun_name, args, on_done, context, progress = FALSE, on_failed = function() NULL) {
+  label <- paste0(toupper(substr(context, 1, 1)), substring(context, 2), "...")
   fail <- function(e) {
+    on_failed()
     message(sprintf("Error while %s: %s", context, conditionMessage(e)))
     shiny::showNotification(sprintf("Error while %s: %s", context, conditionMessage(e)), type = "error", duration = NULL)
   }
+  async <- isTRUE(getOption("fslretho.async", TRUE)) && requireNamespace("future", quietly = TRUE)
 
-  if (!isTRUE(getOption("fslretho.async", TRUE)) || !requireNamespace("future", quietly = TRUE)) {
+  if (progress && async) {
+    progress_file <- tempfile(fileext = ".rds")
+    args$progress_file <- progress_file
+    bar <- shiny::Progress$new()
+    bar$set(message = label, value = 0)
+    # follow the progress reported by the task
+    poll <- shiny::observe({
+      shiny::invalidateLater(500)
+      state <- tryCatch(readRDS(progress_file), error = function(e) NULL)
+      # an empty detail must be sent explicitly, otherwise the previous one stays
+      if (!is.null(state)) bar$set(message = state$message, detail = state$detail %||% "", value = state$value)
+    })
+    done <- function() {
+      poll$destroy()
+      bar$close()
+      unlink(progress_file)
+    }
+  } else {
+    note <- shiny::showNotification(label, duration = NULL, type = "message")
+    done <- function() shiny::removeNotification(note)
+  }
+
+  if (!async) {
     on.exit(done())
     result <- tryCatch(do.call(get(fun_name, envir = asNamespace("fslretho")), args), error = function(e) { fail(e); NULL })
     if (!is.null(result)) on_done(result)
@@ -86,4 +127,5 @@ in_background <- function(fun_name, args, on_done, context) {
   )
   p <- promises::then(task, onFulfilled = on_done, onRejected = fail)
   promises::finally(p, done)
+  invisible(NULL)
 }

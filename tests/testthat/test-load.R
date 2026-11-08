@@ -39,7 +39,7 @@ test_that("flies without data are skipped and reported, instead of crashing", {
     "E_029,2016-01-25,1,7"
   ))
   expect_equal(nrow(behavr::meta(res$data)), 1)
-  skipped <- res$problems[grepl("no data", problem)]
+  skipped <- res$problems[grepl("no tracking data", problem)]
   expect_equal(nrow(skipped), 1)
   expect_match(skipped$problem, "E_008 ROI 1")
   expect_equal(skipped$rows, "2, 3")

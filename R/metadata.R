@@ -573,6 +573,9 @@ flies_without_data <- function(metadata) {
       con <- RSQLite::dbConnect(RSQLite::SQLite(), path, flags = RSQLite::SQLITE_RO)
       on.exit(RSQLite::dbDisconnect(con))
       tbls <- RSQLite::dbListTables(con)
+      if (!"ROI_MAP" %in% tbls) {
+        return(data.table::data.table(id = as.character(rows$id))[, reason := "the .db file is incomplete (it has no ROI_MAP table)"])
+      }
       has_data <- sapply(rows$region_id, function(r) {
         tbl <- paste0("ROI_", r)
         tbl %in% tbls && nrow(RSQLite::dbGetQuery(con, sprintf("SELECT 1 FROM %s LIMIT 1", tbl))) > 0

@@ -10,9 +10,18 @@ COLUMNS_TO_KEEP <- c(
 #' @param params list of scoring parameters (see scoringParamsServer)
 #' @return behavr table
 #' @noRd
-load_ethoscope_data <- function(metadata, params) {
+load_ethoscope_data <- function(metadata, params, progress_file = NULL) {
   conf <- fslretho_conf()
   ncores <- conf$scopr$ncores
+
+  # scopr calls back once per fly (and per interval, if the SD has its own parameters)
+  steps <- nrow(metadata) * (1 + length(params$intervals))
+  done <- 0
+  report_progress(progress_file, "Loading data to memory (R)", value = 0)
+  callback <- function(detail = NULL) {
+    done <<- done + 1
+    report_progress(progress_file, "Loading data to memory (R)", detail = detail, value = min(1, done / steps))
+  }
 
   dt <- do.call(scopr::load_ethoscope, c(
     list(
@@ -22,6 +31,7 @@ load_ethoscope_data <- function(metadata, params) {
       ncores = ncores,
       cache = conf$scopr$folders$cache$path,
       verbose = TRUE,
+      callback = callback,
       columns_to_keep = COLUMNS_TO_KEEP
     ),
     params
@@ -88,7 +98,7 @@ remote_file_size <- function(url) {
 #' read from the index, which is out of date for recordings that are still running.
 #' @return list with linked (the linked metadata) and note (what was downloaded)
 #' @noRd
-link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir) {
+link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir, progress_file = NULL) {
   if (file.access(result_dir, mode = 2) != 0) {
     stop(sprintf("the local result folder '%s' is not writable, so the .db files cannot be downloaded into it", result_dir))
   }
@@ -104,6 +114,11 @@ link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir) 
     remote_size <- remote_file_size(url)
     local_size <- if (file.exists(local)) file.size(local) else NA
     if (is.na(local_size) || is.na(remote_size) || local_size != remote_size) {
+      report_progress(
+        progress_file, sprintf("Downloading %s (%d of %d)", basename(local), i, length(relative)),
+        detail = if (is.na(remote_size)) NULL else sprintf("%.0f MB from %s", remote_size / 1e6, remote_dir),
+        value = (i - 1) / length(relative)
+      )
       dir.create(dirname(local), recursive = TRUE, showWarnings = FALSE)
       # unique temporary name: two users may download the same file at the same time
       tmp <- tempfile(pattern = basename(local), tmpdir = dirname(local), fileext = ".part")
@@ -126,7 +141,8 @@ link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir) 
 #' @return list with problems (see check_metadata), data (the scored behavr table, or NULL if
 #' nothing could be loaded), title (why nothing was loaded) and note (remote downloads)
 #' @noRd
-load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, params) {
+load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, params, progress_file = NULL) {
+  report_progress(progress_file, "Checking the metadata", value = 0)
   metadata <- read_metadata(metadata_paths)
   monitor <- metadata_monitor(metadata)
   remote <- identical(monitor, "ethoscope") && identical(source, "remote")
@@ -141,12 +157,13 @@ load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
 
   if (monitor == "dam") {
     linked <- damr::link_dam_metadata(coerce_metadata(metadata), result_dir = result_dir)
+    report_progress(progress_file, "Loading DAM data", value = 0.5)
     return(list(problems = found, data = load_dam_data(linked, params)))
   }
 
   note <- NULL
   if (remote) {
-    r <- suppressWarnings(link_remote_ethoscope(coerce_metadata(metadata), remote_dir, index_file, result_dir))
+    r <- suppressWarnings(link_remote_ethoscope(coerce_metadata(metadata), remote_dir, index_file, result_dir, progress_file))
     linked <- r$linked
     note <- r$note
   } else {
@@ -154,19 +171,22 @@ load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
   }
 
   missing <- flies_without_data(linked)
-  if (nrow(missing) > 0) {
-    skipped <- linked[id %in% missing$id]
+  fixes <- c(
+    "no tracking data for this ROI in the .db file" = "Their tube (ROI) was empty or not tracked, or the recording stopped before they were tracked.",
+    "the .db file is incomplete (it has no ROI_MAP table)" = "The recording was probably stopped or copied before it was complete."
+  )
+  for (reason in unique(missing$reason)) {
+    skipped <- linked[id %in% missing[reason == missing$reason, id]]
     found <- rbind(found, new_problem(
       "warning", "region_id", metadata_rows(metadata, skipped),
-      sprintf("%d fly(s) have no data and are skipped: %s", nrow(skipped), describe_flies(skipped)),
-      paste("Their tube (ROI) was empty or not tracked, or the recording stopped before they were tracked.",
-            "Remove these rows from the metadata to hide this message.")
+      sprintf("%d fly(s) are skipped because %s: %s", nrow(skipped), reason, describe_flies(skipped)),
+      paste(if (reason %in% names(fixes)) fixes[[reason]] else "", "Remove these rows from the metadata to hide this message.")
     ))
-    linked <- linked[!id %in% missing$id]
   }
+  linked <- linked[!id %in% missing$id]
   if (nrow(linked) == 0) return(list(problems = found, note = note, title = "None of the flies in the metadata have data"))
 
-  dt <- load_ethoscope_data(linked, params)
+  dt <- load_ethoscope_data(linked, params, progress_file)
 
   not_loaded <- linked[!as.character(id) %in% as.character(behavr::meta(dt)$id)]
   if (nrow(not_loaded) > 0) {
@@ -250,13 +270,15 @@ loadDataServer <- function(id, reload, params, parent_session) {
         loading(TRUE)
         name <- input$metadata$name[1]
 
+        task_finished <- function() loading(FALSE)
         in_background(
           "load_dataset",
           list(
             metadata_paths = input$metadata$datapath, source = input$source, remote_dir = input$remote_dir,
             result_dir = input$result_dir, result_dir_dam = input$result_dir_dam, params = params()
           ),
-          context = "loading the data",
+          context = "loading the data", progress = TRUE,
+          on_failed = task_finished,
           on_done = function(res) {
             loading(FALSE)
             problems(res$problems)
@@ -269,9 +291,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
             else showNotification(sprintf("Loaded %d flies", nrow(behavr::meta(res$data))), type = "message")
             set_dataset(output_rv, res$data, name)
           }
-        ) -> task
-        # if the task failed, allow new loads
-        if (is.null(task)) loading(FALSE) else promises::finally(task, function() loading(FALSE))
+        )
       })
 
       output$report <- renderUI({

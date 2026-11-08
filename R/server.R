@@ -58,7 +58,15 @@ server <- function(input, output, session) {
       `periodogram` = rhythm$periodogram,
       `spectrogram` = rhythm$spectrogram
     ),
-    loaded = loaded_data
+    loaded = loaded_data,
+    plot_y = list(
+      `sleep-binned` = reactive(input[["sleepPlot-esquisse-dragvars"]]$target$yvar[1]),
+      `bouts` = reactive(input[["boutPlot-esquisse-dragvars"]]$target$yvar[1])
+    ),
+    summary_fun = list(
+      `sleep-binned` = reactive(input[["sleepBin-summary_FUN"]]),
+      `bouts` = reactive(input[["boutBin-summary_FUN"]])
+    )
   )
 
   reproducibilityModuleServer(

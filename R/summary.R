@@ -116,7 +116,11 @@ flySummaryServer <- function(id, plot_rv, meta_rv, vars) {
         safely(context = "summarising the flies", summarise_flies(plot_rv$data, behavr::meta(meta_rv$data), input$var, input$period))
       })
 
-      observeEvent(summary(), set_dataset(output_rv, summary(), plot_rv$name))
+      observeEvent(summary(), {
+        s <- data.table::copy(summary())
+        data.table::setattr(s, "value_label", summary_label(input$var, input$period))
+        set_dataset(output_rv, s, plot_rv$name)
+      })
 
       output$plot <- renderPlot({
         s <- req(summary())
