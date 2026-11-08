@@ -11,7 +11,9 @@ help_workflow <- function() {
   tagList(
     tags$p("FSLRetho turns the tracking data recorded by ethoscopes into sleep and circadian rhythm measurements."),
     tags$ol(
-      tags$li(tags$b("Load"), ": upload a metadata file (one row per fly). The app checks it, finds the recordings in the ethoscope database and scores sleep."),
+      tags$li(tags$b("Load"), ": upload a metadata file (one row per fly) and press ", tags$b("Link"),
+              ": the app checks it, finds the recording of every fly and lists the flies. Untick the ones you don't want and press ",
+              tags$b("Load selected flies"), " to load them and score sleep."),
       tags$li(tags$b("Scoring parameters"), " (top bar): decide when a fly counts as moving and when as asleep. Changing them re-scores the loaded data."),
       tags$li(tags$b("Sleep / Bout binning"), " (top bar): choose the bin length and how each bin is summarised."),
       tags$li(tags$b("Sleep analysis / Bout analysis"), ": plot the binned data (top) and one value per fly (bottom)."),
@@ -73,10 +75,19 @@ help_metadata <- function() {
     ),
     tags$h4("The metadata check"),
     tags$p(
-      "Before loading, every row is checked: missing columns, empty cells, dates, times, reference hours and region_ids ",
+      "Before linking, every row is checked: missing columns, empty cells, dates, times, reference hours and region_ids ",
       "that cannot be read, duplicated flies, and ethoscopes or dates that are not in the database ",
       "(listing the closest recordings that do exist). All problems are listed at once, with the rows as numbered in Excel. ",
-      "Flies whose tube has no tracking data are skipped and listed, instead of stopping the whole load."
+      "Problems of the whole file (e.g. a missing column) must be fixed before linking. Problems of some rows only ",
+      "(e.g. a date with no recording) only exclude those rows: the table of flies shows them with the reason, and ",
+      "the other flies can still be loaded. So do flies whose tube has no tracking data."
+    ),
+    tags$h4("Choosing the flies to load"),
+    tags$p(
+      "After linking, every fly is listed with the data available for it, and all the flies that can be loaded are ticked. ",
+      "Untick the flies you don't want (e.g. dead or escaped flies), or use ", tags$i("Select all / Deselect all"), ", and press ",
+      tags$i("Load selected flies"), ". Changing the scoring parameters, or loading again, keeps the selection. ",
+      "The reproducibility script only loads the flies selected."
     )
   )
 }
@@ -252,7 +263,8 @@ help_other <- function() {
     tags$p(
       "The Sessions menu (top bar) saves the loaded dataset on the server under the name you type, and opens ",
       "a saved one, which is much faster than loading from the database again. Sessions are visible to every user. ",
-      "The reload button (top right) loads the current metadata again."
+      "The reload button (top right) links the current metadata again (downloading the recordings that changed, ",
+      "e.g. one that is still running) and loads the same selection of flies."
     ),
     tags$h4("Other tabs"),
     tags$p(tags$b("Revise metadata"), " shows the metadata of the loaded flies. ",

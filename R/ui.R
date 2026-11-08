@@ -47,7 +47,7 @@ get_header <- function() {
       header_dropdown("downloadCenter", "Download datasets", downloadsUI("downloads")),
       header_dropdown("sessionsMenu", "Sessions", sessionsUI("sessions"))
     ),
-    tags$li(class = "dropdown fsl-header-item", actionButton("reload", "", icon = icon("redo"), title = "Load the metadata again")),
+    tags$li(class = "dropdown fsl-header-item", actionButton("reload", "", icon = icon("redo"), title = "Link the metadata again and load the same flies")),
     tags$li(class = "dropdown fsl-header-item", div(class = "fsl-dataset-name", textOutput("dataset_name", inline = TRUE))),
     tags$li(class = "dropdown fsl-header-item fsl-commit", commit_label())
   )

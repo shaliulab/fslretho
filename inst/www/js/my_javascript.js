@@ -38,3 +38,26 @@ $(function () {
   };
   new MutationObserver(update).observe(document.body, { childList: true, subtree: true });
 });
+
+// Load tab: the flies to load (see flies_table and loadDataServer).
+// The selection is sent as {token, ids}: the token tells the server which table it comes from.
+(function () {
+  function send(table) {
+    var ids = $(table).find('input.fsl-fly-select:checked').map(function () { return this.value; }).get();
+    Shiny.setInputValue(table.dataset.input, { token: table.dataset.token, ids: ids }, { priority: 'event' });
+    var boxes = $(table).find('input.fsl-fly-select');
+    var all = boxes.length > 0 && boxes.filter(':checked').length === boxes.length;
+    $('button.fsl-flies-toggle[data-table="' + table.id + '"]').text(all ? 'Deselect all' : 'Select all');
+  }
+  $(document).on('change', 'table.fsl-flies input.fsl-fly-select', function () {
+    send($(this).closest('table')[0]);
+  });
+  // (de)select all: deselect if every fly is selected, select all otherwise
+  $(document).on('click', 'button.fsl-flies-toggle', function () {
+    var table = document.getElementById(this.dataset.table);
+    if (!table) return;
+    var boxes = $(table).find('input.fsl-fly-select');
+    boxes.prop('checked', boxes.filter(':checked').length !== boxes.length);
+    send(table);
+  });
+})();

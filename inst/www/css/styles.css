@@ -109,6 +109,37 @@
   border: 1px solid #eee;
 }
 
+/* ---- Load tab: flies --------------------------------------------------- */
+.fsl-flies-controls {
+  margin-bottom: 10px;
+}
+.fsl-flies-controls > * {
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.fsl-flies td {
+  vertical-align: middle !important;
+}
+.fsl-flies td.fsl-nowrap {
+  white-space: nowrap;
+}
+.fsl-flies td.fsl-status {
+  min-width: 250px;
+}
+.fsl-flies td.fsl-status .label {
+  margin-right: 6px;
+}
+.fsl-flies tr.fsl-fly-error td {
+  color: #999;
+}
+.fsl-flies tr.fsl-fly-error td.fsl-error-text,
+.fsl-error-text {
+  color: #c0392b;
+}
+.fsl-warning-text {
+  color: #d68910;
+}
+
 /* ---- Misc ---------------------------------------------------------------- */
 .dropdown > .dropdown-toggle > .label-danger {
   display: none;

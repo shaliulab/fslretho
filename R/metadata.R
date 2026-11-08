@@ -75,9 +75,21 @@ format_rows <- function(rows) {
   paste(rows, collapse = ", ")
 }
 
+#' One problem of the metadata
+#' @param rows the metadata rows involved (1 is the first row below the header); none if it is about the whole file
+#' @return data.table with level, column, rows (as shown in a spreadsheet), problem, fix and row_ids
+#' (a list column with the rows, so the problem can be shown next to the flies it concerns)
+#' @noRd
 new_problem <- function(level, column, rows, problem, fix) {
-  data.table::data.table(level = level, column = column, rows = format_rows(rows), problem = problem, fix = fix)
+  data.table::data.table(
+    level = level, column = column, rows = format_rows(rows), problem = problem, fix = fix,
+    row_ids = list(sort(unique(as.integer(rows))))
+  )
 }
+
+#' An empty problems table, with the columns of new_problem
+#' @noRd
+no_problems <- function() new_problem("error", "", integer(0), "", "")[0]
 
 #' Collect problems for each distinct offending value of a column
 #' @param values character vector, one value per metadata row
@@ -521,7 +533,7 @@ check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monit
   if (monitor == "dam") {
     problems[[length(problems) + 1]] <- check_dam_metadata(metadata, result_dir)
     out <- data.table::rbindlist(problems)
-    if (nrow(out) == 0) return(data.table::data.table(level = character(), column = character(), rows = character(), problem = character(), fix = character()))
+    if (nrow(out) == 0) return(no_problems())
     return(out[order(level != "error")])
   }
 
@@ -554,7 +566,7 @@ check_metadata <- function(metadata, result_dir = NULL, monitor = metadata_monit
   }
 
   out <- data.table::rbindlist(problems)
-  if (nrow(out) == 0) out <- data.table::data.table(level = character(), column = character(), rows = character(), problem = character(), fix = character())
+  if (nrow(out) == 0) out <- no_problems()
   out[order(level != "error")]
 }
 

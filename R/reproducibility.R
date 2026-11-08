@@ -1,5 +1,20 @@
+#' Lines of the reproducibility script that keep only the flies selected in the Load tab
+#' @param ids ids of the flies loaded, or NULL if every fly was loaded
+#' @noRd
+select_flies <- function(ids) {
+  if (length(ids) == 0) return(NULL)
+  c(
+    "# only the flies selected in the Load tab",
+    "selected <- c(",
+    paste0("  ", sprintf("'%s'", ids), c(rep(",", length(ids) - 1), "")),
+    ")",
+    "metadata <- metadata[id %in% selected]"
+  )
+}
+
 #' Write an R script that reproduces the analysis done in the app
-#' @param params list with monitor (ethoscope or dam), result_dir, the scoring parameters and the binning parameters
+#' @param params list with monitor (ethoscope or dam), result_dir, the scoring parameters, the binning parameters
+#' and ids (the flies loaded, if only some of them were selected)
 #' @return character, the script
 #' @noRd
 reproducibility_script <- function(dataset_name, params) {
@@ -26,20 +41,24 @@ reproducibility_script <- function(dataset_name, params) {
     "metadata <- fslretho::read_metadata(metadata_path)",
     sprintf("problems <- fslretho::check_metadata(metadata, result_dir = %s)", fmt(params$result_dir)),
     "print(problems)",
-    "stopifnot(!any(problems$level == 'error'))",
+    "# problems of the whole file must be fixed; rows with problems are skipped, as in the app",
+    "stopifnot(!any(problems$level == 'error' & lengths(problems$row_ids) == 0))",
+    "rows <- setdiff(seq_len(nrow(metadata)), unlist(problems[level == 'error', row_ids]))",
     if (dam) c(
       sprintf(
-        "metadata <- damr::link_dam_metadata(fslretho::load_metadata(metadata_path), result_dir = %s)",
+        "metadata <- damr::link_dam_metadata(fslretho::load_metadata(metadata_path)[rows], result_dir = %s)",
         fmt(params$result_dir)
       ),
+      select_flies(params$ids),
       "",
       "## ---- Load and score the data (sleep annotation of DAM beam crosses)",
       sprintf("dt <- damr::load_dam(metadata, FUN = sleepr::sleep_dam_annotation, min_time_immobile = %s)", fmt(scoring$min_time_immobile))
     ) else c(
     sprintf(
-      "metadata <- scopr::link_ethoscope_metadata(fslretho::load_metadata(metadata_path), result_dir = %s)",
+      "metadata <- scopr::link_ethoscope_metadata(fslretho::load_metadata(metadata_path)[rows], result_dir = %s)",
       fmt(params$result_dir)
     ),
+    select_flies(params$ids),
     "",
     "## ---- Load and score the data (sleep annotation)",
     "dt <- scopr::load_ethoscope(",
