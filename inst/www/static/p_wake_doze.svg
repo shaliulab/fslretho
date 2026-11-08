@@ -20,11 +20,7 @@
 
   <!-- ===== LEFT: the paper ===== -->
   <text x="280" y="80" text-anchor="middle" font-size="17" font-weight="bold">Wiggin et al. 2020 (Fig. 1A, Example #1)</text>
-  <text x="57" y="112" fill="#555">DAM beam crosses per minute: a minute is active if ≥ 1</text>
-  <g font-size="15" fill="#555" text-anchor="middle">
-    <text x="73" y="144">3</text><text x="119" y="144">0</text><text x="165" y="144">0</text><text x="211" y="144">0</text><text x="257" y="144">1</text>
-    <text x="303" y="144">0</text><text x="349" y="144">0</text><text x="395" y="144">0</text><text x="441" y="144">2</text><text x="487" y="144">5</text>
-  </g>
+  <text x="57" y="112" fill="#555">DAM: a minute is active if the fly crossed the beam at least once</text>
   <rect x="57" y="190" width="32" height="32" fill="#fff" stroke="#222" stroke-width="2"/><rect x="103" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="149" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="195" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="241" y="190" width="32" height="32" fill="#fff" stroke="#222" stroke-width="2"/>
   <rect x="287" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="333" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="379" y="190" width="32" height="32" fill="#222" stroke="#222" stroke-width="2"/><rect x="425" y="190" width="32" height="32" fill="#fff" stroke="#222" stroke-width="2"/><rect x="471" y="190" width="32" height="32" fill="#fff" stroke="#222" stroke-width="2"/>
   <g fill="none" stroke-width="2">
