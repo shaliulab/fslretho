@@ -1,4 +1,17 @@
 APP_TITLE <- "FSLRetho v3"
+# width of the title area (with the logos) and of the sidebar below it
+SIDEBAR_WIDTH <- 290
+
+#' Title of the top bar: the KU Leuven and VIB logos, then the name of the app
+#' @noRd
+header_title <- function() {
+  tags$span(
+    class = "fsl-title",
+    tags$img(src = "fslretho/static/logos/logo1.png", alt = "KU Leuven", class = "fsl-logo"),
+    tags$img(src = "fslretho/static/logos/logo2.png", alt = "VIB", class = "fsl-logo"),
+    APP_TITLE
+  )
+}
 
 #' A dropdown menu in the top bar
 #' @noRd
@@ -8,7 +21,7 @@ header_dropdown <- function(id, title, ...) {
 
 get_header <- function() {
   shinydashboardPlus::dashboardHeader(
-    title = APP_TITLE,
+    title = header_title(), titleWidth = SIDEBAR_WIDTH,
     leftUi = tagList(
       header_dropdown("scoringInput", "Scoring parameters", scoringParamsUI("scoring")),
       header_dropdown("sleepBinningInput", "Sleep binning", binDataUI("sleepBin")),
@@ -23,6 +36,7 @@ get_header <- function() {
 
 get_sidebar <- function() {
   shinydashboard::dashboardSidebar(
+    width = SIDEBAR_WIDTH,
     shinydashboard::sidebarMenu(
       id = "tabs",
       shinydashboard::menuItem("Welcome", tabName = "welcome", icon = icon("home")),

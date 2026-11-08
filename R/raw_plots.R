@@ -43,21 +43,49 @@ rawPlotsUI <- function(id) {
       column(2, checkboxInput(ns("sd_only"), "SD only", value = TRUE)),
       column(1, actionButton(ns("button"), "Plot", class = "btn-primary"))
     ),
-    plotOutput(ns("plot_x")),
-    plotOutput(ns("plot_y")),
-    plotOutput(ns("plot_sleep")),
-    plotOutput(ns("plot_interactions"))
+    helpText("Click on any plot to open the snapshot taken closest to that time, in the snapshot viewer."),
+    uiOutput(ns("hover_info")),
+    lapply(RAW_PLOTS, function(p) {
+      div(class = "fsl-clickable", plotOutput(
+        ns(p), click = ns(paste0(p, "_click")),
+        hover = hoverOpts(ns(paste0(p, "_hover")), delay = 100, delayType = "throttle"), height = "300px"
+      ))
+    })
   )
 }
 
+RAW_PLOTS <- c("plot_x", "plot_y", "plot_sleep", "plot_interactions")
+
+#' @param snapshot_request reactiveVal read by the snapshot viewer (see snapshotViewerServer)
 #' @return dataset with the raw data of the plotted fly
 #' @noRd
-rawPlotsServer <- function(id, sleep_data, interactions_data) {
+rawPlotsServer <- function(id, sleep_data, interactions_data, snapshot_request = reactiveVal(NULL), parent_session = NULL) {
   moduleServer(
     id,
     function(input, output, session) {
 
       output_rv <- dataset_rv()
+      fly_meta <- reactiveVal(NULL)
+
+      # click on a plot: show the closest snapshot
+      for (p in RAW_PLOTS) local({
+        click <- paste0(p, "_click")
+        observeEvent(input[[click]], {
+          meta <- req(fly_meta())
+          snapshot_request(list(
+            dbfile = as.character(unlist(meta$file_info))[1], t = input[[click]]$x,
+            reference_hour = meta$reference_hour[1], at = Sys.time()
+          ))
+          if (!is.null(parent_session)) shinydashboard::updateTabItems(parent_session, "tabs", "snapshot")
+        })
+      })
+
+      output$hover_info <- renderUI({
+        hover <- NULL
+        for (p in RAW_PLOTS) if (!is.null(input[[paste0(p, "_hover")]])) hover <- input[[paste0(p, "_hover")]]
+        if (is.null(hover) || is.null(fly_meta())) return(tags$p(HTML("&nbsp;")))
+        tags$p(tags$b(sprintf("ZT %.2f h", hover$x / 3600)), "- click to open the closest snapshot")
+      })
 
       output$animal_id_ui <- renderUI({
         selectizeInput(session$ns("animal_id"), label = "Fly", choices = as.character(behavr::meta(req(sleep_data$data))$id))
@@ -76,6 +104,7 @@ rawPlotsServer <- function(id, sleep_data, interactions_data) {
         }
         sd_only <- input$sd_only
         name <- sleep_data$name
+        fly_meta(meta)
         in_background(
           "load_raw_fly", list(meta = meta, time_range = input$time_range, downsample = max(1, input$downsample)),
           context = "loading the raw data",

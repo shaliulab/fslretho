@@ -135,11 +135,49 @@ link_remote_ethoscope <- function(metadata, remote_dir, index_file, result_dir, 
   )
 }
 
+#' When the raw data of each ethoscope fly starts and ends, how many rows (frames) it has and its frame rate
+#' @param linked linked metadata of the loaded flies
+#' @return data.table with id, machine, region_id, from, to (POSIXct, GMT), rows and fps
+#' @noRd
+ethoscope_availability <- function(linked) {
+  paths <- sapply(linked$file_info, function(x) x$path)
+  data.table::rbindlist(lapply(unique(paths), function(path) {
+    selected <- paths == path
+    rows <- linked[selected]
+    start <- as.numeric(suppressMessages(scopr::get_metadata(path))$date_time)
+    con <- RSQLite::dbConnect(RSQLite::SQLite(), path, flags = RSQLite::SQLITE_RO)
+    on.exit(RSQLite::dbDisconnect(con))
+    tables <- RSQLite::dbListTables(con)
+    data.table::rbindlist(lapply(seq_len(nrow(rows)), function(i) {
+      table <- paste0("ROI_", rows$region_id[i])
+      if (!table %in% tables) return(NULL)
+      q <- RSQLite::dbGetQuery(con, sprintf("SELECT COUNT(*) AS n, MIN(t) AS t0, MAX(t) AS t1 FROM %s", table))
+      seconds <- (q$t1 - q$t0) / 1000
+      data.table::data.table(
+        id = as.character(rows$id[i]), machine = rows$machine_name[i], region_id = rows$region_id[i],
+        from = as.POSIXct(start + q$t0 / 1000, origin = "1970-01-01", tz = "GMT"),
+        to = as.POSIXct(start + q$t1 / 1000, origin = "1970-01-01", tz = "GMT"),
+        rows = q$n, fps = if (isTRUE(seconds > 0)) q$n / seconds else NA_real_
+      )
+    }))
+  }))
+}
+
+#' Same as ethoscope_availability, for DAM data: one row per minute
+#' @noRd
+dam_availability <- function(dt) {
+  meta <- data.table::as.data.table(behavr::meta(dt))
+  d <- data.table::as.data.table(dt)[, .(t0 = min(t), t1 = max(t), rows = .N), by = id]
+  d <- meta[, .(id, file = basename(as.character(unlist(file_info))), region_id, start = as.POSIXct(start_datetime, tz = "GMT"))][d, on = "id"]
+  d[, .(id = as.character(id), machine = file, region_id, from = start + t0, to = start + t1, rows, fps = 1 / 60)]
+}
+
 #' Read, check, link, load and score the data described by one or more metadata files
 #'
 #' Runs without Shiny, so it can run in a background process (see in_background).
 #' @return list with problems (see check_metadata), data (the scored behavr table, or NULL if
-#' nothing could be loaded), title (why nothing was loaded) and note (remote downloads)
+#' nothing could be loaded), availability (see ethoscope_availability), title (why nothing was loaded)
+#' and note (remote downloads)
 #' @noRd
 load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, params, progress_file = NULL) {
   report_progress(progress_file, "Checking the metadata", value = 0)
@@ -158,7 +196,8 @@ load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
   if (monitor == "dam") {
     linked <- damr::link_dam_metadata(coerce_metadata(metadata), result_dir = result_dir)
     report_progress(progress_file, "Loading DAM data", value = 0.5)
-    return(list(problems = found, data = load_dam_data(linked, params)))
+    dt <- load_dam_data(linked, params)
+    return(list(problems = found, data = dt, availability = dam_availability(dt)))
   }
 
   note <- NULL
@@ -196,7 +235,9 @@ load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
       "These flies were tracked for too short a time (or too sparsely) to be scored."
     ))
   }
-  list(problems = found, data = dt, note = note)
+  report_progress(progress_file, "Counting the data of each fly", value = 1)
+  availability <- ethoscope_availability(linked[as.character(id) %in% as.character(behavr::meta(dt)$id)])
+  list(problems = found, data = dt, availability = availability, note = note)
 }
 
 loadDataUI <- function(id) {
@@ -236,7 +277,8 @@ loadDataUI <- function(id) {
         tags$p("See the", actionLink(ns("go_help"), "Help"), "tab for details on every column and parameter.")
       )
     ),
-    column(width = 12, uiOutput(ns("report")))
+    column(width = 12, uiOutput(ns("report"))),
+    column(width = 12, uiOutput(ns("availability_ui")))
   )
 }
 
@@ -251,6 +293,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
 
       output_rv <- dataset_rv()
       problems <- reactiveVal(NULL)
+      availability <- reactiveVal(NULL)
 
       updateTextInput(session, "result_dir", value = fslretho_conf()$scopr$folders$results$path)
       updateTextInput(session, "result_dir_dam", value = fslretho_conf()$damr$folders$results$path)
@@ -282,6 +325,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
           on_done = function(res) {
             loading(FALSE)
             problems(res$problems)
+            availability(res$availability)
             if (!is.null(res$note)) showNotification(res$note, type = "message", duration = 10)
             if (is.null(res$data)) {
               show_problems_modal(res$problems, res$title)
@@ -293,6 +337,25 @@ loadDataServer <- function(id, reload, params, parent_session) {
           }
         )
       })
+
+      output$availability_ui <- renderUI({
+        req(availability())
+        shinydashboard::box(
+          width = NULL, title = "Data available per fly", status = "primary", solidHeader = TRUE,
+          tableOutput(session$ns("availability_table")),
+          helpText("Times are in GMT, as recorded by the ethoscopes / DAM system. Rows are the raw observations",
+                   "(ethoscope frames; DAM minutes); frames per second is the number of rows divided by the time between the first and the last one.")
+        )
+      })
+      output$availability_table <- renderTable({
+        a <- data.table::copy(req(availability()))
+        a[, .(
+          Fly = id, Machine = machine, ROI = region_id,
+          From = format(from, "%Y-%m-%d %H:%M"), To = format(to, "%Y-%m-%d %H:%M"),
+          Hours = format(round(as.numeric(difftime(to, from, units = "hours")), 1), nsmall = 1),
+          Rows = format(rows, big.mark = ","), `Frames per second` = signif(fps, 3)
+        )]
+      }, striped = TRUE, spacing = "s")
 
       output$report <- renderUI({
         p <- req(problems())

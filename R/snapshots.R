@@ -54,8 +54,10 @@ read_roi_map <- function(dbfile) {
 
 #' A snapshot with the ROIs drawn on top: white, or blue for the manipulated ROIs while the SD runs
 #' @param file extracted snapshot, named <id>_<t in ms>.jpg; the date banner is above the frame
+#' @param show "all"; "sd" to black out the ROIs that are not manipulated by the stimulator; "no_sd" to
+#' black out the manipulated ones
 #' @noRd
-snapshot_with_rois <- function(file, roi_map, stimulation) {
+snapshot_with_rois <- function(file, roi_map, stimulation, show = "all") {
   dims <- jpeg_size(file)
   banner <- max(0, dims[2] - stimulation$frame_height)
   t_ms <- as.numeric(strsplit(tools::file_path_sans_ext(basename(file)), "_")[[1]][2])
@@ -63,7 +65,11 @@ snapshot_with_rois <- function(file, roi_map, stimulation) {
 
   rects <- lapply(seq_len(nrow(roi_map)), function(i) {
     r <- roi_map[i]
-    blue <- sd_on && r$roi_value %in% stimulation$rois
+    stimulated <- r$roi_value %in% stimulation$rois
+    if ((show == "sd" && !stimulated) || (show == "no_sd" && stimulated)) {
+      return(tags$rect(x = r$x, y = r$y + banner, width = r$w, height = r$h, fill = "black"))
+    }
+    blue <- sd_on && stimulated
     tags$rect(
       x = r$x, y = r$y + banner, width = r$w, height = r$h, fill = "none",
       stroke = if (blue) "#1e90ff" else "white", `stroke-width` = if (blue) 4 else 2,
@@ -163,6 +169,21 @@ list_snapshots <- function(dbfile) {
   shots
 }
 
+#' The snapshot closest in time to a time in the data of a fly
+#' @param t time in seconds since ZT0, as in the loaded data
+#' @param reference_hour reference hour (ZT0) of the fly
+#' @return one row of list_snapshots
+#' @noRd
+closest_snapshot <- function(dbfile, t, reference_hour) {
+  start <- as.POSIXct(as.numeric(scopr::get_metadata(dbfile)$date_time), origin = "1970-01-01", tz = "GMT")
+  # scopr: t since ZT0 = t since the recording started + ms_after_ref / 1000
+  offset <- scopr::get_ms_after_ref(list(date_time = start), reference_hour) / 1000
+  # computed outside shots[...]: inside it, t would be the column of the snapshots
+  target_ms <- (t - offset) * 1000
+  shots <- list_snapshots(dbfile)
+  shots[which.min(abs(shots$t - target_ms))]
+}
+
 #' Group snapshots in blocks of SNAPSHOT_BLOCK_SIZE seconds (one block per snapshot if there are few)
 #' @return the snapshots with a block column: the id of the first snapshot of the block
 #' @noRd
@@ -229,6 +250,9 @@ snapshotViewerUI <- function(id) {
         width = 8,
         shinydashboard::box(
           width = NULL,
+          radioButtons(ns("show_rois"), "Show", inline = TRUE, choices = c(
+            "All flies" = "all", "Only flies under SD" = "sd", "Only flies not under SD" = "no_sd"
+          )),
           uiOutput(ns("index_ui")),
           uiOutput(ns("snapshot")),
           helpText("ROIs are drawn in white; the ROIs manipulated by the stimulator turn blue while the SD schedule is active.")
@@ -239,13 +263,37 @@ snapshotViewerUI <- function(id) {
 }
 
 #' @param input_rv the loaded dataset: its .db files are offered
+#' @param request reactiveVal set by the Raw tab to show the snapshot closest to a time:
+#' list(dbfile, t (seconds since ZT0), reference_hour)
 #' @noRd
-snapshotViewerServer <- function(id, input_rv) {
+snapshotViewerServer <- function(id, input_rv, request = reactiveVal(NULL)) {
   moduleServer(
     id,
     function(input, output, session) {
 
       extracted <- reactiveVal(NULL)
+      pending <- reactiveVal(NULL)
+
+      # show the snapshot requested from the Raw tab, once its recording is selected
+      show_requested <- function() {
+        r <- pending()
+        pending(NULL)
+        safely(context = "finding the closest snapshot", {
+          shot <- closest_snapshot(r$dbfile, r$t, r$reference_hour)
+          updateSelectizeInput(session, "blocks", selected = as.character(blocks()[id == shot$id, block]))
+          showNotification(sprintf("Snapshot of %s GMT, the closest to ZT %.2f h", format(shot$datetime, "%Y-%m-%d %H:%M"), r$t / 3600), type = "message")
+          in_background("ethoscope_imager", list(dbfile = r$dbfile, ids = shot$id), context = "extracting the snapshot", on_done = extracted)
+        })
+      }
+      observeEvent(request(), {
+        pending(request())
+        if (identical(input$dbfile, request()$dbfile)) show_requested()
+        else updateSelectizeInput(session, "dbfile", selected = request()$dbfile)
+      })
+      observeEvent(input$dbfile, {
+        r <- pending()
+        if (!is.null(r) && !identical(input$dbfile, r$dbfile)) updateSelectizeInput(session, "dbfile", selected = r$dbfile)
+      })
 
       output$dbfile_ui <- renderUI({
         meta <- behavr::meta(req(input_rv$data))
@@ -266,7 +314,10 @@ snapshotViewerServer <- function(id, input_rv) {
       observeEvent(blocks(), {
         extracted(NULL)
         updateSelectizeInput(session, "blocks", choices = snapshot_choices(blocks()), selected = character(0))
+        if (!is.null(pending()) && identical(pending()$dbfile, input$dbfile)) show_requested()
       })
+
+      outputOptions(output, "dbfile_ui", suspendWhenHidden = FALSE)
 
       stimulation <- reactive(recording_stimulation(req(input$dbfile)))
       roi_map <- reactive(read_roi_map(req(input$dbfile)))
@@ -325,7 +376,7 @@ snapshotViewerServer <- function(id, input_rv) {
 
       output$snapshot <- renderUI({
         files <- req(extracted())
-        snapshot_with_rois(files[min(req(input$index), length(files))], roi_map(), stimulation())
+        snapshot_with_rois(files[min(req(input$index), length(files))], roi_map(), stimulation(), input$show_rois %||% "all")
       })
 
       output$video <- downloadHandler(

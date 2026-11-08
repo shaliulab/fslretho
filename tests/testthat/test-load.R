@@ -67,3 +67,25 @@ test_that("DAM data is loaded and scored with sleepr::sleep_dam_annotation", {
   expect_true(is_dam_dataset(result))
   expect_equal(max(result$t), behavr::hours(40))
 })
+
+test_that("the data available for each fly is reported after loading", {
+  res <- load_dataset(
+    upload(c("machine_name,date,region_id,reference_hour", "E_029,2016-01-25,1,7", "E_029,2016-01-25,2,7"))$datapath,
+    source = "local", remote_dir = "", result_dir = example_results(), result_dir_dam = "",
+    params = list(curate = FALSE, FUN = NULL)
+  )
+  a <- res$availability
+  expect_equal(nrow(a), 2)
+  expect_true(all(a$rows > 0))
+  expect_true(all(a$to > a$from))
+  expect_true(all(a$fps > 0))
+  expect_equal(a$region_id, 1:2)
+
+  dam <- load_dataset(
+    upload(c("file,start_datetime,stop_datetime,region_id", "M064.txt,2017-07-01 08:00:00,2017-07-03,1"))$datapath,
+    source = "local", remote_dir = "", result_dir = "", result_dir_dam = damr::damr_example_dir(),
+    params = list(min_time_immobile = 300)
+  )$availability
+  expect_equal(dam$fps, 1 / 60)
+  expect_equal(format(dam$from, "%Y-%m-%d %H:%M"), "2017-07-01 08:00")
+})

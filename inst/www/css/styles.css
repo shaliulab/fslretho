@@ -159,3 +159,20 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
 }
+
+/* Raw tab: plots can be clicked to open the closest snapshot */
+.fsl-clickable img {
+  cursor: pointer;
+}
+
+/* ---- Logos in the top left corner ---------------------------------------- */
+.fsl-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.fsl-logo {
+  height: 28px;
+  width: auto;
+}

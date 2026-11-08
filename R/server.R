@@ -15,7 +15,9 @@ server <- function(input, output, session) {
 
   output$dataset_name <- renderText(if (is.null(loaded_data$name)) "No data loaded" else loaded_data$name)
   viewMetadataServer("viewMetadata", loaded_data)
-  snapshotViewerServer("snapshotViewer", loaded_data)
+  # the Raw tab opens the snapshot closest to the time clicked
+  snapshot_request <- reactiveVal(NULL)
+  snapshotViewerServer("snapshotViewer", loaded_data, snapshot_request)
 
   ## Bin ----
   sleep_data <- binDataServer("sleepBin", loaded_data)
@@ -24,7 +26,7 @@ server <- function(input, output, session) {
 
   ## Plot ----
   premadePlotsServer("premadePlots", sleep_data, interactions_data)
-  raw_data <- rawPlotsServer("rawPlots", sleep_data, interactions_data)
+  raw_data <- rawPlotsServer("rawPlots", sleep_data, interactions_data, snapshot_request, session)
 
   sleep_plot <- esquisseModuleServer(
     "sleepPlot", sleep_data, x_unit = c(t = "hours"),
