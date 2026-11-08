@@ -62,7 +62,8 @@ dataset_basename <- function(name) {
 #' @noRd
 report_progress <- function(file, message, detail = NULL, value = NULL) {
   if (is.null(file)) return(invisible(NULL))
-  tmp <- paste0(file, ".tmp")
+  # one temporary file per process: flies may be loaded by several processes at the same time
+  tmp <- paste0(file, ".", Sys.getpid(), ".tmp")
   saveRDS(list(message = message, detail = detail, value = value), tmp)
   file.rename(tmp, file)
   invisible(NULL)

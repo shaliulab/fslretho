@@ -33,6 +33,9 @@ The app is then at `http://<server>:3839`.
   of `inst/configuration/fslretho.conf` (an http(s) or ftp address serving the result folder and its `index.txt`).
 * `/fslretho_data` holds the saved sessions and the usage logs (`sessions/` and `logs/`, writable).
   Use a different folder for each version so their sessions don't mix.
+* Flies are loaded in parallel: `ncores` in `/etc/scopr.conf` (8 by default, in `inst/configuration/scopr.conf`)
+  is the number of cores used by each load, and `async_workers` in `/etc/fslretho.conf` (4) the number of loads
+  that can run at the same time.
 * The container runs as user 1000 by default; build with `--build-arg USER_ID=... --build-arg GROUP_ID=...`
   to match the owner of the data folders.
 

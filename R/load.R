@@ -14,13 +14,17 @@ load_ethoscope_data <- function(metadata, params, progress_file = NULL) {
   conf <- fslretho_conf()
   ncores <- conf$scopr$ncores
 
-  # scopr calls back once per fly (and per interval, if the SD has its own parameters)
+  # scopr calls back once per fly (and per interval, if the SD has its own parameters).
+  # Flies may be loaded in parallel (ncores, in forked processes), so the count is kept in a file:
+  # one byte per fly loaded
   steps <- nrow(metadata) * (1 + length(params$intervals))
-  done <- 0
-  report_progress(progress_file, "Loading data to memory (R)", value = 0)
+  counter <- if (!is.null(progress_file)) paste0(progress_file, ".count")
+  if (!is.null(counter)) on.exit(unlink(counter), add = TRUE)
+  report_progress(progress_file, "Loading data to memory (R)", detail = sprintf("%d flies, %d core(s)", nrow(metadata), ncores), value = 0)
   callback <- function(detail = NULL) {
-    done <<- done + 1
-    report_progress(progress_file, "Loading data to memory (R)", detail = detail, value = min(1, done / steps))
+    if (is.null(counter)) return(invisible(NULL))
+    cat("x", file = counter, append = TRUE)
+    report_progress(progress_file, "Loading data to memory (R)", detail = detail, value = min(1, file.size(counter) / steps))
   }
 
   dt <- do.call(scopr::load_ethoscope, c(
