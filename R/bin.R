@@ -5,16 +5,19 @@ SUMMARY_FUNCTIONS <- list(mean = mean, median = stats::median, max = max, min = 
 
 #' Probability of leaving a state, as defined in Wiggin et al. 2020 (PNAS 117:10024)
 #'
-#' Every minute in state `from`, except the last one, is an opportunity (denominator);
+#' Every minute in state `from` that is followed by the next minute is an opportunity (denominator);
 #' the numerator counts those followed by a minute in the other state.
+#' A minute whose next minute is missing (the last one, or one before a gap in the data,
+#' e.g. minutes removed by curation) is not an opportunity: there is no transition to see.
 #' @param active logical, one value per minute: did the fly move in that minute?
 #' @param from the state left: FALSE (inactive) for P(Wake), TRUE (active) for P(Doze)
+#' @param t start of each minute (seconds), sorted. By default the minutes are consecutive.
 #' @return list with p (NA if there are no opportunities) and n, the number of opportunities
 #' @noRd
-leave_probability <- function(active, from) {
+leave_probability <- function(active, from, t = 60 * seq_along(active)) {
   n <- length(active)
   if (n < 2) return(list(p = NA_real_, n = 0L))
-  opportunities <- active[-n] == from
+  opportunities <- active[-n] == from & diff(t) == 60
   n_opp <- sum(opportunities)
   list(p = if (n_opp == 0) NA_real_ else sum(opportunities & active[-1] != from) / n_opp, n = n_opp)
 }
@@ -32,13 +35,13 @@ leave_probability <- function(active, from) {
 #' @return data.table with id, interval, t, p_wake, p_doze, n_inactive and n_active
 #' @noRd
 transition_probabilities <- function(d, bin_length, min_minutes = 5) {
-  minutes <- d[, .(active = any(moving)), by = .(id, interval, t = floor(t / 60) * 60)]
-  data.table::setorderv(minutes, c("id", "interval", "t"))
+  minutes <- d[, .(active = any(moving)), by = .(id, interval, minute = floor(t / 60) * 60)]
+  data.table::setorderv(minutes, c("id", "interval", "minute"))
   out <- minutes[, {
-    wake <- leave_probability(active, FALSE)
-    doze <- leave_probability(active, TRUE)
+    wake <- leave_probability(active, FALSE, minute)
+    doze <- leave_probability(active, TRUE, minute)
     list(p_wake = wake$p, p_doze = doze$p, n_inactive = wake$n, n_active = doze$n)
-  }, by = .(id, interval, t = floor(t / bin_length) * bin_length)]
+  }, by = .(id, interval, t = floor(minute / bin_length) * bin_length)]
   out[n_inactive < min_minutes, p_wake := NA_real_]
   out[n_active < min_minutes, p_doze := NA_real_]
   out

@@ -56,6 +56,23 @@ test_that("P(Wake) is computed on 1 minute activity and left empty with too few 
   expect_true(is.na(transition_probabilities(d, 3600, min_minutes = 5)$p_doze)) # only 2 active minutes
 })
 
+test_that("P(Wake) and P(Doze) do not count transitions across missing minutes", {
+  # minutes 0, 1, 3, 4 (minute 2 missing, e.g. removed by curation): inactive, inactive, active, active
+  active <- c(FALSE, FALSE, TRUE, TRUE)
+  minute <- c(0, 60, 180, 240)
+  # minute 1 is not followed by minute 2: only minute 0 is an opportunity, and it stays inactive
+  expect_equal(leave_probability(active, FALSE, minute), list(p = 0, n = 1L))
+  # without the times, minute 1 -> 3 would be counted as a wake transition
+  expect_equal(leave_probability(active, FALSE), list(p = 1 / 2, n = 2L))
+
+  d <- data.table::data.table(id = "a", interval = "default", t = seq(0, 290, by = 10))
+  d[, moving := t >= 180]
+  d <- d[!(t >= 120 & t < 180)] # remove minute 2
+  p <- transition_probabilities(d, bin_length = 300, min_minutes = 0)
+  expect_equal(p$p_wake, 0)
+  expect_equal(p$n_inactive, 1L)
+})
+
 test_that("binned data has p_wake and p_doze", {
   binned <- bin_dataset(scored(), 30, mean)
   expect_true(all(c("p_wake", "p_doze", "n_inactive", "n_active") %in% names(binned)))

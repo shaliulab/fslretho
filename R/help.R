@@ -144,10 +144,19 @@ help_binning <- function() {
       "A high P(Wake) means a lighter sleep; a high P(Doze) a higher sleep pressure."
     ),
     tags$p(
+      "The sketch below uses the same example as Fig. 1A of the paper (left) and shows how the app computes it (right), ",
+      "with the differences numbered. The bins here are 5 minutes long to keep it small."
+    ),
+    tags$img(
+      src = "fslretho/static/p_wake_doze.svg", class = "fsl-help-figure",
+      alt = "P(Wake) and P(Doze): the method of Wiggin et al. 2020 next to the one of FSLRetho"
+    ),
+    tags$p(
       "In a bin where a fly was inactive only for a minute or two, a single transition gives P(Wake) = 0.5 or 1, ",
       "and these values make the population average jump. Such bins are left empty: set the minimum number of minutes ",
       "in the binning menu (", tags$code("n_inactive"), " and ", tags$code("n_active"), " give the number of minutes used; ",
-      "0 keeps every value, as in the paper). Longer bins also give smoother traces: the paper used 90 minute intervals."
+      "0 keeps every value, as in the paper). Longer bins also give smoother traces: the paper used 90 minute intervals. ",
+      "Minutes without data (e.g. removed by Curate) are skipped: no transition is counted across them."
     ),
     tags$p(
       "Sleep binning applies to the Sleep analysis tab, Bout binning to the Bout analysis tab. During SD, ",

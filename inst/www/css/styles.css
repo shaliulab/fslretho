@@ -100,6 +100,14 @@
   white-space: nowrap;
   padding-right: 20px;
 }
+.fsl-help-figure {
+  display: block;
+  width: 100%;
+  max-width: 1120px;
+  height: auto;
+  margin: 10px 0 20px;
+  border: 1px solid #eee;
+}
 
 /* ---- Misc ---------------------------------------------------------------- */
 .dropdown > .dropdown-toggle > .label-danger {
