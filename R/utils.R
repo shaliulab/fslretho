@@ -34,6 +34,12 @@ safely <- function(expr, context, warnings = FALSE) {
     tryCatch(expr, error = function(e) {
       # req() and validate() stop the observer on purpose: let them through
       if (inherits(e, "shiny.silent.error")) stop(e)
+      if (!nzchar(conditionMessage(e))) {
+        # nothing useful to tell the user; keep the details in the log
+        message(sprintf("Error without message while %s: class %s, call %s", context,
+                        paste(class(e), collapse = "/"), paste(deparse(conditionCall(e)), collapse = " ")))
+        return(NULL)
+      }
       message(sprintf("Error while %s: %s", context, conditionMessage(e)))
       shiny::showNotification(
         sprintf("Error while %s: %s", context, conditionMessage(e)),

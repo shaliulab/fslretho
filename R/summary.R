@@ -173,7 +173,9 @@ flySummaryServer <- function(id, plot_rv, meta_rv, vars, plot_y = reactive(NULL)
         s[, group__ := factor(as.character(get(x)))]
         ggplot2::ggplot(s, ggplot2::aes(x = group__, y = value)) +
           ggplot2::geom_boxplot(outlier.shape = NA, width = 0.5, fill = NA) +
-          ggforce::geom_sina(ggplot2::aes(colour = group__), size = 2.5, alpha = 0.8, show.legend = FALSE) +
+          # narrow and scaled by width: with few flies per group, the default spread puts points off their group
+          ggforce::geom_sina(ggplot2::aes(colour = group__), size = 2.5, alpha = 0.8, show.legend = FALSE,
+                             maxwidth = 0.4, scale = "width", seed = 1) +
           ggplot2::labs(x = x, y = summary_label(group_var(), input$period)) +
           ggplot2::theme_bw(base_size = 16)
       })
