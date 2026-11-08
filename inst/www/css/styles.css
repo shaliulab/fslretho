@@ -176,3 +176,13 @@
   height: 28px;
   width: auto;
 }
+
+/* Version (git commit), right of the dataset name */
+.fsl-commit {
+  padding: 15px 10px 0 4px;
+}
+.fsl-commit code {
+  font-size: 11px;
+  color: #777;
+  background: none;
+}

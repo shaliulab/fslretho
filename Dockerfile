@@ -76,8 +76,8 @@ RUN for PKG in behavr zeitgebr ggetho damr scopr sleepr esquisse; do \
     done
 
 # background R processes for long tasks, so several users can work at the same time
-RUN R -e 'install.packages("future", repos = Sys.getenv("CRAN_SNAPSHOT"))' \
-    && R -e 'stopifnot(requireNamespace("future"))'
+RUN R -e 'install.packages(c("future", "ggforce"), repos = Sys.getenv("CRAN_SNAPSHOT"))' \
+    && R -e 'stopifnot(requireNamespace("future"), requireNamespace("ggforce"))'
 
 # the app itself
 COPY . /opt/fslretho
@@ -116,6 +116,11 @@ RUN chown -R shiny:shiny /srv/shiny-server
 RUN mkdir -p /DAM_data /ethoscope_data /fslretho_data \
     && chown shiny:shiny /DAM_data /ethoscope_data /fslretho_data
 
+
+# version shown in the app: docker build --build-arg GIT_COMMIT=$(git describe --always --dirty) .
+# (last, so a new commit does not rebuild the layers above)
+ARG GIT_COMMIT=unknown
+RUN echo "$GIT_COMMIT" > /etc/fslretho_commit
 
 # run app
 CMD ["/usr/bin/shiny-server"]

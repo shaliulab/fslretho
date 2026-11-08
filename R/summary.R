@@ -71,7 +71,7 @@ summarise_flies <- function(data, meta, var, period = "total") {
 
 flySummaryUI <- function(id) {
   ns <- NS(id)
-  shinydashboard::box(
+  tagList(shinydashboard::box(
     width = NULL, title = "One value per fly",
     fluidRow(
       column(3, uiOutput(ns("var_ui"))),
@@ -84,15 +84,22 @@ flySummaryUI <- function(id) {
       uiOutput(ns("tooltip"))
     ),
     helpText("Computed on the data shown in the plot above (with its filters). Flies are sorted by date, machine and ROI: hover a bar to see which fly it is.")
-  )
+  ),
+  shinydashboard::box(
+    width = NULL, title = "Groups",
+    fluidRow(column(4, uiOutput(ns("group_ui")))),
+    plotOutput(ns("groups"), height = "450px"),
+    helpText("One point per fly: the variable on the Y axis of the first plot, over the period chosen above, grouped by the variable on the X axis.")
+  ))
 }
 
 #' @param plot_rv dataset shown in the plot above (filtered binned data)
 #' @param meta_rv the loaded dataset, for the metadata
 #' @param vars variables offered; the first one is selected
+#' @param plot_y reactive, the variable on the Y axis of the plot above (for the group plot)
 #' @return dataset with the per-fly values
 #' @noRd
-flySummaryServer <- function(id, plot_rv, meta_rv, vars) {
+flySummaryServer <- function(id, plot_rv, meta_rv, vars, plot_y = reactive(NULL)) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -134,6 +141,41 @@ flySummaryServer <- function(id, plot_rv, meta_rv, vars) {
           ggplot2::theme(axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
                          panel.grid.major.x = ggplot2::element_blank())
         gg
+      })
+
+      meta_columns <- reactive({
+        meta <- behavr::meta(req(meta_rv$data))
+        setdiff(names(meta)[!sapply(meta, is.list)], c("id", "file_info"))
+      })
+
+      output$group_ui <- renderUI({
+        choices <- meta_columns()
+        selectInput(session$ns("group"), "X axis", choices = choices,
+                    selected = intersect(c("genotype", "condition", "treatment", "sex"), choices)[1], width = "100%")
+      })
+
+      # per-fly values of the variable plotted in the first panel
+      group_var <- reactive({
+        y <- plot_y()
+        if (is.null(y) || !y %in% names(req(plot_rv$data)) || !is.numeric(plot_rv$data[[y]])) y <- req(input$var)
+        y
+      })
+      group_values <- reactive({
+        req(plot_rv$data, meta_rv$data, input$period)
+        safely(context = "summarising the flies", summarise_flies(plot_rv$data, behavr::meta(meta_rv$data), group_var(), input$period))
+      })
+
+      output$groups <- renderPlot({
+        s <- req(group_values())
+        x <- req(input$group)
+        req(x %in% names(s))
+        s <- s[!is.na(value)]
+        s[, group__ := factor(as.character(get(x)))]
+        ggplot2::ggplot(s, ggplot2::aes(x = group__, y = value)) +
+          ggplot2::geom_boxplot(outlier.shape = NA, width = 0.5, fill = NA) +
+          ggforce::geom_sina(ggplot2::aes(colour = group__), size = 2.5, alpha = 0.8, show.legend = FALSE) +
+          ggplot2::labs(x = x, y = summary_label(group_var(), input$period)) +
+          ggplot2::theme_bw(base_size = 16)
       })
 
       output$tooltip <- renderUI({

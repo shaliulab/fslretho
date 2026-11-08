@@ -30,6 +30,7 @@ Imports:
     tools,
     utils,
     future,
+    ggforce,
     promises,
     behavr (>= 0.3.3),
     damr (>= 0.3.4),
@@ -47,7 +48,7 @@ RoxygenNote: 7.2.1
 Remotes:
     shaliulab/behavr@3ebdfd8400273ff26353564fbd62185c29873b56,
     shaliulab/damr@73b0b966590809702a0b1ad9175b3411b39fd4c6,
-    shaliulab/esquisse@3ecc69c2dda2df2329c88e857826a7dc45d6af6d,
+    shaliulab/esquisse@a0463a4c90bd50956afb84825ba1043150f0bd2b,
     shaliulab/ggetho@c593ba2a316e3a48624ea0e8a08b87eb2ec63610,
     shaliulab/scopr@fe6623337ac7cedeb9424660d2b48df7b61a07a7,
     shaliulab/sleepr@ff75dea9b817ea3ed5128219b2a5eb13a24a5a8f,

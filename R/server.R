@@ -38,9 +38,13 @@ server <- function(input, output, session) {
   )
 
   # one value per fly, from the data shown in the plots above
+  # Y axis of the first plot of each tab
+  sleep_y <- reactive(input[["sleepPlot-esquisse-dragvars"]]$target$yvar[1])
+  bout_y <- reactive(input[["boutPlot-esquisse-dragvars"]]$target$yvar[1])
   sleep_summary <- flySummaryServer("sleepSummary", sleep_plot, loaded_data,
-                                    vars = c("asleep", "p_wake", "p_doze", "activity", "moving", "interactions", "max_velocity"))
-  bout_summary <- flySummaryServer("boutSummary", bout_plot, loaded_data, vars = "duration")
+                                    vars = c("asleep", "p_wake", "p_doze", "activity", "moving", "interactions", "max_velocity"),
+                                    plot_y = sleep_y)
+  bout_summary <- flySummaryServer("boutSummary", bout_plot, loaded_data, vars = "duration", plot_y = bout_y)
 
   ## Period ----
   # the period analysis uses the sleep data with the filters of the sleep plot
@@ -61,10 +65,7 @@ server <- function(input, output, session) {
       `spectrogram` = rhythm$spectrogram
     ),
     loaded = loaded_data,
-    plot_y = list(
-      `sleep-binned` = reactive(input[["sleepPlot-esquisse-dragvars"]]$target$yvar[1]),
-      `bouts` = reactive(input[["boutPlot-esquisse-dragvars"]]$target$yvar[1])
-    ),
+    plot_y = list(`sleep-binned` = sleep_y, `bouts` = bout_y),
     summary_fun = list(
       `sleep-binned` = reactive(input[["sleepBin-summary_FUN"]]),
       `bouts` = reactive(input[["boutBin-summary_FUN"]])

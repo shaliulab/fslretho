@@ -2,6 +2,24 @@ APP_TITLE <- "FSLRetho v3"
 # width of the title area (with the logos) and of the sidebar below it
 SIDEBAR_WIDTH <- 290
 
+#' Git commit the app was built from (written to /etc/fslretho_commit by the Dockerfile)
+#' @noRd
+app_commit <- function() {
+  path <- "/etc/fslretho_commit"
+  commit <- if (file.exists(path)) trimws(readLines(path, n = 1, warn = FALSE)) else ""
+  if (length(commit) == 0 || commit %in% c("", "unknown")) NA_character_ else commit
+}
+
+#' The commit, linked to GitHub unless it was built with uncommitted changes (-dirty)
+#' @noRd
+commit_label <- function() {
+  commit <- app_commit()
+  if (is.na(commit)) return(NULL)
+  label <- tags$code(commit, title = "Version of FSLRetho (git commit)")
+  if (grepl("dirty", commit)) return(label)
+  tags$a(label, href = paste0("https://github.com/shaliulab/fslretho/commit/", commit), target = "_blank", rel = "noopener")
+}
+
 #' Title of the top bar: the KU Leuven and VIB logos, then the name of the app
 #' @noRd
 header_title <- function() {
@@ -30,7 +48,8 @@ get_header <- function() {
       header_dropdown("sessionsMenu", "Sessions", sessionsUI("sessions"))
     ),
     tags$li(class = "dropdown fsl-header-item", actionButton("reload", "", icon = icon("redo"), title = "Load the metadata again")),
-    tags$li(class = "dropdown fsl-header-item", div(class = "fsl-dataset-name", textOutput("dataset_name", inline = TRUE)))
+    tags$li(class = "dropdown fsl-header-item", div(class = "fsl-dataset-name", textOutput("dataset_name", inline = TRUE))),
+    tags$li(class = "dropdown fsl-header-item fsl-commit", commit_label())
   )
 }
 
