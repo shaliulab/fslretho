@@ -102,7 +102,9 @@ help_scoring <- function() {
       list("Curate", "Discard minutes with too little tracking data (20 positions or fewer per minute), typically when the fly was not detected.")
     )),
     tags$p(
-      "Movement in the 6 s after the sleep depriver moves the tube is ignored, so the SD itself does not count as the fly waking up."
+      "Movement in the 6 s after an interaction (the sleep depriver moving the tube) is ignored, so the SD itself does not count as the fly waking up. ",
+      "Change it with ", tags$i("Ignore movement after an interaction"), ": use 0 when the interaction is light (optogenetic stimulation), ",
+      "which does not move the tube, so all the movement of the fly counts."
     ),
     tags$h4("DAM monitors"),
     tags$p(

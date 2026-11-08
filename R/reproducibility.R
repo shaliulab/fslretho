@@ -51,11 +51,13 @@ reproducibility_script <- function(dataset_name, params) {
     sprintf("  velocity_correction_coef = %s,", fmt(scoring$velocity_correction_coef)),
     sprintf("  min_time_immobile = %s,", fmt(scoring$min_time_immobile)),
     sprintf("  time_window_length = %s,", fmt(scoring$time_window_length)),
+    if (!is.null(scoring$masking_duration)) sprintf("  masking_duration = %s,", fmt(scoring$masking_duration)),
     if (sd) c(
       "  # different scoring parameters while the SD is running",
       sprintf("  velocity_correction_coef_sd = %s,", fmt(scoring$velocity_correction_coef_sd)),
       sprintf("  min_time_immobile_sd = %s,", fmt(scoring$min_time_immobile_sd)),
       sprintf("  time_window_length_sd = %s,", fmt(scoring$time_window_length_sd)),
+      if (!is.null(scoring$masking_duration_sd)) sprintf("  masking_duration_sd = %s,", fmt(scoring$masking_duration_sd)),
       "  intervals = list(interval_sd = 'SD'),"
     ),
     sprintf("  curate = %s", fmt(scoring$curate)),

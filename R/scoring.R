@@ -24,9 +24,19 @@ scoringInputs <- function(ns, suffix = "") {
     sliderInput(
       id("time_window_length"), label = "Window length (s)",
       min = 5, max = 60, value = 10, step = 5, width = "100%"
-    )
+    ),
+    numericInput(
+      id("masking_duration"), label = "Ignore movement after an interaction (s)",
+      value = DEFAULT_MASKING_DURATION, min = 0, max = 60, step = 1, width = "100%"
+    ),
+    helpText("The sleep depriver moves the tube, so the fly moves with it: that movement is ignored.",
+             "Use 0 when the interaction is light (optogenetics), which does not move the tube.")
   )
 }
+
+#' Seconds of movement ignored after an interaction by sleepr's motion detector (masking_duration)
+#' @noRd
+DEFAULT_MASKING_DURATION <- 6
 
 scoringParamsUI <- function(id) {
   ns <- NS(id)
@@ -85,10 +95,14 @@ scoringParamsServer <- function(id) {
           curate = isTRUE(input$curate),
           FUN = unname(ANNOTATIONS[req(input$FUN)])
         )
+        # only passed when changed, so the results cached with the default are reused
+        masking <- function(value) if (is.null(value) || is.na(value)) DEFAULT_MASKING_DURATION else value
+        if (masking(input$masking_duration) != DEFAULT_MASKING_DURATION) params$masking_duration <- masking(input$masking_duration)
         if (isTRUE(input$differentiate_SD)) {
           params$velocity_correction_coef_sd <- input$velocity_correction_coef_sd
           params$min_time_immobile_sd <- input$min_time_immobile_sd
           params$time_window_length_sd <- input$time_window_length_sd
+          if (masking(input$masking_duration_sd) != masking(input$masking_duration)) params$masking_duration_sd <- masking(input$masking_duration_sd)
           # scopr::load_row reads the SD window from the ethoscope's SD schedule
           params$intervals <- list(interval_sd = "SD")
         }
