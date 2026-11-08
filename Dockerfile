@@ -117,7 +117,7 @@ RUN mkdir -p /DAM_data /ethoscope_data /fslretho_data \
     && chown shiny:shiny /DAM_data /ethoscope_data /fslretho_data
 
 
-# version shown in the app: docker build --build-arg GIT_COMMIT=$(git describe --always --dirty) .
+# version shown in the app: docker build --build-arg GIT_COMMIT=<commit> . (see README)
 # (last, so a new commit does not rebuild the layers above)
 ARG GIT_COMMIT=unknown
 RUN echo "$GIT_COMMIT" > /etc/fslretho_commit
