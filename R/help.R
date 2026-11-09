@@ -129,7 +129,12 @@ help_scoring <- function() {
       "The tube rotations of the SD can make the tracking noisier. Tick ", tags$i("Use different parameters during SD"),
       " to score the SD period with its own window length, threshold and minimum time immobile. The SD period is read ",
       "from the SD schedule (date range) set in the ethoscope, e.g. ", tags$code("2021-06-19 17:00:00 > 2021-06-20 05:00:00"),
-      ". The data then has an ", tags$code("interval"), " column (default or sd) telling which parameters were used."
+      ". The data then has an ", tags$code("interval"), " column (default or sd) telling which parameters were used. ",
+      "Flies of ethoscopes without SD schedule are scored with the default parameters."
+    ),
+    tags$p(
+      "Changing a parameter scores the loaded flies again. If they are still loading, they are scored again ",
+      "with the new parameters as soon as the current load is done."
     )
   )
 }

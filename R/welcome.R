@@ -24,9 +24,15 @@ welcomePageUI <- function(id) {
         ),
         actionLink(ns("about"), "About", class = "pull-right")
       )
+    ),
+    column(
+      width = 5,
+      shinydashboard::box(
+        width = NULL, title = "Tour of the application",
+        # recorded with inst/tour/record_tour.js
+        tags$video(src = "fslretho/static/fslretho3-tour.mp4", type = "video/mp4", controls = "controls", width = "100%")
+      )
     )
-    # The tour video (inst/www/static/fslretho3-tour.mp4, see inst/tour) is hidden until it is
-    # recorded again: it shows the old Load tab (a single Submit button)
   )
 }
 

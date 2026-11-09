@@ -8,6 +8,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const browser = await puppeteer.launch({
     executablePath: '/usr/bin/google-chrome', headless: 'new',
     args: ['--no-sandbox', '--window-size=1600,900'],
+    // waiting for the data or a periodogram can take minutes
+    protocolTimeout: 1800000,
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1600, height: 900 });
@@ -16,10 +18,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   fs.mkdirSync(framesDir, { recursive: true });
   const frames = [];
   const cdp = await page.target().createCDPSession();
+  // time cut from the video (see fastForward)
+  let offset = 0;
+  let resumed = false;
   cdp.on('Page.screencastFrame', async (f) => {
     const file = `${framesDir}/${String(frames.length).padStart(6, '0')}.jpg`;
     fs.writeFileSync(file, Buffer.from(f.data, 'base64'));
-    frames.push({ file, t: f.metadata.timestamp });
+    if (resumed && frames.length > 0) {
+      // the video jumps over the wait, with one second of the last frame before it
+      offset += f.metadata.timestamp - offset - frames[frames.length - 1].t - 1;
+      resumed = false;
+    }
+    frames.push({ file, t: f.metadata.timestamp - offset });
     try { await cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }); } catch (e) {}
   });
 
@@ -65,10 +75,31 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.evaluate(() => { const c = document.querySelector('.modal.in .modal-footer button, .modal.show .modal-footer button'); if (c) c.click(); });
     await sleep(800);
   };
+  // background tasks show a progress bar, or a notification ending in "..." (see in_background)
+  const waitIdle = async (timeout = 600000) => {
+    await sleep(1500);
+    await page.waitForFunction(() => ![...document.querySelectorAll('.shiny-notification')].some((n) =>
+      n.querySelector('.progress') || /\.\.\.$/.test((n.querySelector('.shiny-notification-content-text') || n).innerText.trim())),
+    { timeout, polling: 500 });
+  };
+  // long waits (loading, computing) are cut from the video
+  const screencast = () => cdp.send('Page.startScreencast', { format: 'jpeg', quality: 85, everyNthFrame: 1 });
+  const fastForward = async (wait) => {
+    await sleep(1500);
+    await cdp.send('Page.stopScreencast');
+    await wait();
+    resumed = true;
+    await screencast();
+    await sleep(300);
+  };
+  const closeNotes = async () => {
+    await page.evaluate(() => document.querySelectorAll('.shiny-notification-close').forEach((b) => b.click()));
+    await sleep(500);
+  };
 
   await page.goto(url, { waitUntil: 'networkidle2' });
   await sleep(2000);
-  await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 85, everyNthFrame: 1 });
+  await screencast();
 
   // 1. Welcome
   await caption('<b>FSLRetho</b>: sleep and circadian analysis of flies recorded with ethoscopes or DAM monitors', 4500);
@@ -92,9 +123,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await caption('Untick the flies you don\'t want to load (or use Select all / Deselect all)...', 3500);
   await click('#loadData-load', 300);
   await caption('...and press <b>Load selected flies</b>: the data is loaded and sleep is scored (progress at the bottom right).', 1000);
-  await page.waitForFunction(() => document.querySelector('table.fsl-flies .label-success'), { timeout: 600000 });
+  await fastForward(() => page.waitForFunction(() => document.querySelector('table.fsl-flies .label-success'), { timeout: 600000 }));
   await sleep(1500);
   await closeModal();
+  await closeNotes();
+  if (await page.$('table.fsl-flies tr.fsl-fly-error')) {
+    await scrollTo('table.fsl-flies tr.fsl-fly-error');
+    await caption('Flies that could not be scored (e.g. too little data) say so in the table.', 4000);
+  } else {
+    await caption('Loaded flies are marked in the table.', 3000);
+  }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   await sleep(800);
 
@@ -108,6 +146,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // 4. Sleep analysis
   await click('a[data-value="sleep"]', 500);
+  await caption('New scoring parameters score the loaded flies again (progress at the bottom right).', 1000);
+  await fastForward(() => waitIdle());
+  await closeNotes();
   await page.waitForFunction(() => document.querySelector('#sleepPlot-esquisse-plooooooot-plot img'), { timeout: 120000 });
   await sleep(1500);
   await caption('<b>3. Sleep analysis</b> &mdash; fraction of time asleep in 30 min bins. Light and dark phases are shaded.', 5000);
@@ -132,11 +173,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await click('a[data-value="period"]', 800);
   await click('#periodAnalysis-periodogram-button', 500);
   await caption('<b>4. Period analysis</b> &mdash; periodograms and spectrograms of the sleep data shown in the Sleep tab.', 1000);
-  // wait until the app is idle (the periodogram is computed and plotted)
-  for (let i = 0; i < 240; i++) {
-    await sleep(1000);
-    if (i > 4 && !(await page.evaluate(() => document.documentElement.classList.contains('shiny-busy')))) break;
-  }
+  // the periodogram is computed in the background, then plotted
+  await fastForward(() => page.waitForFunction(() => document.querySelector('#periodAnalysis-periodogram-esquisse-esquisse-plooooooot-plot img'), { timeout: 1200000 }));
+  await closeNotes();
   await sleep(2000);
   await page.evaluate(() => window.scrollBy({ top: 350, behavior: 'smooth' })); await sleep(1200);
   await caption('Peaks above zero are significant periods.', 4000);
@@ -147,14 +186,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await caption('<b>5. Raw data</b> &mdash; the position of one fly in its tube, frame by frame, next to its sleep.', 3500);
   await page.$eval('#rawPlots-sd_only', (e) => { if (e.checked) e.click(); });
   await click('#rawPlots-button', 500);
-  await page.waitForFunction(() => document.querySelector('#rawPlots-plot_x img'), { timeout: 300000 });
+  await fastForward(() => page.waitForFunction(() => document.querySelector('#rawPlots-plot_x img'), { timeout: 600000 }));
   await sleep(2000);
   const raw = await page.$('#rawPlots-plot_x img');
   const rb = await raw.boundingBox();
   await moveTo(rb.x + rb.width * 0.62, rb.y + rb.height * 0.5);
   await caption('Click on any plot to see the picture the ethoscope took closest to that moment...', 3000);
   await page.mouse.down(); await sleep(80); await page.mouse.up();
-  await page.waitForFunction(() => document.querySelector('#snapshotViewer-snapshot svg'), { timeout: 180000 });
+  await fastForward(() => page.waitForFunction(() => document.querySelector('#snapshotViewer-snapshot svg'), { timeout: 600000 }));
   await sleep(1500);
   await caption('<b>6. Snapshot viewer</b> &mdash; tubes in white; the sleep-deprived ones turn blue while the SD is running.', 5500);
   await click('input[name="snapshotViewer-show_rois"][value="sd"]', 2500);

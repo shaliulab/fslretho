@@ -492,6 +492,8 @@ loadDataServer <- function(id, reload, params, parent_session) {
       # the selection sent by the browser is ignored if it belongs to a table of a previous link
       token <- reactiveVal(0)
       busy <- reactiveVal(FALSE)
+      # new scoring parameters arrived while loading: score the flies again once loaded
+      rescore <- reactiveVal(FALSE)
 
       updateTextInput(session, "result_dir", value = fslretho_conf()$scopr$folders$results$path)
       updateTextInput(session, "result_dir_dam", value = fslretho_conf()$damr$folders$results$path)
@@ -579,11 +581,15 @@ loadDataServer <- function(id, reload, params, parent_session) {
           return()
         }
         if (!start()) return()
+        rescore(FALSE)
         in_background(
           "load_linked",
           list(linked = l$linked[as.character(id) %in% ids], monitor = l$monitor, params = params()),
           context = "loading the data", progress = TRUE,
-          on_failed = function() busy(FALSE),
+          on_failed = function() {
+            busy(FALSE)
+            rescore_if_needed()
+          },
           on_done = function(res) {
             busy(FALSE)
             loaded(res)
@@ -597,8 +603,16 @@ loadDataServer <- function(id, reload, params, parent_session) {
               showNotification(sprintf("Loaded %d flies", n), type = "message")
             }
             set_dataset(output_rv, res$data, l$name)
+            rescore_if_needed()
           }
         )
+      })
+
+      rescore_if_needed <- function() isolate({
+        if (rescore()) {
+          rescore(FALSE)
+          run_load()
+        }
       })
 
       observeEvent(input$link, run_link())
@@ -608,9 +622,12 @@ loadDataServer <- function(id, reload, params, parent_session) {
         req(input$metadata)
         run_link(keep_selection = TRUE, then_load = !is.null(loaded()))
       })
-      # new scoring parameters: score the loaded flies again
+      # new scoring parameters: score the loaded flies again (once the current load is done, if busy)
       observeEvent(params(), ignoreInit = TRUE, {
-        if (!is.null(loaded()) && !is.null(linked())) run_load()
+        if (is.null(linked())) return()
+        # busy: a load started with the previous parameters (a link is followed by a load
+        # that takes the parameters when it starts, which clears rescore)
+        if (busy()) rescore(TRUE) else if (!is.null(loaded())) run_load()
       })
 
       observeEvent(input$selection, {

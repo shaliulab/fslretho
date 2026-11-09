@@ -174,3 +174,41 @@ test_that("new scoring parameters score the loaded flies again", {
   })
   expect_true(result)
 })
+
+test_that("different SD parameters load flies recorded without SD schedule", {
+  params <- reactive(c(isolate(default_params()), list(intervals = list(interval_sd = "SD"), min_time_immobile_sd = 60)))
+  result <- NULL
+  testServer(loadDataServer, args = list(reload = reactive(0), params = params, parent_session = NULL), {
+    session$setInputs(metadata = upload(c("machine_name,date,region_id,reference_hour", "E_029,2016-01-25,1,7")),
+                      result_dir = example_results())
+    session$setInputs(link = 1)
+    session$setInputs(load = 1)
+    result <<- list(data = output_rv$data, flies = flies())
+  })
+  expect_true(behavr::is.behavr(result$data))
+  expect_equal(result$flies$status, "loaded")
+})
+
+test_that("parameters changed while loading are applied once the load is done", {
+  params <- reactiveVal(isolate(default_params()))
+  result <- NULL
+  testServer(loadDataServer, args = list(reload = reactive(0), params = params, parent_session = NULL), {
+    session$setInputs(metadata = upload(c("machine_name,date,region_id,reference_hour", "E_029,2016-01-25,1,7")),
+                      result_dir = example_results())
+    session$setInputs(link = 1)
+    session$setInputs(load = 1)
+    first_load <- output_rv$time
+    # a load is running (loads are synchronous in the tests): the new parameters wait
+    busy(TRUE)
+    params(modifyList(params(), list(min_time_immobile = 600)))
+    session$flushReact()
+    waiting <- isolate(rescore()) && identical(first_load, output_rv$time)
+    # the load finishes: the flies are scored again with the new parameters
+    busy(FALSE)
+    rescore_if_needed()
+    result <<- list(waiting = waiting, rescored = !identical(first_load, output_rv$time), pending = isolate(rescore()))
+  })
+  expect_true(result$waiting)
+  expect_true(result$rescored)
+  expect_false(result$pending)
+})

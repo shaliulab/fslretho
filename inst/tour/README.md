@@ -1,7 +1,8 @@
 # Tour video
 
 `inst/www/static/fslretho3-tour.mp4` (shown on the Welcome page) is recorded with `record_tour.js`,
-which drives the app in headless Chrome (puppeteer-core) and records it with Chrome's screencast:
+which drives the app in headless Chrome (puppeteer-core) and records it with Chrome's screencast.
+Long waits (loading the data, computing the periodogram) are cut from the video:
 
 ```bash
 npm install puppeteer-core@21
