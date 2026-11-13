@@ -258,7 +258,13 @@ help_other <- function() {
     help_table(list(
       list("Ethoscope .db files", "The raw recordings of the loaded flies, in a .zip."),
       list("Sleep (scored)", "One row per fly and window: moving, asleep, sd_on..."),
-      list("Sleep (binned) / Sleep bouts", "The data of the Sleep / Bout analysis plots, with their filters."),
+      list("Sleep (binned)", paste(
+        "The bins of the Sleep analysis plot, with its filters: the plotted variable first, then asleep, sleep_min",
+        "(minutes asleep in the bin), P(Wake) and P(Doze) with the minutes they are computed on (n_inactive, n_active),",
+        "interactions, moving, activity, max_velocity, is_interpolated (windows without data, filled in) and sd_on,",
+        "those in the data, and the interval (default / sd)."
+      )),
+      list("Sleep bouts", "The data of the Bout analysis plot, with its filters."),
       list("Summaries", "One row per fly, as in the plots at the bottom of the Sleep and Bout tabs."),
       list("Raw data", "The raw data of the fly last plotted in the Raw tab."),
       list("Periodogram / Spectrogram", "The results of the Period analysis tab.")

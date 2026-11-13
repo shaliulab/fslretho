@@ -47,6 +47,28 @@ transition_probabilities <- function(d, bin_length, min_minutes = 5) {
   out
 }
 
+#' Minutes of sleep of each fly in each time bin
+#'
+#' The number of windows asleep times the window length (the usual spacing of t, per fly and interval,
+#' as the SD can be scored with its own window length). Unlike the mean of asleep times the bin length,
+#' it does not count missing data (e.g. removed by Curate, or the end of the recording) as sleep,
+#' and it does not depend on the summary function.
+#' @param d data.table with id, interval, t and asleep, one row per window
+#' @param bin_length bin length in seconds
+#' @return data.table with id, interval, t and sleep_min
+#' @noRd
+sleep_minutes <- function(d, bin_length) {
+  window <- d[, {
+    s <- sort(unique(t))
+    .(window = if (length(s) > 1) stats::median(diff(s)) else NA_real_)
+  }, by = .(id, interval)]
+  out <- d[, .(n_asleep = sum(as.logical(asleep), na.rm = TRUE)),
+           by = .(id, interval, t = floor(t / bin_length) * bin_length)]
+  out <- window[out, on = c("id", "interval")]
+  out[, sleep_min := n_asleep * window / 60]
+  out[, c("id", "interval", "t", "sleep_min"), with = FALSE]
+}
+
 #' Variables that are summarised in each bin, if present in the data
 #' @noRd
 Y_VARS <- c(
@@ -62,15 +84,17 @@ Y_VARS <- c(
 #' * sd_on becomes TRUE if the SD was running during the whole bin
 #' * x (position in the tube) becomes pareto, see pareto_sd
 #' * p_wake and p_doze are added, see transition_probabilities
+#' * sleep_min is added (if sleep_minutes), see sleep_minutes
 #' * day (1 for ZT 0-24, 2 for ZT 24-48...) and phase (L for ZT 0-12, 24-36...; D for ZT 12-24, 36-48...)
 #'   are added to filter the plots
 #' @param data behavr table
 #' @param minutes bin length in minutes
 #' @param FUN summary function
 #' @param min_transition_minutes see transition_probabilities
+#' @param sleep_minutes add sleep_min? Only for scored data (one row per window), not for bouts
 #' @return behavr table, one row per fly, interval and bin. t is the start of the bin.
 #' @noRd
-bin_dataset <- function(data, minutes, FUN, min_transition_minutes = 5) {
+bin_dataset <- function(data, minutes, FUN, min_transition_minutes = 5, sleep_minutes = TRUE) {
   bin_length <- behavr::mins(minutes)
   d <- data.table::as.data.table(data)
   if (!"interval" %in% names(d)) d[, interval := "default"]
@@ -90,6 +114,9 @@ bin_dataset <- function(data, minutes, FUN, min_transition_minutes = 5) {
   ]
   if ("moving" %in% names(d)) {
     out <- transition_probabilities(d, bin_length, min_transition_minutes)[out, on = c("id", "interval", "t")]
+  }
+  if (sleep_minutes && "asleep" %in% names(d)) {
+    out <- sleep_minutes(d, bin_length)[out, on = c("id", "interval", "t")]
   }
   add_day_phase(out)
   data.table::setkeyv(out, "id")
@@ -152,7 +179,8 @@ binDataServer <- function(id, input_rv, summary_time_window = NULL, summary_FUN 
         safely(context = "binning the data", {
           if (!is.null(preproc_FUN)) data <- apply_by_interval(data, preproc_FUN)
           min_minutes <- if (is.null(input$min_transition_minutes) || is.na(input$min_transition_minutes)) 5 else input$min_transition_minutes
-          set_dataset(output_rv, bin_dataset(data, minutes, SUMMARY_FUNCTIONS[[fun_name]], min_minutes), input_rv$name)
+          binned <- bin_dataset(data, minutes, SUMMARY_FUNCTIONS[[fun_name]], min_minutes, sleep_minutes = is.null(preproc_FUN))
+          set_dataset(output_rv, binned, input_rv$name)
         })
       })
 

@@ -79,6 +79,21 @@ test_that("binned data has p_wake and p_doze", {
   expect_true(all(binned$p_wake >= 0 & binned$p_wake <= 1, na.rm = TRUE))
 })
 
+test_that("sleep_min counts the minutes asleep, not the missing data", {
+  dt <- scored()
+  binned <- data.table::as.data.table(bin_dataset(dt, 30, mean))
+  expect_equal(binned$sleep_min, binned$asleep * 30) # full bins
+  # the same with median: sleep_min does not depend on the summary function
+  expect_equal(data.table::as.data.table(bin_dataset(dt, 30, stats::median))$sleep_min, binned$sleep_min)
+  # half of a bin missing
+  gap <- data.table::as.data.table(bin_dataset(dt[!(t >= behavr::hours(1) & t < behavr::hours(1.25))], 30, mean))
+  full <- dt[t >= behavr::hours(1.25) & t < behavr::hours(1.5)]
+  expect_equal(gap[t == behavr::hours(1), sleep_min], sum(full$asleep) * 10 / 60)
+  # not for bouts (one row per bout)
+  bouts <- bin_dataset(apply_by_interval(dt, bout_analysis), 30, mean, sleep_minutes = FALSE)
+  expect_false("sleep_min" %in% names(bouts))
+})
+
 test_that("binned data has the day and phase of each bin", {
   binned <- data.table::as.data.table(bin_dataset(scored(), 30, mean))
   expect_equal(binned[t == behavr::hours(0), unique(day)], 1L)

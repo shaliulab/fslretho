@@ -25,15 +25,27 @@ downloadsUI <- function(id) {
 #' @param fun summary function used to bin it (mean, median...)
 #' @noRd
 binned_column_name <- function(var, fun = "mean") {
-  if (var %in% c("p_wake", "p_doze")) return(var)
+  if (var %in% UNSUMMARISED_VARS) return(var)
   if (identical(fun, "mean")) {
     nice <- c(asleep = "fraction_of_time_asleep", moving = "fraction_of_time_moving",
+              is_interpolated = "fraction_of_windows_interpolated",
               duration = "mean_bout_duration_s", activity = "mean_beam_crosses_per_minute",
               interactions = "mean_sd_interactions_per_window")
     if (var %in% names(nice)) return(nice[[var]])
   }
   paste0(fun, "_", var)
 }
+
+#' Variables of the binned sleep download, when present in the data (the plotted one comes first)
+#' @noRd
+SLEEP_BINNED_VARS <- c(
+  "asleep", "sleep_min", "p_wake", "n_inactive", "p_doze", "n_active",
+  "interactions", "moving", "activity", "max_velocity", "is_interpolated", "sd_on"
+)
+
+#' Binned variables that are not summarised with the summary function: their name does not change
+#' @noRd
+UNSUMMARISED_VARS <- c("p_wake", "p_doze", "n_inactive", "n_active", "sleep_min", "sd_on", "pareto")
 
 #' Turn a label such as "Sleep per day (min)" into a column name such as sleep_per_day_min
 #' @noRd
@@ -59,8 +71,15 @@ export_table <- function(name, data, y = NULL, fun = "mean") {
   }
   switch(
     name,
-    `sleep-binned` = , `bouts` = {
-      if (is.null(y) || !y %in% names(d)) y <- if (name == "bouts") "duration" else "asleep"
+    `sleep-binned` = {
+      vars <- unique(c(if (!is.null(y) && y %in% names(d)) y, intersect(SLEEP_BINNED_VARS, names(d))))
+      # interval (default / sd): a bin across the start or end of the SD has one row per interval
+      keys <- c("id", "t", "interval")
+      new_names <- vapply(vars, binned_column_name, character(1), fun = fun)
+      keep(c(keys, vars), c(keys, new_names))
+    },
+    `bouts` = {
+      if (is.null(y) || !y %in% names(d)) y <- "duration"
       keep(c("id", "t", y), c("id", "t", binned_column_name(y, fun)))
     },
     `sleep-scored` = keep(c("id", "t", "asleep")),
