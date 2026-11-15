@@ -32,6 +32,20 @@ metadata_batches <- function(metadata) {
   NULL
 }
 
+#' The rows of a metadata to link
+#'
+#' Rows whose batch is not a date in YYYY-MM-DD format are left out, unless no row has such a date
+#' (then every row is kept, so the problems of the dates are reported).
+#' @param batches the batches to keep; NULL for all
+#' @return the row numbers (1 is the first row below the header)
+#' @noRd
+select_batch_rows <- function(metadata, batches = NULL) {
+  batch <- metadata_batches(metadata)
+  rows <- seq_len(nrow(metadata))
+  if (is.null(batch) || !any(is_iso_date(batch))) return(rows)
+  which(is_iso_date(batch) & (is.null(batches) | batch %in% batches))
+}
+
 #' Read one or more metadata .csv files into R, without any type conversion
 #'
 #' All columns are read as text so that problems (e.g. a date that Excel turned

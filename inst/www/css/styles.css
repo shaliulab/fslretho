@@ -109,6 +109,20 @@
   border: 1px solid #eee;
 }
 
+/* ---- Load tab: batches ------------------------------------------------- */
+/* several batches per line, in aligned columns; scroll if there are many */
+.fsl-batches .shiny-options-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  column-gap: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.fsl-batches .checkbox-inline {
+  margin: 0 !important;
+  white-space: nowrap;
+}
+
 /* ---- Load tab: flies --------------------------------------------------- */
 .fsl-flies-controls {
   margin-bottom: 10px;

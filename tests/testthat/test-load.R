@@ -75,12 +75,12 @@ test_that("flies without data are listed with the reason, and the others are loa
 })
 
 test_that("rows with problems are listed with the problem, and the other rows are loaded", {
-  res <- load_with(c("machine_name,date,region_id,reference_hour", "E_029,42394,1,7", "E_029,2016-01-25,2,7"))
+  res <- load_with(c("machine_name,date,region_id,reference_hour", "E_029,2016-01-25,1,7:30", "E_029,2016-01-25,2,7"))
   expect_equal(nrow(behavr::meta(res$data)), 1)
   bad <- res$flies[status == "error"]
   expect_equal(bad$fsl_row + 1, 2)
   expect_true(is.na(bad$id))
-  expect_match(bad$message, "2016-01-25")
+  expect_match(bad$message, "7.5")
   expect_equal(res$flies[fsl_row == 2, status], "loaded")
 })
 
@@ -245,4 +245,22 @@ test_that("link_dataset reports problems with the rows of the metadata file", {
   expect_equal(res$problems$row_ids[[1]], 2L)
   expect_equal(res$problems$rows[1], "3")
   expect_equal(res$flies$fsl_row + 1, 3)
+})
+
+test_that("rows whose date is not YYYY-MM-DD are not a batch and are left out", {
+  lines <- c("machine_name,date,region_id,reference_hour", "E_029,42394,1,7", "E_029,2016-01-25,2,7", "E_029,,3,7")
+  result <- NULL
+  testServer(loadDataServer, args = list(reload = reactive(0), params = default_params, parent_session = NULL), {
+    session$setInputs(metadata = upload(lines), result_dir = example_results())
+    session$setInputs(link = 1)
+    result <<- list(batches = batches(), flies = flies(), problems = problems())
+  })
+  expect_equal(names(result$batches), "2016-01-25")
+  expect_equal(result$flies$fsl_row + 1, 3)
+  expect_equal(nrow(result$problems), 0)
+})
+
+test_that("when no date is YYYY-MM-DD, every row is checked so the dates are reported", {
+  res <- load_with(c("machine_name,date,region_id,reference_hour", "E_029,42394,1,7"))
+  expect_match(res$flies$message, "2016-01-25")
 })

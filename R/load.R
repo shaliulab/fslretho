@@ -245,21 +245,17 @@ linked_flies <- function(linked, monitor, progress_file = NULL) {
 #'   and message (why the fly cannot be loaded, or a warning)
 #' * note: what was downloaded from a remote database
 #' * title: why nothing can be loaded, if so
-#' @param batches the batches (see metadata_batches) to link; NULL for all. Rows of other batches are
-#' left out, but rows keep their number in the metadata file
+#' @param batches the batches (see metadata_batches) to link; NULL for all. Rows of other batches, and rows
+#' whose date is not in YYYY-MM-DD format, are left out (see select_batch_rows), but rows keep their number
+#' in the metadata file
 #' @noRd
 link_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, progress_file = NULL, batches = NULL) {
   report_progress(progress_file, "Checking the metadata", value = 0)
   metadata <- read_metadata(metadata_paths)
   monitor <- metadata_monitor(metadata)
   # the row of the metadata file of each row kept
-  file_rows <- seq_len(nrow(metadata))
-  if (!is.null(batches)) {
-    batch <- metadata_batches(metadata)
-    # rows without a batch (an empty date) are kept, so their problem is reported
-    if (!is.null(batch)) file_rows <- which(is.na(batch) | batch %in% batches)
-    metadata <- metadata[file_rows]
-  }
+  file_rows <- select_batch_rows(metadata, batches)
+  metadata <- metadata[file_rows]
   # problems are reported with the rows of the metadata file
   in_file <- function(problems) {
     problems <- data.table::copy(problems)
@@ -458,7 +454,6 @@ loadDataUI <- function(id) {
           ns("metadata"), label = "Metadata (.csv)", multiple = TRUE,
           accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
         ),
-        uiOutput(ns("batches_ui")),
         radioButtons(ns("source"), label = "Ethoscope data", inline = TRUE,
                      choices = c("On this computer" = "local", "Remote (download what is needed)" = "remote")),
         conditionalPanel(
@@ -467,6 +462,7 @@ loadDataUI <- function(id) {
         ),
         textInput(ns("result_dir"), label = "Ethoscope result folder (on this computer)", value = ""),
         textInput(ns("result_dir_dam"), label = "DAM result folder", value = ""),
+        uiOutput(ns("batches_ui")),
         actionButton(ns("link"), label = "Link", icon = icon("link"), class = "btn-primary"),
         helpText("Link finds the recording of every fly (and downloads it, if Remote) and lists the flies below.")
       )
@@ -533,12 +529,18 @@ loadDataServer <- function(id, reload, params, parent_session) {
       # a new metadata (or data source) makes the list of flies out of date
       observeEvent(list(input$metadata, input$source), ignoreInit = TRUE, clear())
 
-      # Batches of flies: the dates in the metadata (see metadata_batches), with the number of rows of each,
-      # oldest first. NULL if the metadata cannot be read or has no dates
-      batches <- reactive({
+      metadata_read <- reactive({
         req(input$metadata)
-        b <- tryCatch(metadata_batches(read_metadata(input$metadata$datapath)), error = function(e) NULL)
-        b <- b[!is.na(b) & nzchar(b)]
+        tryCatch(read_metadata(input$metadata$datapath), error = function(e) NULL)
+      })
+      # Batches of flies: the dates in the metadata (see metadata_batches) in YYYY-MM-DD format, with the
+      # number of rows of each, oldest first. NULL if the metadata cannot be read or has no such dates
+      batches <- reactive({
+        m <- metadata_read()
+        if (is.null(m)) return(NULL)
+        b <- metadata_batches(m)
+        if (is.null(b)) return(NULL)
+        b <- b[is_iso_date(b)]
         if (length(b) == 0) return(NULL)
         counts <- table(b)
         counts[order(names(counts))]
@@ -569,7 +571,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
         tags$div(
           class = "fsl-batches",
           checkboxGroupInput(
-            ns("batches"), label = "Batches of flies (date the recording started)",
+            ns("batches"), label = "Batches of flies (date the recording started)", inline = TRUE,
             choices = stats::setNames(names(b), sprintf("%s (%d row%s)", names(b), as.integer(b), ifelse(b == 1, "", "s"))),
             selected = names(b)
           ),
@@ -577,7 +579,15 @@ loadDataServer <- function(id, reload, params, parent_session) {
             actionLink(ns("batches_all"), "Select all"), " | ",
             actionLink(ns("batches_none"), "Deselect all"), " | ",
             actionLink(ns("batches_last"), "Only the last batch")
-          )
+          ),
+          {
+            m <- metadata_read()
+            left_out <- setdiff(seq_len(nrow(m)), select_batch_rows(m))
+            if (length(left_out) > 0) helpText(sprintf(
+              "%d row(s) with a date not in YYYY-MM-DD format are left out (row %s).",
+              length(left_out), format_rows(left_out)
+            ))
+          }
         )
       })
 
