@@ -21,6 +21,17 @@ metadata_monitor <- function(metadata) {
   NA_character_
 }
 
+#' The batch of flies of each row of a metadata: the date the recording started
+#' (date for ethoscopes, the date of start_datetime for DAM monitors)
+#' @param metadata metadata as read by read_metadata
+#' @return character vector, one batch per row (NA if empty), or NULL if the metadata has no such column
+#' @noRd
+metadata_batches <- function(metadata) {
+  if ("date" %in% names(metadata)) return(trimws(metadata$date))
+  if ("start_datetime" %in% names(metadata)) return(substr(trimws(metadata$start_datetime), 1, 10))
+  NULL
+}
+
 #' Read one or more metadata .csv files into R, without any type conversion
 #'
 #' All columns are read as text so that problems (e.g. a date that Excel turned

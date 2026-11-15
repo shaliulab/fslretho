@@ -212,3 +212,37 @@ test_that("parameters changed while loading are applied once the load is done", 
   expect_true(result$rescored)
   expect_false(result$pending)
 })
+
+test_that("only the batches selected are linked, and rows keep their number in the metadata file", {
+  lines <- c("machine_name,date,region_id,reference_hour", "E_008,2021-06-18,1,9", "E_029,2016-01-25,1,7", "E_029,2016-01-25,2,7")
+  result <- NULL
+  testServer(loadDataServer, args = list(reload = reactive(0), params = default_params, parent_session = NULL), {
+    session$setInputs(metadata = upload(lines), result_dir = example_results())
+    all <- batches()
+    # every batch is selected by default
+    session$setInputs(batches = names(all))
+    selected_all <- selected_batches()
+    session$setInputs(batches_last = 1)
+    session$setInputs(link = 1)
+    result <<- list(all = all, selected_all = selected_all, last = selected_batches(), flies = flies())
+    session$setInputs(batches_none = 1)
+    session$setInputs(link = 2)
+    result$after_none <<- linked()
+  })
+  expect_equal(names(result$all), c("2016-01-25", "2021-06-18"))
+  expect_equal(as.integer(result$all), c(2L, 1L))
+  expect_setequal(result$selected_all, c("2016-01-25", "2021-06-18"))
+  expect_equal(result$last, "2021-06-18")
+  # only the E_008 row (row 2 in Excel) is linked
+  expect_equal(result$flies$fsl_row + 1, 2)
+  expect_equal(result$flies$machine, "E_008")
+  expect_null(result$after_none)
+})
+
+test_that("link_dataset reports problems with the rows of the metadata file", {
+  path <- upload(c("machine_name,date,region_id,reference_hour", "E_029,2016-01-25,1,7", "E_029,2016-01-26,1,7"))$datapath
+  res <- link_dataset(path, "local", "", example_results(), "", batches = "2016-01-26")
+  expect_equal(res$problems$row_ids[[1]], 2L)
+  expect_equal(res$problems$rows[1], "3")
+  expect_equal(res$flies$fsl_row + 1, 3)
+})

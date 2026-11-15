@@ -245,20 +245,39 @@ linked_flies <- function(linked, monitor, progress_file = NULL) {
 #'   and message (why the fly cannot be loaded, or a warning)
 #' * note: what was downloaded from a remote database
 #' * title: why nothing can be loaded, if so
+#' @param batches the batches (see metadata_batches) to link; NULL for all. Rows of other batches are
+#' left out, but rows keep their number in the metadata file
 #' @noRd
-link_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, progress_file = NULL) {
+link_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, progress_file = NULL, batches = NULL) {
   report_progress(progress_file, "Checking the metadata", value = 0)
   metadata <- read_metadata(metadata_paths)
   monitor <- metadata_monitor(metadata)
+  # the row of the metadata file of each row kept
+  file_rows <- seq_len(nrow(metadata))
+  if (!is.null(batches)) {
+    batch <- metadata_batches(metadata)
+    # rows without a batch (an empty date) are kept, so their problem is reported
+    if (!is.null(batch)) file_rows <- which(is.na(batch) | batch %in% batches)
+    metadata <- metadata[file_rows]
+  }
+  # problems are reported with the rows of the metadata file
+  in_file <- function(problems) {
+    problems <- data.table::copy(problems)
+    if (nrow(problems) == 0) return(problems)
+    problems[, row_ids := lapply(row_ids, function(r) file_rows[r])]
+    problems[, rows := vapply(row_ids, format_rows, character(1))]
+    problems
+  }
   remote <- identical(monitor, "ethoscope") && identical(source, "remote")
   index_file <- fslretho_conf()$remote_results$index_file
   if (identical(monitor, "dam")) result_dir <- result_dir_dam
   # a remote database is checked against its index
   found <- if (remote) check_metadata(metadata, remote_dir, monitor, index_file)
            else check_metadata(metadata, result_dir, monitor)
+  found_in_file <- in_file(found)
   errors <- found[level == "error"]
   if (any(lengths(errors$row_ids) == 0)) {
-    return(list(problems = found, monitor = monitor, flies = no_flies(),
+    return(list(problems = found_in_file, monitor = monitor, flies = no_flies(),
                 title = sprintf("The metadata has %d problem(s) to fix before linking", nrow(errors))))
   }
 
@@ -313,7 +332,7 @@ link_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
   flies <- data.table::rbindlist(c(
     list(flies),
     lapply(bad, function(r) unlinked(r, row_messages(errors, r))),
-    lapply(duplicate, function(r) unlinked(r, sprintf("Same fly as row %d: only the first row is used.", first_copy(r) + 1))),
+    lapply(duplicate, function(r) unlinked(r, sprintf("Same fly as row %d: only the first row is used.", file_rows[first_copy(r)] + 1))),
     list(unlinked(setdiff(to_link$fsl_row, flies$fsl_row), "No recording was found for this row."))
   ), use.names = TRUE)
 
@@ -322,14 +341,15 @@ link_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_
   for (r in intersect(unlist(warnings$row_ids), flies[status != "error", fsl_row])) {
     flies[fsl_row == r & status != "error", `:=`(status = "warning", message = row_messages(warnings, r))]
   }
+  flies[, fsl_row := file_rows[fsl_row]]
   data.table::setorderv(flies, c("fsl_row", "region_id"), na.last = TRUE)
 
   usable <- if (!is.null(linked)) linked[as.character(id) %in% flies[status != "error", id]]
   if (is.null(usable) || nrow(usable) == 0) {
-    return(list(problems = found, monitor = monitor, flies = flies, note = note,
+    return(list(problems = found_in_file, monitor = monitor, flies = flies, note = note,
                 title = "None of the flies in the metadata can be loaded: the reason is given for each row"))
   }
-  list(problems = found, monitor = monitor, linked = usable, flies = flies, note = note)
+  list(problems = found_in_file, monitor = monitor, linked = usable, flies = flies, note = note)
 }
 
 #' Load and score the flies of a linked metadata (see link_dataset)
@@ -372,8 +392,8 @@ flies_after_load <- function(flies, result) {
 #' @return list with problems, flies (see link_dataset), data (the scored behavr table, or NULL if
 #' nothing could be loaded), note and title (why nothing was loaded)
 #' @noRd
-load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, params, progress_file = NULL) {
-  l <- link_dataset(metadata_paths, source, remote_dir, result_dir, result_dir_dam, progress_file)
+load_dataset <- function(metadata_paths, source, remote_dir, result_dir, result_dir_dam, params, progress_file = NULL, batches = NULL) {
+  l <- link_dataset(metadata_paths, source, remote_dir, result_dir, result_dir_dam, progress_file, batches)
   if (is.null(l$linked)) return(l)
   r <- load_linked(l$linked, l$monitor, params, progress_file)
   list(problems = l$problems, flies = flies_after_load(l$flies, r), data = r$data, note = l$note)
@@ -438,6 +458,7 @@ loadDataUI <- function(id) {
           ns("metadata"), label = "Metadata (.csv)", multiple = TRUE,
           accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
         ),
+        uiOutput(ns("batches_ui")),
         radioButtons(ns("source"), label = "Ethoscope data", inline = TRUE,
                      choices = c("On this computer" = "local", "Remote (download what is needed)" = "remote")),
         conditionalPanel(
@@ -459,6 +480,8 @@ loadDataUI <- function(id) {
                   tags$code("machine_name"), ",", tags$code("date"), ",", tags$code("region_id"), "and",
                   tags$code("reference_hour"), "; for DAM monitors,", tags$code("file"), ",",
                   tags$code("start_datetime"), ",", tags$code("stop_datetime"), "and", tags$code("region_id"), "."),
+          tags$li("If the metadata has several batches of flies (recordings started on different dates), ",
+                  "untick the batches you don't want to link."),
           tags$li("Press Link. The metadata is checked and the flies are listed below, with the data available for each. ",
                   "Flies that cannot be loaded say why."),
           tags$li("Untick the flies you don't want, adjust the scoring parameters in the top bar if needed, ",
@@ -502,11 +525,67 @@ loadDataServer <- function(id, reload, params, parent_session) {
 
       usable_ids <- function(l) if (is.null(l)) character(0) else l$flies[status != "error", id]
 
-      # a new metadata (or data source) makes the list of flies out of date
-      observeEvent(list(input$metadata, input$source), ignoreInit = TRUE, {
+      clear <- function() {
         linked(NULL)
         loaded(NULL)
         problems(NULL)
+      }
+      # a new metadata (or data source) makes the list of flies out of date
+      observeEvent(list(input$metadata, input$source), ignoreInit = TRUE, clear())
+
+      # Batches of flies: the dates in the metadata (see metadata_batches), with the number of rows of each,
+      # oldest first. NULL if the metadata cannot be read or has no dates
+      batches <- reactive({
+        req(input$metadata)
+        b <- tryCatch(metadata_batches(read_metadata(input$metadata$datapath)), error = function(e) NULL)
+        b <- b[!is.na(b) & nzchar(b)]
+        if (length(b) == 0) return(NULL)
+        counts <- table(b)
+        counts[order(names(counts))]
+      })
+      selected_batches <- reactiveVal(character(0))
+      # every batch is selected when a metadata is uploaded
+      observeEvent(batches(), ignoreNULL = FALSE, selected_batches(names(batches())))
+      set_batches <- function(x) {
+        x <- as.character(x)
+        if (setequal(x, selected_batches())) return()
+        selected_batches(x)
+        # the list of flies is of other batches
+        clear()
+      }
+      observeEvent(input$batches, ignoreNULL = FALSE, ignoreInit = TRUE, set_batches(input$batches))
+      choose_batches <- function(x) {
+        set_batches(x)
+        updateCheckboxGroupInput(session, "batches", selected = x)
+      }
+      observeEvent(input$batches_all, choose_batches(names(batches())))
+      observeEvent(input$batches_none, choose_batches(character(0)))
+      observeEvent(input$batches_last, choose_batches(utils::tail(names(batches()), 1)))
+
+      output$batches_ui <- renderUI({
+        b <- batches()
+        if (is.null(b)) return(NULL)
+        ns <- session$ns
+        tags$div(
+          class = "fsl-batches",
+          checkboxGroupInput(
+            ns("batches"), label = "Batches of flies (date the recording started)",
+            choices = stats::setNames(names(b), sprintf("%s (%d row%s)", names(b), as.integer(b), ifelse(b == 1, "", "s"))),
+            selected = names(b)
+          ),
+          if (length(b) > 1) tags$p(
+            actionLink(ns("batches_all"), "Select all"), " | ",
+            actionLink(ns("batches_none"), "Deselect all"), " | ",
+            actionLink(ns("batches_last"), "Only the last batch")
+          )
+        )
+      })
+
+      # the batches to link: NULL for all of them (or when the metadata has no batches), character(0) for none
+      batches_to_link <- function() isolate({
+        b <- batches()
+        if (is.null(b) || all(names(b) %in% selected_batches())) return(NULL)
+        intersect(selected_batches(), names(b))
       })
 
       start <- function() {
@@ -528,6 +607,11 @@ loadDataServer <- function(id, reload, params, parent_session) {
           showNotification("Upload a metadata file first.", type = "warning")
           return()
         }
+        to_link <- batches_to_link()
+        if (identical(to_link, character(0))) {
+          showNotification("Select at least one batch of flies.", type = "warning")
+          return()
+        }
         if (!start()) return()
         unselected <- if (keep_selection) setdiff(usable_ids(linked()), selected()) else character(0)
         name <- input$metadata$name[1]
@@ -536,7 +620,7 @@ loadDataServer <- function(id, reload, params, parent_session) {
           "link_dataset",
           list(
             metadata_paths = input$metadata$datapath, source = input$source, remote_dir = input$remote_dir,
-            result_dir = input$result_dir, result_dir_dam = input$result_dir_dam
+            result_dir = input$result_dir, result_dir_dam = input$result_dir_dam, batches = to_link
           ),
           context = "linking the metadata", progress = TRUE,
           on_failed = function() busy(FALSE),
