@@ -40,7 +40,8 @@ rawPlotsUI <- function(id) {
       column(3, uiOutput(ns("animal_id_ui"))),
       column(4, sliderInput(ns("time_range"), label = "Time range (hours since ZT0)", min = 0, max = 7 * 24, step = 1, value = c(0, 7 * 24), width = "100%")),
       column(2, numericInput(ns("downsample"), label = "Keep 1 point every", value = 100, min = 1, max = 1000, step = 1)),
-      column(2, checkboxInput(ns("sd_only"), "SD only", value = TRUE)),
+      # ticked when a fly whose recording has an SD schedule is chosen
+      column(2, checkboxInput(ns("sd_only"), "SD only", value = FALSE)),
       column(1, actionButton(ns("button"), "Plot", class = "btn-primary"))
     ),
     fluidRow(
@@ -144,6 +145,17 @@ rawPlotsServer <- function(id, sleep_data, interactions_data, snapshot_request =
         )
       })
       outputOptions(output, "snapshot_tip", suspendWhenHidden = FALSE)
+
+      # "SD only" is ticked by default only if the recording of the chosen fly has an SD schedule
+      observeEvent(input$animal_id, {
+        data <- req(sleep_data$data)
+        if (is_dam_dataset(data)) return()
+        meta <- behavr::meta(data)
+        dbfile <- as.character(unlist(meta[id == input$animal_id]$file_info))[1]
+        if (is.na(dbfile)) return()
+        has_sd <- tryCatch(length(recording_stimulation(dbfile)$date_range) >= 2, error = function(e) FALSE)
+        updateCheckboxInput(session, "sd_only", value = has_sd)
+      })
 
       output$animal_id_ui <- renderUI({
         selectizeInput(session$ns("animal_id"), label = "Fly", choices = as.character(behavr::meta(req(sleep_data$data))$id))
