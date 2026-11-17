@@ -100,10 +100,11 @@ snapshot_with_rois <- function(file, roi_map, stimulation, show = "all") {
   )
 }
 
-#' Width and height of a jpeg file, read from its header
+#' Width and height of a jpeg, read from its header
+#' @param file path to a jpeg file, or the jpeg itself (raw vector)
 #' @noRd
 jpeg_size <- function(file) {
-  bytes <- readBin(file, "raw", min(file.info(file)$size, 65536))
+  bytes <- if (is.raw(file)) file[seq_len(min(length(file), 65536))] else readBin(file, "raw", min(file.info(file)$size, 65536))
   i <- 3
   while (i < length(bytes) - 8) {
     if (bytes[i] != as.raw(0xFF)) { i <- i + 1; next }
@@ -116,7 +117,7 @@ jpeg_size <- function(file) {
     }
     i <- i + 2 + len
   }
-  stop("cannot read the size of ", basename(file))
+  stop("cannot read the size of ", if (is.raw(file)) "the snapshot" else basename(file))
 }
 
 #' Folder where the snapshots of a .db file are extracted
@@ -175,13 +176,77 @@ list_snapshots <- function(dbfile) {
 #' @return one row of list_snapshots
 #' @noRd
 closest_snapshot <- function(dbfile, t, reference_hour) {
+  nearest_snapshot(list_snapshots(dbfile), t, snapshot_offset(dbfile, reference_hour))
+}
+
+#' Seconds to add to the time since a recording started to get the time since ZT0 of a fly
+#' @noRd
+snapshot_offset <- function(dbfile, reference_hour) {
   start <- as.POSIXct(as.numeric(scopr::get_metadata(dbfile)$date_time), origin = "1970-01-01", tz = "GMT")
   # scopr: t since ZT0 = t since the recording started + ms_after_ref / 1000
-  offset <- scopr::get_ms_after_ref(list(date_time = start), reference_hour) / 1000
+  scopr::get_ms_after_ref(list(date_time = start), reference_hour) / 1000
+}
+
+#' The snapshot closest to a time
+#' @param shots snapshots of a recording (see list_snapshots)
+#' @param t time in seconds since ZT0
+#' @param offset see snapshot_offset
+#' @return one row of shots
+#' @noRd
+nearest_snapshot <- function(shots, t, offset) {
   # computed outside shots[...]: inside it, t would be the column of the snapshots
   target_ms <- (t - offset) * 1000
-  shots <- list_snapshots(dbfile)
   shots[which.min(abs(shots$t - target_ms))]
+}
+
+#' The jpeg of one snapshot, read from the .db file (no date banner, unlike the extracted ones)
+#' @return raw vector
+#' @noRd
+read_snapshot <- function(dbfile, id) {
+  con <- RSQLite::dbConnect(RSQLite::SQLite(), dbfile, flags = RSQLite::SQLITE_RO)
+  on.exit(RSQLite::dbDisconnect(con))
+  res <- RSQLite::dbGetQuery(con, "SELECT img FROM IMG_SNAPSHOTS WHERE id = ?", params = list(as.integer(id)))
+  if (nrow(res) == 0) stop("snapshot ", id, " is not in the recording")
+  res$img[[1]]
+}
+
+#' Small preview of a snapshot, with the ROI of the fly outlined
+#' @param img jpeg (raw vector) as read by read_snapshot
+#' @param roi one row of read_roi_map (the ROI of the fly), or NULL
+#' @param crop if TRUE (and roi is given), show only the ROI and a margin around it
+#' @param width width of the preview in pixels
+#' @param caption text below the picture
+#' @noRd
+snapshot_preview <- function(img, roi = NULL, crop = FALSE, width = 320, caption = NULL) {
+  dims <- jpeg_size(img)
+  src <- paste0("data:image/jpeg;base64,", jsonlite::base64_enc(img))
+  has_roi <- !is.null(roi) && nrow(roi) == 1
+  # the visible part of the frame: x0, y0, width, height
+  box <- c(0, 0, dims)
+  if (crop && has_roi) {
+    margin <- roi$h
+    x0 <- max(0, roi$x - margin)
+    y0 <- max(0, roi$y - margin)
+    box <- c(x0, y0, min(dims[1], roi$x + roi$w + margin) - x0, min(dims[2], roi$y + roi$h + margin) - y0)
+  }
+  scale <- width / box[3]
+  div(
+    div(
+      style = sprintf("position: relative; overflow: hidden; width: %dpx; height: %dpx;", width, round(box[4] * scale)),
+      tags$img(
+        src = src,
+        style = sprintf("position: absolute; left: %.1fpx; top: %.1fpx; width: %.1fpx; max-width: none;",
+                        -box[1] * scale, -box[2] * scale, dims[1] * scale)
+      ),
+      if (has_roi) tags$svg(
+        xmlns = "http://www.w3.org/2000/svg", viewBox = paste(box, collapse = " "),
+        style = "position: absolute; top: 0; left: 0; width: 100%; height: 100%;",
+        tags$rect(x = roi$x, y = roi$y, width = roi$w, height = roi$h, fill = "none",
+                  stroke = "#ffd700", `stroke-width` = 2 / scale)
+      )
+    ),
+    if (!is.null(caption)) div(class = "fsl-snapshot-tip-caption", caption)
+  )
 }
 
 #' Group snapshots in blocks of SNAPSHOT_BLOCK_SIZE seconds (one block per snapshot if there are few)

@@ -43,10 +43,20 @@ rawPlotsUI <- function(id) {
       column(2, checkboxInput(ns("sd_only"), "SD only", value = TRUE)),
       column(1, actionButton(ns("button"), "Plot", class = "btn-primary"))
     ),
+    fluidRow(
+      column(3, checkboxInput(ns("hover_snapshot"), "Show the snapshot when hovering the plots", value = FALSE)),
+      column(5, conditionalPanel(
+        "input.hover_snapshot", ns = ns,
+        radioButtons(ns("hover_view"), label = NULL, inline = TRUE,
+                     choices = c("Whole snapshot" = "whole", "Only the ROI of the fly" = "roi"))
+      ))
+    ),
     helpText("Click on any plot to open the snapshot taken closest to that time, in the snapshot viewer."),
     uiOutput(ns("hover_info")),
+    # shown next to the mouse (see my_javascript.js)
+    uiOutput(ns("snapshot_tip"), class = "fsl-snapshot-tip"),
     lapply(RAW_PLOTS, function(p) {
-      div(class = "fsl-clickable", plotOutput(
+      div(class = "fsl-clickable fsl-snapshot-hover", plotOutput(
         ns(p), click = ns(paste0(p, "_click")),
         hover = hoverOpts(ns(paste0(p, "_hover")), delay = 100, delayType = "throttle"), height = "300px"
       ))
@@ -80,12 +90,60 @@ rawPlotsServer <- function(id, sleep_data, interactions_data, snapshot_request =
         })
       })
 
-      output$hover_info <- renderUI({
+      # the position of the mouse in the plot it is over (NULL outside the plots)
+      hovered <- reactive({
         hover <- NULL
         for (p in RAW_PLOTS) if (!is.null(input[[paste0(p, "_hover")]])) hover <- input[[paste0(p, "_hover")]]
+        hover
+      })
+
+      output$hover_info <- renderUI({
+        hover <- hovered()
         if (is.null(hover) || is.null(fly_meta())) return(tags$p(HTML("&nbsp;")))
         tags$p(tags$b(sprintf("ZT %.2f h", hover$x / 3600)), "- click to open the closest snapshot")
       })
+
+      # Snapshot next to the mouse: the snapshots of the recording of the plotted fly, read once per fly
+      hover_index <- reactive({
+        meta <- req(fly_meta())
+        dbfile <- as.character(unlist(meta$file_info))[1]
+        safely(context = "listing the snapshots", {
+          rois <- read_roi_map(dbfile)
+          list(
+            dbfile = dbfile, shots = list_snapshots(dbfile),
+            offset = snapshot_offset(dbfile, meta$reference_hour[1]),
+            roi = rois[roi_value == meta$region_id[1]]
+          )
+        })
+      })
+      # the snapshot closest to the mouse: changes only when another snapshot is closer, so that
+      # the picture is not sent again at every move of the mouse
+      hover_shot <- reactiveVal(NULL)
+      observeEvent(fly_meta(), hover_shot(NULL))
+      observe({
+        req(isTRUE(input$hover_snapshot))
+        hover <- req(hovered())
+        index <- req(hover_index())
+        req(nrow(index$shots) > 0)
+        shot <- nearest_snapshot(index$shots, hover$x, index$offset)
+        if (!identical(shot$id, isolate(hover_shot())$id)) hover_shot(shot)
+      })
+
+      output$snapshot_tip <- renderUI({
+        req(isTRUE(input$hover_snapshot))
+        index <- req(hover_index())
+        if (nrow(index$shots) == 0) return(div(class = "fsl-snapshot-tip-caption", "This recording has no snapshots"))
+        shot <- req(hover_shot())
+        img <- safely(context = "reading the snapshot", read_snapshot(index$dbfile, shot$id))
+        req(img)
+        zt <- shot$t / 1000 + index$offset
+        snapshot_preview(
+          img, roi = index$roi, crop = identical(input$hover_view, "roi"),
+          width = if (identical(input$hover_view, "roi")) 400 else 320,
+          caption = sprintf("Snapshot at ZT %.2f h (%s GMT)", zt / 3600, format(shot$datetime, "%Y-%m-%d %H:%M"))
+        )
+      })
+      outputOptions(output, "snapshot_tip", suspendWhenHidden = FALSE)
 
       output$animal_id_ui <- renderUI({
         selectizeInput(session$ns("animal_id"), label = "Fly", choices = as.character(behavr::meta(req(sleep_data$data))$id))

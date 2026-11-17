@@ -61,3 +61,23 @@ $(function () {
     send(table);
   });
 })();
+
+// Raw tab: the snapshot closest to the mouse is shown next to it while hovering the plots
+// (the server fills .fsl-snapshot-tip when the option is ticked and leaves it empty otherwise)
+$(document).on('mousemove', '.fsl-snapshot-hover', function (e) {
+  var tip = document.querySelector('.fsl-snapshot-tip');
+  if (!tip) return;
+  if (!tip.innerHTML.trim()) { tip.style.display = 'none'; return; }
+  tip.style.display = 'block';
+  var gap = 16;
+  var left = e.clientX + gap;
+  var top = e.clientY + gap;
+  if (left + tip.offsetWidth > window.innerWidth - 10) left = e.clientX - gap - tip.offsetWidth;
+  if (top + tip.offsetHeight > window.innerHeight - 10) top = Math.max(10, window.innerHeight - 10 - tip.offsetHeight);
+  tip.style.left = Math.max(10, left) + 'px';
+  tip.style.top = top + 'px';
+});
+$(document).on('mouseleave', '.fsl-snapshot-hover', function () {
+  var tip = document.querySelector('.fsl-snapshot-tip');
+  if (tip) tip.style.display = 'none';
+});

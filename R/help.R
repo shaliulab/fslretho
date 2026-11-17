@@ -228,7 +228,8 @@ help_plots <- function() {
       list("Fly", "The fly to show."),
       list("Time range", "Hours since ZT0 to load. Loading days of raw data takes long: start with a short range."),
       list("Keep 1 point every", "Show 1 of every n positions, to keep the plot fast."),
-      list("SD only", "Show only the data recorded while the SD was running. Untick it for experiments without SD.")
+      list("SD only", "Show only the data recorded while the SD was running. Untick it for experiments without SD."),
+      list("Show the snapshot when hovering the plots", "Shows, next to the mouse, the snapshot taken closest to the time under it, with the ROI of the fly outlined in yellow. Choose to see the whole snapshot or only the ROI of the fly.")
     ))
   )
 }

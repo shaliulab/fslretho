@@ -218,6 +218,28 @@
   cursor: pointer;
 }
 
+/* Raw tab: snapshot next to the mouse (positioned by my_javascript.js) */
+.fsl-snapshot-tip {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 4px;
+}
+/* no fading while the next snapshot is read */
+.fsl-snapshot-tip.recalculating {
+  opacity: 1;
+}
+.fsl-snapshot-tip-caption {
+  font-size: 12px;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
 /* ---- Logos in the top left corner ---------------------------------------- */
 .fsl-title {
   display: inline-flex;
