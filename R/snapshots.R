@@ -297,18 +297,23 @@ snapshotViewerUI <- function(id) {
           tableOutput(ns("summary"))
         ),
         shinydashboard::box(
-          width = NULL, title = "Snapshots",
-          selectizeInput(ns("blocks"), label = "Snapshots to extract", choices = NULL, multiple = TRUE, width = "100%"),
+          width = NULL, title = "Video",
+          numericInput(ns("fps"), label = "Video frames per second", value = 10, min = 1, max = 30),
+          downloadButton(ns("video"), "Make .mp4 video of the selected snapshots")
+        ),
+        # the buttons go above the selected snapshots: with many of them the box grows long
+        shinydashboard::box(
+          width = NULL, title = "Snapshots to extract",
           div(
-            class = "fsl-inline-buttons",
+            class = "fsl-inline-buttons", style = "margin-top: 0;",
             actionButton(ns("all"), "All snapshots"),
             actionButton(ns("sd"), "SD only"),
             actionButton(ns("clear"), "Clear")
           ),
           actionButton(ns("extract"), "Extract and show", icon = icon("images"), class = "btn-primary"),
-          tags$hr(),
-          numericInput(ns("fps"), label = "Video frames per second", value = 10, min = 1, max = 30),
-          downloadButton(ns("video"), "Make .mp4 video of the selected snapshots")
+          tags$br(), tags$br(),
+          selectizeInput(ns("blocks"), label = NULL, choices = NULL, multiple = TRUE, width = "100%",
+                         options = list(placeholder = "Choose snapshots, or use the buttons above"))
         )
       ),
       column(
