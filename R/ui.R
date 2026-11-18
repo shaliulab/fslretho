@@ -78,6 +78,10 @@ get_body <- function() {
   shinydashboard::dashboardBody(
     shinybusy::add_busy_bar(color = "#FF0000"),
     tags$head(
+      # icon shown next to the page title in browser tabs and bookmarks
+      tags$link(rel = "icon", type = "image/x-icon", href = "fslretho/static/icons/favicon.ico"),
+      tags$link(rel = "icon", type = "image/png", sizes = "512x512", href = "fslretho/static/icons/favicon.png"),
+      tags$link(rel = "apple-touch-icon", sizes = "180x180", href = "fslretho/static/icons/apple-touch-icon.png"),
       tags$link(rel = "stylesheet", type = "text/css", href = "fslretho/css/styles.css"),
       tags$script(src = "fslretho/js/my_javascript.js")
     ),
