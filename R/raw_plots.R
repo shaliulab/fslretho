@@ -30,7 +30,7 @@ raw_plot <- function(data, y, x_limits, geom = ggplot2::geom_point()) {
     ggetho::scale_x_hours(limits = x_limits) +
     ggetho::stat_ld_annotations(height = 1, alpha = 0.2, color = NA) +
     ggplot2::facet_wrap("id") +
-    ggplot2::theme_bw(base_size = 20)
+    ggprism::theme_prism(base_size = 20)
 }
 
 rawPlotsUI <- function(id) {

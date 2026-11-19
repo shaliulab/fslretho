@@ -21,6 +21,9 @@ main <- function(port = NULL) {
     future::plan(future::multisession, workers = if (is.null(workers)) 4 else workers)
   }
 
+  # ggprism's GraphPad Prism look for every plot that does not set its own theme
+  ggplot2::theme_set(ggprism::theme_prism())
+
   shiny::addResourcePath(prefix = "fslretho", directoryPath = system.file(package = "fslretho", "www"))
   shiny::shinyApp(server = server, ui = ui())
 }

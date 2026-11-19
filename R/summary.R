@@ -137,7 +137,7 @@ flySummaryServer <- function(id, plot_rv, meta_rv, vars, plot_y = reactive(NULL)
            else ggplot2::geom_col(ggplot2::aes(fill = factor(.data[[fill]])), width = 0.85)) +
           ggplot2::labs(x = sprintf("Flies (%d), sorted by date, machine and ROI", nrow(s)),
                         y = summary_label(input$var, input$period), fill = fill) +
-          ggplot2::theme_bw(base_size = 16) +
+          ggprism::theme_prism(base_size = 16) +
           ggplot2::theme(axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank(),
                          panel.grid.major.x = ggplot2::element_blank())
         gg
@@ -177,7 +177,7 @@ flySummaryServer <- function(id, plot_rv, meta_rv, vars, plot_y = reactive(NULL)
           ggforce::geom_sina(ggplot2::aes(colour = group__), size = 2.5, alpha = 0.8, show.legend = FALSE,
                              maxwidth = 0.4, scale = "width", seed = 1) +
           ggplot2::labs(x = x, y = summary_label(group_var(), input$period)) +
-          ggplot2::theme_bw(base_size = 16)
+          ggprism::theme_prism(base_size = 16)
       })
 
       output$tooltip <- renderUI({

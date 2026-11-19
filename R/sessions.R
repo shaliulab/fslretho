@@ -20,7 +20,19 @@ sessionsUI <- function(id) {
     tags$p(tags$b("Open a saved session")),
     selectizeInput(ns("session"), label = NULL, choices = NULL, width = "100%", options = list(placeholder = "saved sessions")),
     actionButton(ns("load"), "Open", icon = icon("folder-open"), class = "btn-block"),
-    helpText("Sessions are shared by all users of this server.")
+    helpText("Sessions are shared by all users of this server. Ctrl+S saves the session."),
+    # Ctrl+S (Cmd+S on Mac) saves the session instead of the web page.
+    # If the save dialog is already open, it confirms it
+    tags$script(HTML(sprintf(
+      "$(document).on('keydown', function(e) {
+        if (!(e.ctrlKey || e.metaKey) || e.altKey || (e.key || '').toLowerCase() !== 's') return;
+        e.preventDefault();
+        var confirm = $('#%s:visible');
+        if (confirm.length) { confirm.click(); return; }
+        Shiny.setInputValue('%s', Date.now(), {priority: 'event'});
+      });",
+      ns("shortcut_confirm"), ns("shortcut")
+    )))
   )
 }
 
@@ -43,18 +55,62 @@ sessionsServer <- function(id, loaded) {
         set_dataset(output_rv, loaded$data, loaded$name)
       })
 
-      observeEvent(input$save, {
+      # name of the last save in this browser session, reused by Ctrl+S.
+      # It lives in this Shiny session only, so it is forgotten when the page is
+      # reloaded and never shared with other users
+      saved_name <- reactiveVal(NULL)
+
+      clean_name <- function(x) gsub("[^A-Za-z0-9_.-]+", "_", sub("\\.rds$", "", trimws(x)))
+
+      save_session <- function(name) {
+        if (is.null(output_rv$data)) {
+          showNotification("There is no dataset to save. Load data first.", type = "warning")
+          return(invisible(FALSE))
+        }
+        name <- clean_name(name)
+        if (name == "") name <- dataset_basename(output_rv$name)
+        safely(context = "saving the session", {
+          saveRDS(list(data = output_rv$data, name = output_rv$name), file.path(sessions_folder(), paste0(name, ".rds")))
+          saved_name(name)
+          updateTextInput(session, "name", value = name)
+          showNotification(sprintf("Session saved as %s", name), type = "message")
+          refresh(refresh() + 1)
+        })
+        invisible(TRUE)
+      }
+
+      observeEvent(input$save, save_session(input$name))
+
+      # Ctrl+S: save under the name used before, or ask for one the first time
+      observeEvent(input$shortcut, {
         if (is.null(output_rv$data)) {
           showNotification("There is no dataset to save. Load data first.", type = "warning")
           return()
         }
-        name <- gsub("[^A-Za-z0-9_.-]+", "_", sub("\\.rds$", "", input$name))
-        if (name == "") name <- dataset_basename(output_rv$name)
-        safely(context = "saving the session", {
-          saveRDS(list(data = output_rv$data, name = output_rv$name), file.path(sessions_folder(), paste0(name, ".rds")))
-          showNotification(sprintf("Session saved as %s", name), type = "message")
-          refresh(refresh() + 1)
-        })
+        if (!is.null(saved_name())) {
+          save_session(saved_name())
+          return()
+        }
+        showModal(modalDialog(
+          title = "Save session",
+          textInput(session$ns("shortcut_name"), "Session name", value = dataset_basename(output_rv$name), width = "100%"),
+          # Enter in the text box saves
+          tags$script(HTML(sprintf(
+            "setTimeout(function() { $('#%1$s').focus().select().on('keydown', function(e) {
+               if (e.key === 'Enter') { e.preventDefault(); $('#%2$s').click(); } }); }, 300);",
+            session$ns("shortcut_name"), session$ns("shortcut_confirm")
+          ))),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(session$ns("shortcut_confirm"), "Save", icon = icon("save"), class = "btn-primary")
+          ),
+          easyClose = TRUE
+        ))
+      })
+
+      observeEvent(input$shortcut_confirm, {
+        removeModal()
+        save_session(input$shortcut_name)
       })
 
       observeEvent(input$load, {

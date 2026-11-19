@@ -76,8 +76,8 @@ RUN for PKG in behavr zeitgebr ggetho damr scopr sleepr esquisse; do \
     done
 
 # background R processes for long tasks, so several users can work at the same time
-RUN R -e 'install.packages(c("future", "ggforce"), repos = Sys.getenv("CRAN_SNAPSHOT"))' \
-    && R -e 'stopifnot(requireNamespace("future"), requireNamespace("ggforce"))'
+RUN R -e 'install.packages(c("future", "ggforce", "ggprism"), repos = Sys.getenv("CRAN_SNAPSHOT"))' \
+    && R -e 'stopifnot(requireNamespace("future"), requireNamespace("ggforce"), requireNamespace("ggprism"))'
 
 # the app itself
 COPY . /opt/fslretho
