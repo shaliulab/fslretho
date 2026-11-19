@@ -20,11 +20,12 @@ commit_label <- function() {
   tags$a(label, href = paste0("https://github.com/shaliulab/fslretho/commit/", commit), target = "_blank", rel = "noopener")
 }
 
-#' Title of the top bar: the KU Leuven and VIB logos, then the name of the app
+#' Title of the top bar: the FSLRetho, KU Leuven and VIB logos, then the name of the app
 #' @noRd
 header_title <- function() {
   tags$span(
     class = "fsl-title",
+    tags$img(src = "fslretho/static/icons/favicon.png", alt = "FSLRetho", class = "fsl-logo"),
     tags$img(src = "fslretho/static/logos/logo1.png", alt = "KU Leuven", class = "fsl-logo"),
     tags$img(src = "fslretho/static/logos/logo2.png", alt = "VIB", class = "fsl-logo"),
     APP_TITLE
