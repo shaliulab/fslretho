@@ -261,3 +261,24 @@
   color: #777;
   background: none;
 }
+
+/* Welcome tab: the FSLRetho hex logo, large and faint, behind the boxes.
+   The PNG is 1024 px, so it stays sharp up to that size (and on high-DPI screens at 512 px). */
+#shiny-tab-welcome {
+  position: relative;
+  min-height: calc(100vh - 100px);
+}
+#shiny-tab-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../static/icons/fslretho-hex-1024.png") no-repeat center bottom 5vh;
+  background-size: min(45vh, 512px);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+#shiny-tab-welcome > * {
+  position: relative;
+  z-index: 1;
+}

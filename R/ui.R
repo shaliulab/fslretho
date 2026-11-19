@@ -1,6 +1,6 @@
 APP_TITLE <- "FSLRetho v3"
 # width of the title area (with the logos) and of the sidebar below it
-SIDEBAR_WIDTH <- 290
+SIDEBAR_WIDTH <- 320
 
 #' Git commit the app was built from (written to /etc/fslretho_commit by the Dockerfile)
 #' @noRd
