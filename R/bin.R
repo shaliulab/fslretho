@@ -189,6 +189,20 @@ binDataServer <- function(id, input_rv, summary_time_window = NULL, summary_FUN 
   )
 }
 
+#' Should the bout durations (in seconds) be plotted in minutes?
+#'
+#' Yes when the values plotted reach the 1000s: the largest mean over the flies
+#' of a time bin (what pop_etho plots), or of all the values if there is no t
+#' @param data data plotted, with a duration column
+#' @noRd
+duration_in_minutes <- function(data) {
+  if (is.null(data) || !"duration" %in% names(data)) return(FALSE)
+  d <- as.numeric(data$duration)
+  if (all(is.na(d))) return(FALSE)
+  m <- if ("t" %in% names(data)) max(tapply(d, data$t, mean, na.rm = TRUE), na.rm = TRUE) else max(d, na.rm = TRUE)
+  is.finite(m) && m >= 1000
+}
+
 #' Compute sleep bouts
 #' @param data behavr table with a column called like `var`
 #' @param var name of the binary variable whose bouts are computed

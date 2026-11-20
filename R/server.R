@@ -40,7 +40,12 @@ server <- function(input, output, session) {
   )
   bout_plot <- esquisseModuleServer(
     "boutPlot", bout_data, x_unit = c(t = "hours"),
-    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "duration"), geom = "pop_etho")
+    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "duration"), geom = "pop_etho"),
+    # bout duration in seconds, or in minutes when the values plotted reach the 1000s
+    y_rescale = function(data) {
+      list(var = "duration", divisor = if (duration_in_minutes(data)) 60 else 1,
+           label = if (duration_in_minutes(data)) "Bout duration (min)" else "Bout duration (s)")
+    }
   )
 
   # one value per fly, from the data shown in the plots above
