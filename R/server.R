@@ -30,7 +30,13 @@ server <- function(input, output, session) {
 
   sleep_plot <- esquisseModuleServer(
     "sleepPlot", sleep_data, x_unit = c(t = "hours"),
-    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "asleep"), geom = "pop_etho")
+    hardcoded_dragula = list(mapping = list(xvar = "t", yvar = "asleep"), geom = "pop_etho"),
+    # asleep (the fraction of each bin asleep) shown as minutes asleep per bin
+    y_rescale = function() {
+      minutes <- input[["sleepBin-summary_time_window"]]
+      if (is.null(minutes) || !identical(input[["sleepBin-summary_FUN"]], "mean")) return(NULL)
+      list(var = "asleep", factor = minutes, label = sprintf("Time asleep per %s min bin (min)", minutes))
+    }
   )
   bout_plot <- esquisseModuleServer(
     "boutPlot", bout_data, x_unit = c(t = "hours"),
